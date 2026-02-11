@@ -30,7 +30,9 @@ const activeNav = ref('메인')
 const showLayout = computed(() => route.path !== '/login')
 
 const handleNavClick = (nav) => {
+  console.log('Navigating to:', nav)
   activeNav.value = nav
   if (nav === '메인') router.push('/')
+  if (nav === '전자결재') router.push('/approval')
 }
 </script>
