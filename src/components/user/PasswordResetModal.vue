@@ -18,7 +18,7 @@
             v-model="ssn"
             placeholder="주민등록번호를 입력하세요"
             inputmode="numeric"
-            maxlength="6"
+            maxlength="13"
             autocomplete="off"
         />
       </div>
