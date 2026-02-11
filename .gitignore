@@ -37,3 +37,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+### Mac OS ###
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
