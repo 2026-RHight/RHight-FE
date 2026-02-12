@@ -15,7 +15,6 @@
                 type="text" 
                 v-model="searchQuery" 
                 placeholder="이름/부서 검색..."
-                @input="onSearch"
               />
               <span class="search-icon">🔍</span>
             </div>
