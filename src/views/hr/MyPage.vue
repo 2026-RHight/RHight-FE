@@ -40,7 +40,7 @@
     </div>
 
     <!-- 탭 컨텐츠 -->
-    <TabInfo v-if="activeTab === 'info'" :user="user" />
+    <TabInfo v-if="activeTab === 'info'" :user="user" @update:user="user = $event"/>
     <TabHistory v-else-if="activeTab === 'history'" :employee-id="user.empNo" />
     <TabCertificate v-else-if="activeTab === 'certificate'" :user="user" />
     <!-- 추후 탭 추가 -->
