@@ -41,7 +41,12 @@ const routes = [
     path: '/hr/:pathMatch(.*)*',
     redirect: '/hr/my',
     meta: { requiresAuth: true }
-  }
+  },
+    path: '/performance',
+    name: 'performance',
+    meta: { requiresAuth: true },
+    component: () => import('@/components/performance/Performance.vue')
+  },
 ]
 
 const router = createRouter({
