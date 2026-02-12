@@ -42,7 +42,7 @@ const routes = [
     redirect: '/hr/my',
     meta: { requiresAuth: true }
   },
-    path: '/performance',
+  {    path: '/performance',
     name: 'performance',
     meta: { requiresAuth: true },
     component: () => import('@/components/performance/Performance.vue')

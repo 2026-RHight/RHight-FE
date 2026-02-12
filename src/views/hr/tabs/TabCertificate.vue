@@ -24,7 +24,7 @@
           </div>
           <strong class="issue-title">{{ kind.title }}</strong>
           <p class="issue-desc">{{ kind.description }}</p>
-          <button class="issue-btn" type="button" @click="openIssueModal">발급하기</button>
+          <button class="issue-btn" type="button" @click="openIssueModal(kind)">발급하기</button>
         </article>
       </div>
     </section>
@@ -68,7 +68,7 @@
 
     <BaseModal v-model="showIssueModal" width="460px">
       <div class="modal-title-row">
-        <h2 class="modal-title">재직 증명서 발급</h2>
+        <h2 class="modal-title">{{ issueModalTitle }}</h2>
         <button class="modal-close" type="button" @click="showIssueModal = false">&times;</button>
       </div>
       <div class="modal-fields">
@@ -108,7 +108,7 @@
 
       <div class="preview-frame">
         <div class="preview-paper">
-          <h2 class="cert-main-title">재 직 증 명 서</h2>
+          <h2 class="cert-main-title">{{ previewMainTitle }}</h2>
 
           <div class="cert-body">
             <table class="cert-form-table">
@@ -186,10 +186,9 @@ const props = defineProps({
 })
 
 const certificateKinds = ref(createHrCertificateKindsMock())
-const issueHistory = ref(
-  createHrCertificateHistoryMock().filter((record) => record.kindKey === 'employment')
-)
+const issueHistory = ref(createHrCertificateHistoryMock())
 const policyLines = ref(createHrCertificatePolicyMock())
+const selectedKind = ref(certificateKinds.value[0] || null)
 
 const showIssueModal = ref(false)
 const showPolicyModal = ref(false)
@@ -200,7 +199,11 @@ const issueForm = reactive({
   purpose: ''
 })
 
-const previewTitle = '재직 증명서'
+const issueModalTitle = computed(() => `${selectedKind.value?.title || '증명서'} 발급`)
+const previewTitle = computed(
+  () => selectedKind.value?.title || latestIssued.value?.kindLabel || '증명서'
+)
+const previewMainTitle = computed(() => toSpacedTitle(previewTitle.value))
 const latestIssued = computed(() => issueHistory.value[0] || null)
 const employmentPeriodText = computed(() => {
   const base = `${toKoreanDate(props.user.hireDate)}부터 현재 재직 중임`
@@ -227,6 +230,11 @@ const toKoreanDate = (dateStr) => {
   return `${year}년 ${month}월 ${day}일`
 }
 
+const toSpacedTitle = (title) => {
+  const compact = String(title || '증명서').replace(/\s+/g, '')
+  return compact.split('').join(' ')
+}
+
 const tenureText = (hireDate) => {
   if (!hireDate) return '-'
   const [y = 0, m = 1, d = 1] = String(hireDate).split('.').map(Number)
@@ -245,24 +253,28 @@ const resetIssueForm = () => {
   issueForm.purpose = ''
 }
 
-const openIssueModal = () => {
+const openIssueModal = (kind) => {
+  selectedKind.value = kind || certificateKinds.value[0] || null
   resetIssueForm()
   showIssueModal.value = true
 }
 
 const issueCertificate = () => {
+  if (!selectedKind.value) return
   if (!issueForm.submitTo.trim() || !issueForm.purpose.trim()) return
 
   const issuedDate = formatToday()
+  const kindLabel = selectedKind.value.title
+  const kindSafe = kindLabel.replaceAll(' ', '')
   const newRecord = {
     id: `CERT-${Date.now()}`,
-    kindKey: 'employment',
-    kindLabel: '재직 증명서',
+    kindKey: selectedKind.value.key,
+    kindLabel,
     issuedDate,
     status: 'ISSUED',
     submitTo: issueForm.submitTo.trim(),
     purpose: issueForm.purpose.trim(),
-    fileName: `재직증명서_${issuedDate.replaceAll('.', '')}.pdf`
+    fileName: `${kindSafe}_${issuedDate.replaceAll('.', '')}.pdf`
   }
 
   issueHistory.value.unshift(newRecord)
@@ -312,7 +324,7 @@ const printPreview = () => {
     <html lang="ko">
     <head>
       <meta charset="UTF-8" />
-      <title>재직 증명서</title>
+      <title>${previewTitle.value}</title>
       <style>
         @page { size: A4 portrait; margin: 0; }
         * { box-sizing: border-box; }
@@ -403,7 +415,7 @@ const printPreview = () => {
     </head>
     <body>
       <div class="paper">
-        <h1 class="title">재 직 증 명 서</h1>
+        <h1 class="title">${previewMainTitle.value}</h1>
 
         <table class="form-table">
           <tr>

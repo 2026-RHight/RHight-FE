@@ -115,13 +115,13 @@ const filters = [
 
 const activeFilter = ref('all')
 const selectedEventId = ref(null)
-
+const normalizeDate = (value) => Number(String(value ?? '').replaceAll('.', '')) || 0
 const hrEvents = ref(createHrEventsMock())
 
 const employeeEvents = computed(() => {
   return hrEvents.value
     .filter((item) => item.employee_id === props.employeeId)
-    .sort((a, b) => Number(b.start_date.replaceAll('.', '')) - Number(a.start_date.replaceAll('.', '')))
+      .sort((a, b) => normalizeDate(b.start_date) - normalizeDate(a.start_date))
 })
 
 const filteredHistory = computed(() => {
