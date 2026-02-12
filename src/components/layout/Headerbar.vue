@@ -53,7 +53,7 @@
         </svg>
         <input type="text" placeholder="검색어를 입력하세요" />
       </div>
-      <div class="header-logout">
+      <div class="header-logout" @click="handleLogout">
         로그아웃
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
@@ -65,12 +65,21 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
 defineProps({
   activeNav: { type: String, default: '메인' }
 })
 defineEmits(['navClick'])
 
+const router = useRouter()
 const navItems = ['메인', '인사', '근태', '급여', '성과', '전자결재']
+
+// 로그아웃
+const handleLogout = () => {
+  sessionStorage.setItem('isLoggedIn', 'false')
+  router.push('/login')
+}
 </script>
 
 <style scoped>
