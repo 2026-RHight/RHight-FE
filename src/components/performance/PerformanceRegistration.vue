@@ -49,14 +49,14 @@
       </div>
 
       <!-- 폼 -->
-      <form class="reg-form" @submit.prevent="showModal = true">
+      <form class="reg-form" `@submit.prevent`="handleSubmit">
         <!-- 날짜 -->
         <div class="form-row two-col">
           <div class="form-group">
             <label class="form-label">
               <Calendar :size="14" /> 시작 날짜
             </label>
-            <input v-model="form.startDate" type="date" class="form-input" required />
+            <input v-model="form.endDate" type="date" class="form-input" :min="form.startDate" required />
           </div>
           <div class="form-group">
             <label class="form-label">
@@ -160,6 +160,11 @@ const form = reactive({
   content: '',
   value: '',
 })
+
+function handleSubmit(){
+  if(form.startDate && form.endDate && form.endDate< form.startDate) return
+  showModal.value = true
+}
 
 function resetForm() {
   Object.assign(form, { startDate: '', endDate: '', weight: '', title: '', content: '', value: '' })
