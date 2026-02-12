@@ -169,4 +169,53 @@ export const mockMyDrafts = [
     { id: 4, title: '팀 빌딩 비용 정산', currentApprover: '-', status: '기안', approverInitial: '-' },
 ];
 
+export const mockReviewList = [
+    {
+        id: '2024-REG-001',
+        title: '2024년 1분기 영업 실적 분석 및 전략 보고',
+        drafter: '최지훈',
+        position: '부장',
+        department: '영업1팀',
+        date: '2024-02-10',
+        status: '진행중',
+        content: '2024년 1분기 영업 실적을 분석하고 향후 전략을 보고합니다.',
+        isRead: false,
+        category: '보고서',
+        attachments: ['performance_2024_q1.pdf'],
+        canFinalize: true,
+        step: 2
+    },
+    {
+        id: '2024-EXP-015',
+        title: '신규 서버 인프라 구축 비용 정산',
+        drafter: '박민수',
+        position: '차장',
+        department: '개발1팀',
+        date: '2024-02-12',
+        status: '진행중',
+        content: '클라우드 마이그레이션에 따른 신규 서버 구축 비용 정산 요청입니다.',
+        isRead: true,
+        category: '품의서',
+        attachments: ['invoice_cloud.png', 'cost_benefit_analysis.xlsx'],
+        canFinalize: false,
+        step: 3
+    },
+    {
+        id: '2024-HR-048',
+        title: '하반기 공채 채용 홍보 예산 기안',
+        drafter: '김철수',
+        position: '대리',
+        department: '인사팀',
+        date: '2024-02-13',
+        status: '진행중',
+        content: '우수 인재 확보를 위한 하반기 공채 채용 홍보 예산 집행 요청입니다.',
+        isRead: false,
+        category: '기안서',
+        attachments: [],
+        canFinalize: true,
+        step: 1
+    }
+];
+
+
 
