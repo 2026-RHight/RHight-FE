@@ -156,3 +156,17 @@ export const mockApprovalStatusList = [
     }
 ];
 
+export const mockPendingApprovals = [
+    { id: 1, title: '2024년 정기 휴가 신청', templateName: '휴가', drafter: '김팀원', draftDate: '02-10', isNew: true },
+    { id: 2, title: '신규 프로젝트 협업툴 도입 품의', templateName: '기안', drafter: '이대리', draftDate: '02-11', isNew: false },
+    { id: 3, title: '운영 서버 스토리지 증설 요청', templateName: '품의', drafter: '박과장', draftDate: '02-12', isNew: false },
+];
+
+export const mockMyDrafts = [
+    { id: 1, title: '4월 마케팅 예산 승인 요청', currentApprover: '박본부장', status: '진행', approverInitial: '박' },
+    { id: 2, title: '비품(노트북) 구매 요청의 건', currentApprover: '이지아 과장', status: '진행', approverInitial: '이' },
+    { id: 3, title: '상반기 워크샵 장소 선정 보고', currentApprover: '정수진 이사', status: '완료', approverInitial: '정' },
+    { id: 4, title: '팀 빌딩 비용 정산', currentApprover: '-', status: '기안', approverInitial: '-' },
+];
+
+
