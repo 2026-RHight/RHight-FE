@@ -27,6 +27,7 @@ const routes = [
   {
     path: '/performance',
     name: 'performance',
+    meta: { requiresAuth: true },
     component: () => import('@/components/performance/Performance.vue')
   },
 ]
