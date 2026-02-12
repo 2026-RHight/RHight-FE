@@ -24,6 +24,12 @@ const routes = [
       { path: 'review', name: 'approval-review', component: () => import('@/views/approval/ApprovalReview.vue') },
     ]
   },
+  {
+    path: '/performance',
+    name: 'performance',
+    meta: { requiresAuth: true },
+    component: () => import('@/components/performance/Performance.vue')
+  },
 ]
 
 const router = createRouter({

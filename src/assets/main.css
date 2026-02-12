@@ -1,3 +1,6 @@
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
 /* ══════════════════════════════════════
    RHight HR System – Global Stylesheet
    Colors: #0891B2 primary, #06B6D4 secondary, #ECFEFF accent
@@ -47,6 +50,7 @@ a{text-decoration:none;color:inherit}
 button{cursor:pointer;border:none;font-family:var(--font);outline:none}
 input{font-family:var(--font);outline:none}
 
+/* ── Utility (project-specific) ── */
 /* ── Utility ── */
 .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}
 .justify-between{justify-content:space-between}.gap-2{gap:8px}.gap-3{gap:12px}.gap-4{gap:16px}
