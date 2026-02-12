@@ -1,186 +1,464 @@
 <template>
-  <div class="approval-container">
-    <div class="header-section">
-      <h1 class="page-title">전자결재</h1>
-      <p class="page-subtitle">쉽고 빠른 전자결재 시스템</p>
-    </div>
-
-    <div class="card-grid">
-      <div 
-        v-for="card in cards" 
-        :key="card.route" 
-        class="nav-card"
-        @click="$router.push(card.route)"
-      >
+  <div class="dashboard-container">
+    <!-- Top Summary Cards -->
+    <div class="stats-grid">
+      <!-- 결재 대기 -->
+      <div class="stat-card group" @click="$router.push('/approval/review')">
+        <div class="card-bg red-bg"></div>
         <div class="card-content">
-          <div class="icon-wrapper" :class="card.colorClass">
-            <component :is="card.icon" />
-          </div>
-          <h2 class="card-title">{{ card.title }}</h2>
-          <p class="card-desc">{{ card.description }}</p>
+          <h3 class="stat-label">결재 대기</h3>
+          <div class="stat-value">3<span class="unit">건</span></div>
         </div>
-        <div class="card-arrow">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
+        <div class="card-footer red-text">
+          <span class="icon">⚠️</span> 처리 필요
         </div>
       </div>
+
+      <!-- 결재 진행 -->
+      <div class="stat-card group" @click="$router.push('/approval/status')">
+        <div class="card-bg blue-bg"></div>
+        <div class="card-content">
+          <h3 class="stat-label">결재 진행</h3>
+          <div class="stat-value">8<span class="unit">건</span></div>
+        </div>
+        <div class="card-footer blue-text">
+          <span class="icon">🕒</span> 진행 중
+        </div>
+      </div>
+
+      <!-- 완료 문서 -->
+      <div class="stat-card group" @click="$router.push('/approval/box')">
+        <div class="card-bg green-bg"></div>
+        <div class="card-content">
+          <h3 class="stat-label">완료 문서</h3>
+          <div class="stat-value">152<span class="unit">건</span></div>
+        </div>
+        <div class="card-footer green-text">
+          <span class="icon">✅</span> 이번 달
+        </div>
+      </div>
+
+      <!-- 새 결재 작성 -->
+      <button class="action-card" @click="$router.push('/approval/draft')">
+        <div class="plus-circle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+        <span class="action-text">새 결재 작성하기</span>
+      </button>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-grid">
+      <!-- Recent Pending List -->
+      <section class="grid-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="dot red-dot"></span> 결재 대기 문서
+          </h3>
+          <button class="more-btn" @click="$router.push('/approval/review')">더보기</button>
+        </div>
+        <div class="section-body">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>제목</th>
+                <th class="w-24 text-center">기안자</th>
+                <th class="w-24 text-center">기안일</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in mockPendingApprovals" :key="item.id" @click="$router.push('/approval/review')">
+                <td>
+                  <div class="title-cell">
+                    <span class="tag">{{ item.templateName }}</span>
+                    <span class="title-text">{{ item.title }}</span>
+                    <span v-if="item.isNew" class="new-dot"></span>
+                  </div>
+                </td>
+                <td class="text-gray text-center">{{ item.drafter }}</td>
+                <td class="text-light-gray text-center">{{ item.draftDate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- My Drafts Status -->
+      <section class="grid-section">
+        <div class="section-header">
+          <h3 class="section-title">
+            <span class="dot blue-dot"></span> 내가 올린 기안
+          </h3>
+          <button class="more-btn" @click="$router.push('/approval/status')">더보기</button>
+        </div>
+        <div class="section-body">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>제목</th>
+                <th class="w-40 text-center">현재 결재자</th>
+                <th class="w-20 text-center">상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in mockMyDrafts" :key="item.id" @click="$router.push('/approval/status')">
+                <td>
+                  <span class="title-text">{{ item.title }}</span>
+                </td>
+                <td class="text-center">
+                  <div class="approver-cell">
+                    <div class="avatar">{{ item.approverInitial }}</div>
+                    <span>{{ item.currentApprover }}</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="status-badge" :class="item.status === '완료' ? 'completed' : 'ongoing'">
+                    {{ item.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { h } from 'vue'
-
-// Icons
-const EditIcon = () => h('svg', { width:32, height:32, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('path', { d:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
-  h('path', { d:'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' })
-])
-const ActivityIcon = () => h('svg', { width:32, height:32, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('polyline', { points:'22 12 18 12 15 21 9 3 6 12 2 12' })
-])
-const ArchiveIcon = () => h('svg', { width:32, height:32, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('polyline', { points:'21 8 21 21 3 21 3 8' }),
-  h('rect', { x:'1', y:'3', width:'22', height:'5' }),
-  h('line', { x1:'10', y1:'12', x2:'14', y2:'12' })
-])
-const CheckCircleIcon = () => h('svg', { width:32, height:32, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('path', { d:'M22 11.08V12a10 10 0 1 1-5.93-9.14' }),
-  h('polyline', { points:'22 4 12 14.01 9 11.01' })
-])
-
-const cards = [
-  {
-    title: '전자 결재 기안',
-    description: '새로운 결재 문서를 작성하고 상신합니다.',
-    route: '/approval/draft',
-    icon: EditIcon,
-    colorClass: 'blue-icon'
-  },
-  {
-    title: '전자 결재 현황',
-    description: '진행 중인 결재 문서의 상태를 확인합니다.',
-    route: '/approval/status',
-    icon: ActivityIcon,
-    colorClass: 'green-icon'
-  },
-  {
-    title: '전자 결재 문서함',
-    description: '완료된 결재 문서와 수신 문서를 보관합니다.',
-    route: '/approval/box',
-    icon: ArchiveIcon,
-    colorClass: 'orange-icon'
-  },
-  {
-    title: '전자 결재 검토',
-    description: '결재 문서를 검토하고 승인합니다.',
-    route: '/approval/review',
-    icon: CheckCircleIcon,
-    colorClass: 'purple-icon'
-  }
-]
+import { mockPendingApprovals, mockMyDrafts } from '@/utils/approvalData';
 </script>
 
 <style scoped>
-.approval-container {
-  padding: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header-section {
-  margin-bottom: 40px;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
-}
-
-.page-subtitle {
-  color: #6B7280;
-  font-size: 1.1rem;
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-
-.nav-card {
-  background: white;
-  border-radius: 16px;
+.dashboard-container {
   padding: 32px;
   display: flex;
   flex-direction: column;
+  gap: 32px;
+  background-color: #fcfcfd;
+  height: 100%;
+  overflow-y: auto;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* Grid Layouts */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  flex: 1;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid #f1f3f5;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  height: 280px;
-  cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  height: 128px;
   position: relative;
   overflow: hidden;
-  border: 1px solid #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
-.nav-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border-color: #3B82F6;
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -8px rgba(0,0,0,0.08);
+  border-color: #e9ecef;
 }
 
-.icon-wrapper {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
+.card-bg {
+  position: absolute;
+  right: -24px;
+  top: -24px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover .card-bg {
+  transform: scale(1.15);
+}
+
+.red-bg { background: #fff5f5; }
+.blue-bg { background: #f0f7ff; }
+.green-bg { background: #f2fcf5; }
+
+.card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-label {
+  color: #868e96;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #212529;
+}
+
+.unit {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #adb5bd;
+  margin-left: 4px;
+}
+
+.card-footer {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.red-text { color: #fa5252; }
+.blue-text { color: #339af0; }
+.green-text { color: #40c057; }
+
+/* Action Card */
+.action-card {
+  background: #228be6;
+  border: none;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: white;
+  height: 128px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px -6px rgba(34, 139, 230, 0.3);
+}
+
+.action-card:hover {
+  background: #1c7ed6;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(34, 139, 230, 0.4);
+}
+
+.plus-circle {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-  background: #F3F4F6;
-  color: #4B5563;
-  transition: all 0.3s ease;
 }
 
-.nav-card:hover .icon-wrapper {
-  transform: scale(1.1);
+.action-text {
+  font-weight: 700;
+  font-size: 1rem;
 }
 
-.blue-icon { background: #EBF5FF; color: #3B82F6; }
-.green-icon { background: #ECFDF5; color: #10B981; }
-.orange-icon { background: #FFF7ED; color: #F59E0B; }
-.purple-icon { background: #F5F3FF; color: #8B5CF6; }
+/* Sections */
+.grid-section {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f1f3f5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
 
-.card-title {
-  font-size: 1.5rem;
+.section-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fafbfc;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #343a40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.red-dot { background: #fa5252; }
+.blue-dot { background: #339af0; }
+
+.more-btn {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.more-btn:hover {
+  color: #339af0;
+}
+
+.section-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Dashboard Table */
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.dashboard-table th {
+  padding: 12px 24px;
+  background: #f8f9fa;
+  color: #868e96;
+  font-weight: 500;
+  text-align: left;
+}
+
+.dashboard-table td {
+  padding: 14px 24px;
+  border-bottom: 1px solid #f8f9fa;
+  color: #495057;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dashboard-table tr:hover td {
+  background: #f1f3f5;
+}
+
+.w-24 { width: 96px; }
+.w-40 { width: 160px; }
+.w-20 { width: 80px; }
+
+.title-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  padding: 2px 6px;
+  background: #f1f3f5;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #868e96;
+  font-weight: 500;
+}
+
+.title-text {
+  font-weight: 500;
+  color: #212529;
+}
+
+.new-dot {
+  width: 6px;
+  height: 6px;
+  background: #fa5252;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.text-gray { color: #495057; }
+.text-light-gray { color: #adb5bd; font-size: 0.8rem; }
+
+.approver-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  justify-content: center;
+}
+
+.avatar {
+  width: 20px;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #495057;
   font-weight: 600;
-  color: #1F2937;
-  margin-bottom: 8px;
 }
 
-.card-desc {
-  color: #6B7280;
-  line-height: 1.5;
-  font-size: 0.95rem;
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
 }
 
-.card-arrow {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
-  color: #3B82F6;
+.status-badge.ongoing {
+  background: #f0f7ff;
+  color: #339af0;
+  border-color: #d0e7ff;
 }
 
-.nav-card:hover .card-arrow {
-  opacity: 1;
-  transform: translateX(0);
+.status-badge.completed {
+  background: #f2fcf5;
+  color: #40c057;
+  border-color: #d3f9d8;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .stats-grid { grid-template-columns: 1fr; }
 }
 </style>
+
