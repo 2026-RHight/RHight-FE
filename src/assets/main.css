@@ -40,7 +40,7 @@
   --font:'Noto Sans KR',sans-serif;
   --font-num:'Plus Jakarta Sans','Noto Sans KR',sans-serif;
   --header-h:56px;
-  --sidebar-w:160px;
+  --sidebar-w:230px;
 }
 html{font-size:15px}
 body{font-family:var(--font);color:var(--gray700);background:var(--bg);-webkit-font-smoothing:antialiased}

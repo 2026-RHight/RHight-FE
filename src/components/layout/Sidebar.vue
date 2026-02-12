@@ -62,6 +62,55 @@
     
     </template>
 
+    <template v-else-if="isPerformance">
+      <div class="sidebar-header">
+        <span>성과 관리</span>
+        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': perfStore.role === 'manager' }">
+          {{ perfStore.role === 'manager' ? '관리자' : '사용자' }}
+        </span>
+      </div>
+
+      <!-- 관리자 메뉴 -->
+      <template v-if="perfStore.role === 'manager'">
+        <div class="sidebar-section-label">팀 관리</div>
+        <div
+            v-for="item in managerMenuItems"
+            :key="item.id"
+            class="sidebar-item"
+            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+            @click="perfStore.setPage(item.id)"
+        >
+          <component :is="item.icon" />
+          <span class="sidebar-item-text">{{ item.name }}</span>
+          <span v-if="item.badge" class="sidebar-badge">{{ item.badge }}</span>
+        </div>
+        <div class="sidebar-divider" />
+        <div class="sidebar-section-label">내 성과</div>
+      </template>
+      <!-- 사용자 메뉴 -->
+      <div
+          v-for="item in userMenuItems"
+          :key="item.id"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+          @click="perfStore.setPage(item.id)"
+      >
+        <component :is="item.icon" />
+        {{ item.name }}
+      </div>
+
+      <!-- 모드 전환 버튼 -->
+      <div class="sidebar-toggle">
+        <div class="sidebar-item sidebar-item--toggle" @click="perfStore.toggleRole()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          {{ perfStore.role === 'manager' ? '사용자 모드로 전환' : '관리자 모드로 전환' }}
+        </div>
+      </div>
+    </template>
+
+
     <!-- 메인 모드 (기존 바로가기) -->
     <template v-else>
       <div class="sidebar-header">
@@ -82,15 +131,19 @@
         {{ item.label }}
       </div>
     </template>
+
+
   </aside>
 </template>
 
 <script setup>
 import { h, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { usePerformanceStore } from '@/store/performance'
 
 const router = useRouter()
 const route = useRoute()
+const perfStore = usePerformanceStore()
 
 // 현재 경로가 /approval 로 시작하면 전자결재 모드
 const isApprovalMode = computed(() => route.path.startsWith('/approval'))
@@ -99,6 +152,7 @@ const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 const isHrMode = computed(() => route.path.startsWith('/hr'))
 
 const currentPath = computed(() => route.path)
+const isPerformance = computed(() => route.path.startsWith('/performance'))
 
 // SVG icon components (inline)
 const StarIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
@@ -115,18 +169,57 @@ const ApprovalIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', 
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
   h('polyline', { points:'10 9 9 9 8 9' })
 ])
-const UserIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('path', { d:'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2' }), h('circle', { cx:'12', cy:'7', r:'4' })
+// 성과 아이콘
+const DashboardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'3', y:'3', width:'7', height:'7', rx:'1' }),
+  h('rect', { x:'14', y:'3', width:'7', height:'7', rx:'1' }),
+  h('rect', { x:'3', y:'14', width:'7', height:'7', rx:'1' }),
+  h('rect', { x:'14', y:'14', width:'7', height:'7', rx:'1' }),
+])
+const PlusIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('circle', { cx:'12', cy:'12', r:'10' }),
+  h('line', { x1:'12', y1:'8', x2:'12', y2:'16' }),
+  h('line', { x1:'8', y1:'12', x2:'16', y2:'12' }),
+])
+const SearchIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('circle', { cx:'11', cy:'11', r:'8' }),
+  h('line', { x1:'21', y1:'21', x2:'16.65', y2:'16.65' }),
+])
+const ChartIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'3', y:'12', width:'4', height:'9', rx:'1' }),
+  h('rect', { x:'10', y:'7', width:'4', height:'14', rx:'1' }),
+  h('rect', { x:'17', y:'3', width:'4', height:'18', rx:'1' }),
 ])
 const UsersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('path', { d:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2' }), h('circle', { cx:'9', cy:'7', r:'4' }),
-  h('path', { d:'M23 21v-2a4 4 0 00-3-3.87' }), h('path', { d:'M16 3.13a4 4 0 010 7.75' })
+  h('path', { d:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2' }),
+  h('circle', { cx:'9', cy:'7', r:'4' }),
+  h('path', { d:'M23 21v-2a4 4 0 00-3-3.87' }),
+  h('path', { d:'M16 3.13a4 4 0 010 7.75' }),
 ])
-const TreeIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('rect', { x:'3', y:'3', width:'18', height:'18', rx:'2' }),
-  h('line', { x1:'12', y1:'8', x2:'12', y2:'16' }),
-  h('line', { x1:'8', y1:'12', x2:'16', y2:'12' })
+const CheckIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('polyline', { points:'9 11 12 14 22 4' }),
+  h('path', { d:'M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' }),
 ])
+const FileTextIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z' }),
+  h('polyline', { points:'14 2 14 8 20 8' }),
+  h('line', { x1:'16', y1:'13', x2:'8', y2:'13' }),
+  h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
+])
+const userMenuItems = [
+  { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
+  { id: 'registration', name: '성과 등록', icon: PlusIcon },
+  { id: 'inquiry', name: '성과 조회', icon: SearchIcon },
+  { id: 'monthly', name: '월별 성과', icon: ChartIcon },
+  { id: 'peer-review', name: '동료 평가', icon: UsersIcon },
+]
+
+const managerMenuItems = [
+  { id: 'manager-dashboard', name: '팀 대시보드', icon: DashboardIcon },
+  { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon, badge: 12 },
+  { id: 'team-evaluation', name: '팀원 평가', icon: FileTextIcon },
+  { id: 'team-stats', name: '부서 성과 통계', icon: ChartIcon },
+]
 
 // --- 메인 모드 데이터 ---
 const shortcuts = [
@@ -249,5 +342,58 @@ const handleNavigate = (route) => {
 }
 .sub-item.active .dot {
   background-color: var(--primary);
+}
+
+/* ── Performance sidebar ── */
+.sidebar-role-badge {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--gray100);
+  color: var(--gray500);
+  font-weight: 600;
+}
+.sidebar-role-badge--manager {
+  background: var(--accent);
+  color: var(--primary);
+}
+.sidebar-section-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--gray400);
+  padding: 10px 10px 4px;
+  text-transform: uppercase;
+}
+.sidebar-item--active {
+  background: var(--accent);
+  color: var(--primary);
+  font-weight: 600;
+}
+.sidebar-item--active svg { opacity: 1; }
+.sidebar-badge {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--primary);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.sidebar-divider {
+  height: 1px;
+  background: var(--gray200);
+  margin: 8px 0;
+}
+.sidebar-toggle {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray200);
+}
+.sidebar-item--toggle {
+  font-size: 0.78rem;
+  color: var(--gray400);
+}
+.sidebar-item--toggle:hover {
+  color: var(--primary);
 }
 </style>
