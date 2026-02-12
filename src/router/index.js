@@ -5,7 +5,7 @@ const routes = [
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
-    meta: { requiresAuth: false }  // 로그인 페이지는 인증 불필요
+    meta: { requiresAuth: false }
   },
   {
     path: '/',
@@ -21,10 +21,27 @@ const routes = [
       { path: 'draft', name: 'approval-draft', component: () => import('@/views/approval/ApprovalDraft.vue') },
       { path: 'status', name: 'approval-status', component: () => import('@/views/approval/ApprovalStatus.vue') },
       { path: 'box', name: 'approval-box', component: () => import('@/views/approval/ApprovalBox.vue') },
-      { path: 'review', name: 'approval-review', component: () => import('@/views/approval/ApprovalReview.vue') },
+      { path: 'review', name: 'approval-review', component: () => import('@/views/approval/ApprovalReview.vue') }
     ]
   },
   {
+    path: '/hr',
+    name: 'hr',
+    redirect: '/hr/my',
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hr/my',
+    name: 'mypage',
+    component: () => import('@/views/hr/MyPage.vue'),
+    meta: { requiresAuth: true, section: 'hr' }
+  },
+  // 인사 상세 하위 경로가 아직 없을 때 빈 화면 대신 마이페이지로 안전 리다이렉트
+  {
+    path: '/hr/:pathMatch(.*)*',
+    redirect: '/hr/my',
+    meta: { requiresAuth: true }
+  },
     path: '/performance',
     name: 'performance',
     meta: { requiresAuth: true },
@@ -37,15 +54,12 @@ const router = createRouter({
   routes
 })
 
-// ── 네비게이션 가드 ──
 router.beforeEach((to, from, next) => {
   const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true'
 
   if (to.meta.requiresAuth && !isLoggedIn) {
-    // 로그인 필요한 페이지인데 로그인 안 됨 → 로그인으로
     next('/login')
   } else if (to.path === '/login' && isLoggedIn) {
-    // 이미 로그인했는데 로그인 페이지 접근 → 메인으로
     next('/')
   } else {
     next()
