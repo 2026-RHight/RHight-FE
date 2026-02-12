@@ -65,8 +65,8 @@
             <thead>
               <tr>
                 <th>제목</th>
-                <th class="w-24">기안자</th>
-                <th class="w-24">기안일</th>
+                <th class="w-24 text-center">기안자</th>
+                <th class="w-24 text-center">기안일</th>
               </tr>
             </thead>
             <tbody>
@@ -78,8 +78,8 @@
                     <span v-if="item.isNew" class="new-dot"></span>
                   </div>
                 </td>
-                <td class="text-gray">{{ item.drafter }}</td>
-                <td class="text-light-gray">{{ item.draftDate }}</td>
+                <td class="text-gray text-center">{{ item.drafter }}</td>
+                <td class="text-light-gray text-center">{{ item.draftDate }}</td>
               </tr>
             </tbody>
           </table>
@@ -99,8 +99,8 @@
             <thead>
               <tr>
                 <th>제목</th>
-                <th class="w-32">현재 결재자</th>
-                <th class="w-20">상태</th>
+                <th class="w-40 text-center">현재 결재자</th>
+                <th class="w-20 text-center">상태</th>
               </tr>
             </thead>
             <tbody>
@@ -108,13 +108,13 @@
                 <td>
                   <span class="title-text">{{ item.title }}</span>
                 </td>
-                <td>
+                <td class="text-center">
                   <div class="approver-cell">
                     <div class="avatar">{{ item.approverInitial }}</div>
                     <span>{{ item.currentApprover }}</span>
                   </div>
                 </td>
-                <td>
+                <td class="text-center">
                   <span class="status-badge" :class="item.status === '완료' ? 'completed' : 'ongoing'">
                     {{ item.status }}
                   </span>
@@ -361,7 +361,7 @@ import { mockPendingApprovals, mockMyDrafts } from '@/utils/approvalData';
 }
 
 .w-24 { width: 96px; }
-.w-32 { width: 128px; }
+.w-40 { width: 160px; }
 .w-20 { width: 80px; }
 
 .title-cell {
@@ -405,6 +405,8 @@ import { mockPendingApprovals, mockMyDrafts } from '@/utils/approvalData';
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  justify-content: center;
 }
 
 .avatar {
@@ -421,11 +423,16 @@ import { mockPendingApprovals, mockMyDrafts } from '@/utils/approvalData';
 }
 
 .status-badge {
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   border: 1px solid transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
 }
 
 .status-badge.ongoing {
@@ -438,6 +445,10 @@ import { mockPendingApprovals, mockMyDrafts } from '@/utils/approvalData';
   background: #f2fcf5;
   color: #40c057;
   border-color: #d3f9d8;
+}
+
+.text-center {
+  text-align: center !important;
 }
 
 /* Responsiveness */
