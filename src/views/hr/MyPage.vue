@@ -42,6 +42,7 @@
     <!-- 탭 컨텐츠 -->
     <TabInfo v-if="activeTab === 'info'" :user="user" />
     <TabHistory v-else-if="activeTab === 'history'" :employee-id="user.empNo" />
+    <TabCertificate v-else-if="activeTab === 'certificate'" :user="user" />
     <!-- 추후 탭 추가 -->
     <div v-else class="tab-placeholder">{{ activeTabLabel }} 탭은 준비 중입니다.</div>
   </div>
@@ -51,6 +52,7 @@
 import { ref, computed } from 'vue'
 import TabInfo from './tabs/TabInfo.vue'
 import TabHistory from './tabs/TabHistory.vue'
+import TabCertificate from './tabs/TabCertificate.vue'
 import { createHrMyPageUserMock } from '@/mocks/hr/myPageUser'
 
 const activeTab = ref('info')
