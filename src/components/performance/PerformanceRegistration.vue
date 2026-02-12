@@ -162,10 +162,9 @@ const form = reactive({
 })
 
 function handleSubmit(){
-  if(form.startDate && form.endDate && form.endDate< form.startDate) return
+  if (form.startDate && form.endDate && form.endDate < form.startDate) return
   showModal.value = true
 }
-
 function resetForm() {
   Object.assign(form, { startDate: '', endDate: '', weight: '', title: '', content: '', value: '' })
 }

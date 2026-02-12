@@ -3,6 +3,7 @@
     <PerformanceDashboard v-if="perfStore.activePage === 'dashboard'" />
     <PerformanceRegistration v-else-if="perfStore.activePage === 'registration'" />
     <PerformanceInquiry v-else-if="perfStore.activePage === 'inquiry'" />
+    <PerformanceMonthly v-else-if="perfStore.activePage === 'monthly'" />
   </div>
 </template>
 
@@ -11,6 +12,8 @@ import { usePerformanceStore } from '@/store/performance'
 import PerformanceDashboard from './PerformanceDashboard.vue'
 import PerformanceRegistration from "./PerformanceRegistration.vue";
 import PerformanceInquiry from "@/components/performance/PerformanceInquiry.vue";
+import PerformanceMonthly from "@/components/performance/PerformanceMonthly.vue";
+
 
 const perfStore = usePerformanceStore()
 </script>
