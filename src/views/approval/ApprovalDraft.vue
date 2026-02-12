@@ -353,7 +353,7 @@ const finalizeSubmission = () => {
 .draft-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%; /* 부모(main-content) 높이를 채움 */
   background-color: #f5f7fa;
   overflow: hidden;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
@@ -368,6 +368,10 @@ const finalizeSubmission = () => {
   background: white;
   border-bottom: 1px solid #e1e4e8;
   height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
 }
 
 .toolbar-left {
