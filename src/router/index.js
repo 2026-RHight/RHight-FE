@@ -42,6 +42,7 @@ const routes = [
     redirect: '/hr/my',
     meta: { requiresAuth: true }
   },
+    {
     path: '/performance',
     name: 'performance',
     meta: { requiresAuth: true },

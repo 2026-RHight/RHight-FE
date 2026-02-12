@@ -203,6 +203,7 @@ const props = defineProps({ user: { type: Object, required: true } })
 // ── 기본 정보 수정 ──
 const showEditBasic = ref(false)
 const editForm = reactive({ phone: '', address: '' })
+const emit = defineEmits(['update:user'])
 
 watch(showEditBasic, (val) => {
   if (val) {
@@ -212,8 +213,11 @@ watch(showEditBasic, (val) => {
 })
 
 const saveBasicInfo = () => {
-  props.user.phone = editForm.phone
-  props.user.address = editForm.address
+  emit('update:user', {
+    ...props.user,
+    phone: editForm.phone,
+    address: editForm.address
+  })
   showEditBasic.value = false
   // 추후 API: await api.put('/users/me/basic', editForm)
 }
@@ -228,12 +232,16 @@ const handleFileSelect = (e) => { skillForm.file = e.target.files[0] || null }
 
 const addSkill = () => {
   if (!skillForm.name || !skillForm.issuer) return
-  props.user.skills.push({
+  const newSkill = {
     type: skillForm.type,
     name: skillForm.name,
     issuer: skillForm.issuer,
     date: skillForm.date,
     status: '유효'
+  }
+  emit('update:user',{
+    ...props.user,
+    skills: [...props.user.skills, newSkill]
   })
   Object.assign(skillForm, { type: '자격증', name: '', issuer: '', date: '', expiry: '', certNo: '', file: null })
   showAddSkill.value = false

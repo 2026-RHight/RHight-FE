@@ -196,6 +196,18 @@ const UsersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fil
   h('path', { d:'M23 21v-2a4 4 0 00-3-3.87' }),
   h('path', { d:'M16 3.13a4 4 0 010 7.75' }),
 ])
+const UserIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
+  h('circle', { cx:'12', cy:'7', r:'4' }),
+])
+const TreeIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('circle', { cx:'12', cy:'5', r:'2' }),
+  h('circle', { cx:'5', cy:'19', r:'2' }),
+  h('circle', { cx:'19', cy:'19', r:'2' }),
+  h('line', { x1:'12', y1:'7', x2:'12', y2:'14' }),
+  h('line', { x1:'12', y1:'14', x2:'5', y2:'17' }),
+  h('line', { x1:'12', y1:'14', x2:'19', y2:'17' }),
+])
 const CheckIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
   h('polyline', { points:'9 11 12 14 22 4' }),
   h('path', { d:'M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' }),
