@@ -32,6 +32,7 @@ const handleNavClick = (nav) => {
   console.log('Navigating to:', nav)
   activeNav.value = nav
   if (nav === '메인') router.push('/')
+  else if (nav === '인사') router.push('/hr')
   else if (nav === '전자결재') router.push('/approval')
   else if (nav === '성과') router.push('/performance')
 }

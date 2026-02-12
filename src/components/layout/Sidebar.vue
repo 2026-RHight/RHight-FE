@@ -1,7 +1,28 @@
 <template>
   <aside class="sidebar">
+    <!-- 인사 모드 -->
+    <template v-if="isHrMode">
+      <div class="sidebar-header">
+        <span>인사</span>
+      </div>
+
+      <div class="menu-section">
+        <div
+            v-for="item in hrMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath === item.route }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+    </template>
     <!-- 전자결재 모드 -->
-    <template v-if="isApprovalMode">
+    <template v-else-if="isApprovalMode">
       <div class="sidebar-header">
         <span>전자결재</span>
       </div>
@@ -126,6 +147,10 @@ const perfStore = usePerformanceStore()
 
 // 현재 경로가 /approval 로 시작하면 전자결재 모드
 const isApprovalMode = computed(() => route.path.startsWith('/approval'))
+
+// 현재 경로가 /hr 로 시작하면 인사 모드
+const isHrMode = computed(() => route.path.startsWith('/hr'))
+
 const currentPath = computed(() => route.path)
 const isPerformance = computed(() => route.path.startsWith('/performance'))
 
@@ -200,6 +225,13 @@ const managerMenuItems = [
 const shortcuts = [
   { label: '마이페이지', icon: StarIcon, route: '/hr/my' },
   { label: '휴가 신청', icon: FileIcon, route: '/hr/leave' },
+]
+
+// --- 인사 모드 데이터 ---
+const hrMenus = [
+  { label: '마이페이지', icon: UserIcon, route: '/hr/my' },
+  { label: '내 조직 조회', icon: UsersIcon, route: '/hr/org' },
+  { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
 ]
 
 // --- 전자결재 모드 데이터 ---
