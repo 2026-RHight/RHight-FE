@@ -40,8 +40,9 @@ const currentTemplateTitle = computed(() => {
   return name.split('').join(' '); // Add spaces for styling
 });
 
-const currentDate = new Date().toISOString().split('T')[0];
-const currentDateShort = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+const now = new Date();
+const currentDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+const currentDateShort = now.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
 
 const contentPlaceholder = computed(() => {
   if (activeTemplate.value === 'reinstatement') return '복직 사유 및 계획을 입력하세요.';
@@ -56,7 +57,8 @@ const calculateDays = computed(() => {
     const start = new Date(docInfo.startDate);
     const end = new Date(docInfo.endDate);
     const diff = end - start;
-    return Math.max(0, diff / (1000 * 60 * 60 * 24)) + 1;
+    if (diff < 0) return 0;
+    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
 });
 
 // Methods
