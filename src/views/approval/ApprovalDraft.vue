@@ -23,6 +23,8 @@ const docInfo = reactive({
   content: '',
   startDate: '',
   endDate: '',
+  startTime: '09:00',
+  endTime: '18:00',
   vacationType: '연차',
   attachments: []
 });
@@ -278,9 +280,15 @@ const finalizeSubmission = () => {
             <tr v-if="['vacation', 'leave', 'reinstatement'].includes(activeTemplate)">
               <td class="label">기간</td>
               <td class="date-range">
-                <input type="date" v-model="docInfo.startDate" class="input-date" />
+                <div class="datetime-input">
+                  <input type="date" v-model="docInfo.startDate" class="input-date" />
+                  <input type="time" v-model="docInfo.startTime" class="input-time" />
+                </div>
                 <span v-if="activeTemplate !== 'reinstatement'">~</span>
-                <input v-if="activeTemplate !== 'reinstatement'" type="date" v-model="docInfo.endDate" class="input-date" />
+                <div class="datetime-input" v-if="activeTemplate !== 'reinstatement'">
+                  <input type="date" v-model="docInfo.endDate" class="input-date" />
+                  <input type="time" v-model="docInfo.endTime" class="input-time" />
+                </div>
                 <span class="hint" v-if="docInfo.startDate && docInfo.endDate && activeTemplate !== 'reinstatement'">
                   (총 {{ calculateDays }}일)
                 </span>
@@ -750,19 +758,49 @@ const finalizeSubmission = () => {
 .date-range {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.datetime-input {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.datetime-input:focus-within {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.input-date, .input-time {
+  border: none;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  color: #333;
+  background: transparent;
 }
 
 .input-date {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-family: inherit;
+  width: 155px;
+}
+
+.input-time {
+  width: 145px;
+  border-left: 1px solid #eee;
 }
 
 .hint {
-  font-size: 0.8rem;
-  color: #888;
+  font-size: 0.85rem;
+  color: #0066cc;
+  font-weight: 500;
+  margin-left: 5px;
 }
 
 .radio-group {
