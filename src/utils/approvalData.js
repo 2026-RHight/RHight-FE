@@ -112,3 +112,47 @@ export const templates = [
     { id: 'leave', name: '휴직신청서', type: 'HR' },
     { id: 'reinstatement', name: '복직신청서', type: 'HR' },
 ];
+
+export const mockApprovalStatusList = [
+    {
+        id: 'DOC-2024-001',
+        title: '2024년 정기 휴가 신청',
+        templateName: '휴가 신청서',
+        drafter: '홍길동',
+        draftDate: '2024-02-10',
+        status: '진행중',
+        currentApprover: '최지훈 부장',
+        progress: 66,
+        approvalLine: [
+            { name: '김철수', position: '대리', status: '승인', date: '2024-02-10' },
+            { name: '최지훈', position: '부장', status: '대기', date: '' },
+            { name: '강동원', position: '대표이사', status: '대기', date: '' }
+        ]
+    },
+    {
+        id: 'DOC-2024-002',
+        title: '신규 프로젝트 협업툴 도입 품의',
+        templateName: '기안서',
+        drafter: '홍길동',
+        draftDate: '2024-02-11',
+        status: '반려',
+        currentApprover: '정수진 이사',
+        progress: 33,
+        approvalLine: [
+            { name: '김철수', position: '대리', status: '승인', date: '2024-02-11' },
+            { name: '정수진', position: '이사', status: '반려', date: '2024-02-12' }
+        ]
+    },
+    {
+        id: 'DOC-2024-003',
+        title: '3월 유연근무제 신청',
+        templateName: '유연근무 신청서',
+        drafter: '홍길동',
+        draftDate: '2024-02-12',
+        status: '기안중',
+        currentApprover: '-',
+        progress: 0,
+        approvalLine: []
+    }
+];
+
