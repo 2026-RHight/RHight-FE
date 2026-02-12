@@ -1,7 +1,28 @@
 <template>
   <aside class="sidebar">
+    <!-- 인사 모드 -->
+    <template v-if="isHrMode">
+      <div class="sidebar-header">
+        <span>인사</span>
+      </div>
+
+      <div class="menu-section">
+        <div
+            v-for="item in hrMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath === item.route }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+    </template>
     <!-- 전자결재 모드 -->
-    <template v-if="isApprovalMode">
+    <template v-else-if="isApprovalMode">
       <div class="sidebar-header">
         <span>전자결재</span>
       </div>
@@ -73,6 +94,10 @@ const route = useRoute()
 
 // 현재 경로가 /approval 로 시작하면 전자결재 모드
 const isApprovalMode = computed(() => route.path.startsWith('/approval'))
+
+// 현재 경로가 /hr 로 시작하면 인사 모드
+const isHrMode = computed(() => route.path.startsWith('/hr'))
+
 const currentPath = computed(() => route.path)
 
 // SVG icon components (inline)
@@ -90,11 +115,30 @@ const ApprovalIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', 
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
   h('polyline', { points:'10 9 9 9 8 9' })
 ])
+const UserIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2' }), h('circle', { cx:'12', cy:'7', r:'4' })
+])
+const UsersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2' }), h('circle', { cx:'9', cy:'7', r:'4' }),
+  h('path', { d:'M23 21v-2a4 4 0 00-3-3.87' }), h('path', { d:'M16 3.13a4 4 0 010 7.75' })
+])
+const TreeIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'3', y:'3', width:'18', height:'18', rx:'2' }),
+  h('line', { x1:'12', y1:'8', x2:'12', y2:'16' }),
+  h('line', { x1:'8', y1:'12', x2:'16', y2:'12' })
+])
 
 // --- 메인 모드 데이터 ---
 const shortcuts = [
   { label: '마이페이지', icon: StarIcon, route: '/hr/my' },
   { label: '휴가 신청', icon: FileIcon, route: '/hr/leave' },
+]
+
+// --- 인사 모드 데이터 ---
+const hrMenus = [
+  { label: '마이페이지', icon: UserIcon, route: '/hr/my' },
+  { label: '내 조직 조회', icon: UsersIcon, route: '/hr/org' },
+  { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
 ]
 
 // --- 전자결재 모드 데이터 ---
