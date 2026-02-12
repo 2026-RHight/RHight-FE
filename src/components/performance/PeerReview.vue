@@ -1,0 +1,758 @@
+<template>
+  <div class="peer-wrap">
+    <!-- ═══ 좌측: 동료 목록 ═══ -->
+    <div class="peer-sidebar">
+      <div class="peer-sidebar-header">
+        <h3 class="peer-sidebar-title">평가 대상</h3>
+        <span class="peer-sidebar-count">{{ colleagues.length }}명</span>
+      </div>
+      <div class="peer-list">
+        <button
+          v-for="c in colleagues"
+          :key="c.name"
+          class="peer-item"
+          :class="{ active: selectedColleague?.name === c.name }"
+          @click="selectColleague(c)"
+        >
+          <div class="peer-avatar" :style="{ background: c.color }">{{ c.name[0] }}</div>
+          <div class="peer-item-info">
+            <span class="peer-item-name">{{ c.name }}</span>
+            <span class="peer-item-team">{{ c.team }}</span>
+          </div>
+          <span v-if="c.evaluated" class="peer-done-badge">완료</span>
+        </button>
+      </div>
+      <div class="peer-sidebar-footer">
+        <div class="peer-progress-label">
+          <span>진행률</span>
+          <span class="peer-progress-num">{{ evaluatedCount }}/{{ colleagues.length }}</span>
+        </div>
+        <div class="peer-progress-bar">
+          <div class="peer-progress-fill" :style="{ width: (evaluatedCount / colleagues.length * 100) + '%' }"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 우측: 평가 폼 ═══ -->
+    <div class="peer-main">
+      <!-- 미선택 상태 -->
+      <div v-if="!selectedColleague" class="peer-empty">
+        <div class="peer-empty-icon">
+          <Users :size="32" />
+        </div>
+        <h3 class="peer-empty-title">평가할 동료를 선택해주세요</h3>
+        <p class="peer-empty-desc">왼쪽 목록에서 동료를 선택하면 평가를 시작할 수 있습니다.</p>
+      </div>
+
+      <!-- 선택됨: 평가 폼 -->
+      <template v-else>
+        <!-- 헤더 -->
+        <div class="peer-form-header">
+          <div class="peer-form-profile">
+            <div class="peer-form-avatar" :style="{ background: selectedColleague.color }">
+              {{ selectedColleague.name[0] }}
+            </div>
+            <div>
+              <h2 class="peer-form-name">{{ selectedColleague.name }}<span>님에 대한 평가</span></h2>
+              <p class="peer-form-meta">{{ selectedColleague.team }} · 평가 기간: 2023년 상반기</p>
+            </div>
+          </div>
+          <div class="peer-anonymous-badge">
+            <Shield :size="13" /> 익명 평가
+          </div>
+        </div>
+
+        <!-- 평가 항목 -->
+        <div class="peer-form-body">
+          <div v-for="item in criteria" :key="item.id" class="criteria-row">
+            <div class="criteria-label-wrap">
+              <span class="criteria-label">{{ item.label }}</span>
+              <span v-if="scores[item.id]" class="criteria-selected">{{ scores[item.id] }}점</span>
+            </div>
+            <div class="score-buttons">
+              <button
+                v-for="score in 5"
+                :key="score"
+                class="score-btn"
+                :class="{
+                  active: scores[item.id] === score,
+                  filled: scores[item.id] >= score
+                }"
+                @click="scores[item.id] = score"
+              >
+                <span class="score-num">{{ score }}</span>
+                <span class="score-label">{{ scoreLabels[score] }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 코멘트 -->
+          <div class="comment-section">
+            <label class="comment-label">
+              <MessageSquare :size="14" /> 종합 코멘트 <span>(선택사항)</span>
+            </label>
+            <textarea
+              v-model="comment"
+              rows="4"
+              class="comment-textarea"
+              placeholder="동료의 장점이나 바라는 점을 자유롭게 작성해주세요."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="peer-form-footer">
+          <button class="btn-cancel" @click="resetForm">초기화</button>
+          <button class="btn-submit" :disabled="!isFormValid" @click="showModal = true">
+            <Send :size="14" /> 평가 제출하기
+          </button>
+        </div>
+      </template>
+    </div>
+
+    <!-- ═══ 제출 완료 모달 ═══ -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+          <div class="modal-card">
+            <div class="modal-icon-wrap">
+              <div class="modal-icon">
+                <CheckCircle2 :size="32" />
+              </div>
+            </div>
+            <h3 class="modal-title">평가가 제출되었습니다</h3>
+            <p class="modal-desc">
+              <strong>{{ selectedColleague?.name }}</strong>님에 대한 평가가 익명으로 제출되었습니다.<br />
+              소중한 피드백에 감사드립니다.
+            </p>
+            <div class="modal-actions">
+              <button class="btn-modal-sub" @click="closeAndNext">다음 동료 평가</button>
+              <button class="btn-modal-main" @click="closeModal">확인</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed } from 'vue'
+import { Users, Shield, MessageSquare, Send, CheckCircle2 } from 'lucide-vue-next'
+
+const colleagues = [
+  { name: '김서연', team: '전략 기획팀', color: '#3b82f6', evaluated: false },
+  { name: '이승주', team: '개발팀', color: '#22c55e', evaluated: true },
+  { name: '박지성', team: '마케팅팀', color: '#f59e0b', evaluated: false },
+  { name: '손흥민', team: '영업팀', color: '#ef4444', evaluated: false },
+  { name: '페이커', team: '개발팀', color: '#a855f7', evaluated: true },
+]
+
+const evaluatedCount = computed(() => colleagues.filter(c => c.evaluated).length)
+
+const selectedColleague = ref(null)
+const showModal = ref(false)
+const comment = ref('')
+
+const scores = reactive({})
+const scoreLabels = { 1: '미흡', 2: '부족', 3: '보통', 4: '우수', 5: '탁월' }
+
+const criteria = [
+  { id: 1, label: '협업 및 커뮤니케이션 능력' },
+  { id: 2, label: '문제 해결 능력' },
+  { id: 3, label: '책임감 및 자기 주도성' },
+  { id: 4, label: '팀 기여도' },
+  { id: 5, label: '조직 문화 기여도' },
+]
+
+const isFormValid = computed(() => criteria.every(c => scores[c.id]))
+
+function selectColleague(c) {
+  selectedColleague.value = c
+  resetForm()
+}
+
+function resetForm() {
+  criteria.forEach(c => { scores[c.id] = 0 })
+  comment.value = ''
+}
+
+function closeModal() {
+  showModal.value = false
+}
+
+function closeAndNext() {
+  if (selectedColleague.value) selectedColleague.value.evaluated = true
+  showModal.value = false
+  const next = colleagues.find(c => !c.evaluated)
+  if (next) selectColleague(next)
+  else selectedColleague.value = null
+}
+</script>
+
+<style scoped>
+/* ════════════════════════════════
+   레이아웃: 좌우 분할
+   ════════════════════════════════ */
+.peer-wrap {
+  display: flex;
+  gap: 16px;
+  min-height: calc(100vh - var(--header-h) - 80px);
+}
+
+/* ════════════════════════════════
+   좌측 사이드바: 동료 목록
+   ════════════════════════════════ */
+.peer-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.peer-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--gray100);
+}
+
+.peer-sidebar-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--gray800);
+}
+
+.peer-sidebar-count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gray400);
+  background: var(--gray100);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.peer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.peer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  text-align: left;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+}
+
+.peer-item:hover {
+  background: var(--gray50);
+}
+
+.peer-item.active {
+  background: var(--accent);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.peer-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.peer-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.peer-item-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray800);
+}
+
+.peer-item-team {
+  font-size: 0.7rem;
+  color: var(--gray400);
+}
+
+.peer-done-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #22c55e;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* 진행률 */
+.peer-sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--gray100);
+}
+
+.peer-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--gray500);
+  margin-bottom: 6px;
+}
+
+.peer-progress-num {
+  font-family: var(--font-num);
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.peer-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: var(--gray100);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.peer-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+  transition: width 0.4s ease;
+}
+
+/* ════════════════════════════════
+   우측: 메인 영역
+   ════════════════════════════════ */
+.peer-main {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* 빈 상태 */
+.peer-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.peer-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--gray50);
+  color: var(--gray300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.peer-empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gray700);
+  margin-bottom: 6px;
+}
+
+.peer-empty-desc {
+  font-size: 0.82rem;
+  color: var(--gray400);
+}
+
+/* ═══ 폼 헤더 ═══ */
+.peer-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gray100);
+  background: var(--accent);
+}
+
+.peer-form-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.peer-form-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.peer-form-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--gray800);
+}
+
+.peer-form-name span {
+  font-weight: 500;
+  color: var(--gray500);
+  margin-left: 2px;
+}
+
+.peer-form-meta {
+  font-size: 0.78rem;
+  color: var(--gray400);
+  margin-top: 2px;
+}
+
+.peer-anonymous-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: #fff;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--accent2);
+}
+
+/* ═══ 폼 바디 ═══ */
+.peer-form-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 평가 항목 */
+.criteria-row {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--gray100);
+}
+
+.criteria-row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.criteria-label-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.criteria-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray800);
+}
+
+.criteria-selected {
+  font-family: var(--font-num);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--accent);
+  padding: 2px 10px;
+  border-radius: 8px;
+}
+
+.score-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.score-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.score-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--gray200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-num);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--gray400);
+  transition: all 0.2s ease;
+}
+
+.score-btn:hover .score-num {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  background: var(--accent);
+}
+
+.score-btn.active .score-num {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(8, 145, 178, 0.3);
+}
+
+.score-btn.filled:not(.active) .score-num {
+  border-color: var(--accent2);
+  background: var(--accent);
+  color: var(--primary);
+}
+
+.score-label {
+  font-size: 0.62rem;
+  color: var(--gray400);
+  min-height: 14px;
+}
+
+.score-btn.active .score-label {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 코멘트 */
+.comment-section {
+  margin-top: 4px;
+}
+
+.comment-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gray800);
+  margin-bottom: 10px;
+}
+
+.comment-label svg {
+  color: var(--gray400);
+}
+
+.comment-label span {
+  font-weight: 400;
+  color: var(--gray400);
+  font-size: 0.78rem;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--gray50);
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-xs);
+  font-size: 0.88rem;
+  font-family: var(--font);
+  color: var(--gray700);
+  resize: none;
+  transition: all var(--transition);
+}
+
+.comment-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--accent);
+  background: #fff;
+  outline: none;
+}
+
+.comment-textarea::placeholder {
+  color: var(--gray400);
+}
+
+/* ═══ 폼 푸터 ═══ */
+.peer-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray100);
+}
+
+.btn-cancel {
+  padding: 10px 22px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray600);
+  background: var(--gray100);
+  transition: all var(--transition);
+}
+
+.btn-cancel:hover {
+  background: var(--gray200);
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--primary);
+  box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25);
+  transition: all var(--transition);
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.35);
+}
+
+.btn-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ════════════════════════════════
+   모달
+   ════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 32px 28px;
+  text-align: center;
+}
+
+.modal-icon-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.modal-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--gray800);
+  margin-bottom: 8px;
+}
+
+.modal-desc {
+  font-size: 0.82rem;
+  color: var(--gray500);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.modal-desc strong {
+  color: var(--gray700);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-modal-sub {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--gray100);
+  color: var(--gray600);
+  transition: all var(--transition);
+}
+
+.btn-modal-sub:hover {
+  background: var(--gray200);
+}
+
+.btn-modal-main {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--primary);
+  color: #fff;
+  transition: all var(--transition);
+}
+
+.btn-modal-main:hover {
+  background: var(--primary-dark);
+}
+
+/* 모달 애니메이션 */
+.modal-enter-active { transition: all 0.25s ease; }
+.modal-leave-active { transition: all 0.2s ease; }
+.modal-enter-from { opacity: 0; }
+.modal-leave-to { opacity: 0; }
+.modal-enter-from .modal-card { transform: scale(0.95) translateY(10px); opacity: 0; }
+.modal-leave-to .modal-card { transform: scale(0.97); opacity: 0; }
+.modal-enter-active .modal-card { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.modal-leave-active .modal-card { transition: all 0.15s ease; }
+</style>
