@@ -217,5 +217,92 @@ export const mockReviewList = [
     }
 ];
 
+export const mockApprovalBox = [
+    {
+        id: '2024-REG-101',
+        title: '연간 마케팅 제안서 검토 요청',
+        drafter: '최지훈',
+        position: '부장',
+        department: '마케팅팀',
+        date: '2024-02-01 10:00',
+        status: '완료',
+        category: '보고서',
+        isRead: true,
+        content: '2024년 연간 마케팅 핵심 전략 및 예산안 보고서입니다.',
+        attachments: ['marketing_strategy_2024.pdf'],
+        approvalLine: [
+            { name: '최지훈', position: '부장', status: '기안', date: '2024-02-01' },
+            { name: '이팀장', position: '팀장', status: '승인', date: '2024-02-01' },
+            { name: '박본부장', position: '본부장', status: '승인', date: '2024-02-02' }
+        ],
+        referrers: ['김철수 (대리)', '이영희 (사원)'],
+        comments: [
+            { name: '박본부장', text: '좋은 마케팅 계획입니다. 실행에 차질 없도록 하세요.', date: '2024-02-02' }
+        ]
+    },
+    {
+        id: '2024-EXP-202',
+        title: '신규 법인카드 발급 신청',
+        drafter: '김나영',
+        position: '사원',
+        department: '경영지원팀',
+        date: '2024-02-05 14:30',
+        status: '진행중',
+        category: '품의서',
+        isRead: false,
+        content: '영업팀 신규 입사자 법인카드 발급을 요청합니다.',
+        attachments: [],
+        approvalLine: [
+            { name: '김나영', position: '사원', status: '기안', date: '2024-02-05' },
+            { name: '백팀장', position: '팀장', status: '대기', date: '-' }
+        ]
+    },
+    {
+        id: '2024-HR-303',
+        title: '3월 연차 휴가 사용 계획',
+        drafter: '정수진',
+        position: '이사',
+        department: 'IT디자인실',
+        date: '2024-02-08 09:15',
+        status: '반려',
+        category: '기안서',
+        isRead: true,
+        content: '3월 중순 개인 사정으로 인한 연차 휴가 사용 계획입니다.',
+        attachments: [],
+        rejectReason: '해당 주간에 전사 워크샵이 예정되어 있습니다. 일정 조정 바랍니다.',
+        approvalLine: [
+            { name: '정수진', position: '이사', status: '기안', date: '2024-02-08' },
+            { name: '김상무', position: '상무', status: '반려', date: '2024-02-08' }
+        ]
+    },
+    {
+        id: 'TEMP-001',
+        title: '(임시) 전사 보안 교육 실시의 건',
+        drafter: '박기안',
+        position: '대리',
+        department: '정보보안팀',
+        date: '2024-02-12 11:00',
+        status: '임시저장',
+        category: '기안서',
+        isRead: true,
+        content: '전 임직원 대상 상반기 정보보안 교육 실시를 위한 기안입니다.',
+        attachments: ['sec_training_plan.docx']
+    },
+    {
+        id: '2024-PUR-404',
+        title: '모니터링 서버 노후 장비 교체 품의',
+        drafter: '이대리',
+        position: '대리',
+        department: '인프라팀',
+        date: '2024-02-10 16:45',
+        status: '보류',
+        category: '품의서',
+        isRead: false,
+        content: '인프라 모니터링 서버의 내구연한 만료에 따른 장비 교체 요청입니다.',
+        attachments: ['server_spec_compare.xlsx']
+    }
+];
+
+
 
 

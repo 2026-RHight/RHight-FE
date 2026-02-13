@@ -20,7 +20,14 @@ const routes = [
       { path: '', name: 'approval-main', component: () => import('@/views/approval/ApprovalMain.vue') },
       { path: 'draft', name: 'approval-draft', component: () => import('@/views/approval/ApprovalDraft.vue') },
       { path: 'status', name: 'approval-status', component: () => import('@/views/approval/ApprovalStatus.vue') },
-      { path: 'box', name: 'approval-box', component: () => import('@/views/approval/ApprovalBox.vue') },
+      {
+        path: 'box',
+        name: 'approval-box-container',
+        children: [
+          { path: '', name: 'approval-box', component: () => import('@/views/approval/ApprovalBox.vue') },
+          { path: ':type', name: 'approval-box-list', component: () => import('@/views/approval/ApprovalBoxList.vue') }
+        ]
+      },
       { path: 'review', name: 'approval-review', component: () => import('@/views/approval/ApprovalReview.vue') }
     ]
   },
@@ -66,7 +73,8 @@ const routes = [
     redirect: '/hr/my',
     meta: { requiresAuth: true }
   },
-  {    path: '/performance',
+  {
+    path: '/performance',
     name: 'performance',
     meta: { requiresAuth: true },
     component: () => import('@/components/performance/Performance.vue')

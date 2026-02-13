@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { templates, mockUsers, mockApprovalLine, mockReferrers } from '@/utils/approvalData';
+import { templates, mockUsers, mockApprovalLine, mockReferrers, mockApprovalBox } from '@/utils/approvalData';
 import OrgChartModal from './components/OrgChartModal.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
+import { useRoute } from 'vue-router';
 
 // State
 const router = useRouter();
+const route = useRoute();
 const activeTemplate = ref('vacation');
 const showTemplateMenu = ref(false);
 const isModalOpen = ref(false);
@@ -74,6 +76,36 @@ const loadTestData = () => {
     }
 };
 
+const loadFromData = (id) => {
+    const doc = mockApprovalBox.find(d => d.id === id);
+    if (!doc) return;
+
+    docInfo.title = `[재상신] ${doc.title}`;
+    docInfo.content = doc.content;
+    if (doc.category === '기안서') activeTemplate.value = 'vacation'; // Default to vacation template for demo
+    else if (doc.category === '품의서') activeTemplate.value = 'expense';
+    else if (doc.category === '보고서') activeTemplate.value = 'report';
+
+    if (doc.approvalLine) {
+      // Re-map approval line (original line minus current status)
+      approvalLine.value = doc.approvalLine.map(a => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: a.name,
+        position: a.position,
+        department: '소속팀' // Mock
+      }));
+    }
+    
+    if (doc.referrers) {
+      referrers.value = doc.referrers.map(r => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: r.split(' ')[0],
+        position: r.split(' ')[1] || '',
+        department: ''
+      }));
+    }
+};
+
 const handleClickOutside = (event) => {
     if (templateSelectorRef.value && !templateSelectorRef.value.contains(event.target)) {
         showTemplateMenu.value = false;
@@ -82,7 +114,12 @@ const handleClickOutside = (event) => {
 
 // Initialize with test data
 onMounted(() => {
-    loadTestData();
+    const fromId = route.query.from;
+    if (fromId) {
+      loadFromData(fromId);
+    } else {
+      loadTestData();
+    }
     window.addEventListener('click', handleClickOutside);
 });
 
@@ -204,13 +241,7 @@ const finalizeSubmission = () => {
               <div class="box-header">기안</div>
               <div class="box-content">
                 <div class="signature">
-                  <!-- Layer 1: Stamp (Background) - Drafter has a stamp for demo -->
-                  <div class="real-stamp">
-                    <div class="stamp-inner" :class="{ 'vertical': currentUser.name.length === 3, 'grid-2x2': currentUser.name.length === 4 }">
-                        <span class="char" v-for="(c, idx) in currentUser.name" :key="idx">{{ c }}</span>
-                    </div>
-                  </div>
-                  <!-- Layer 2: Text (Foreground) -->
+                  <!-- Text (Foreground) - Stamp removed during drafting -->
                   <div class="signature-text">
                     <span class="name">{{ currentUser.name }}</span>
                   </div>
