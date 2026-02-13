@@ -54,7 +54,7 @@ jobs:
           docker run -d \
             --name rhight-fe-app \
             --restart always \
-            -p 80:80 \
+            -p 2060:80 \
             ${{ secrets.DOCKER_USERNAME }}/rhight-fe:latest
 
       - name: Prune unused images
