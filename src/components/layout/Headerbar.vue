@@ -23,7 +23,8 @@
     </nav>
 
     <div class="header-right">
-      <svg
+      <button class="header-icon-btn" type="button" title="조직도 사원 검색" @click="showOrgSearchModal = true">
+        <svg
           width="18"
           height="18"
           viewBox="0 0 24 24"
@@ -32,27 +33,24 @@
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-      >
-        <!-- top node -->
-        <rect x="9" y="3" width="6" height="6" rx="1" />
-        <!-- connector down -->
-        <path d="M12 9v3" />
-        <!-- connector to left/right -->
-        <path d="M6 12h12" />
-        <!-- down to left/right nodes -->
-        <path d="M6 12v3" />
-        <path d="M18 12v3" />
-        <!-- left/right nodes -->
-        <rect x="3" y="15" width="6" height="6" rx="1" />
-        <rect x="15" y="15" width="6" height="6" rx="1" />
-      </svg>
+        >
+          <rect x="9" y="3" width="6" height="6" rx="1" />
+          <path d="M12 9v3" />
+          <path d="M6 12h12" />
+          <path d="M6 12v3" />
+          <path d="M18 12v3" />
+          <rect x="3" y="15" width="6" height="6" rx="1" />
+          <rect x="15" y="15" width="6" height="6" rx="1" />
+        </svg>
+      </button>
 
       <div class="search-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" placeholder="검색어를 입력하세요" />
+        <input v-model="headerSearchKeyword" type="text" placeholder="검색어를 입력하세요" />
       </div>
+
       <div class="header-logout" @click="handleLogout">
         로그아웃
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -62,10 +60,14 @@
       </div>
     </div>
   </header>
+
+  <OrgSearchModal v-model="showOrgSearchModal" :initial-keyword="headerSearchKeyword" />
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import OrgSearchModal from '@/components/org/OrgSearchModal.vue'
 
 defineProps({
   activeNav: { type: String, default: '메인' }
@@ -74,8 +76,9 @@ defineEmits(['navClick'])
 
 const router = useRouter()
 const navItems = ['메인', '인사', '근태', '급여', '성과', '전자결재']
+const showOrgSearchModal = ref(false)
+const headerSearchKeyword = ref('')
 
-// 로그아웃
 const handleLogout = () => {
   sessionStorage.setItem('isLoggedIn', 'false')
   router.push('/login')
@@ -116,13 +119,10 @@ const handleLogout = () => {
   width:36px;height:36px;border-radius:var(--radius-sm);
   display:flex;align-items:center;justify-content:center;
   color:var(--gray500);cursor:pointer;position:relative;
+  border:none;background:transparent;
   transition:all var(--transition);
 }
 .header-icon-btn:hover{background:var(--gray50);color:var(--gray700)}
-.badge-dot{
-  position:absolute;top:6px;right:8px;width:7px;height:7px;
-  background:var(--red);border-radius:50%;border:1.5px solid #fff;
-}
 .header-logout{
   display:flex;align-items:center;gap:5px;
   font-size:0.82rem;font-weight:500;color:var(--gray500);

@@ -36,6 +36,30 @@ const routes = [
     component: () => import('@/views/hr/MyPage.vue'),
     meta: { requiresAuth: true, section: 'hr' }
   },
+  {
+    path: '/hr/org',
+    name: 'hr-org',
+    component: () => import('@/views/hr/OrgTeamView.vue'),
+    meta: { requiresAuth: true, section: 'hr' }
+  },
+  {
+    path: '/hr/orgchart',
+    name: 'hr-orgchart',
+    component: () => import('@/views/hr/OrgChartView.vue'),
+    meta: { requiresAuth: true, section: 'hr' }
+  },
+  {
+    path: '/hr/team-member/:employeeId/attendance',
+    name: 'hr-member-attendance',
+    component: () => import('@/views/hr/MemberAttendanceView.vue'),
+    meta: { requiresAuth: true, section: 'hr' }
+  },
+  {
+    path: '/hr/team-member/:employeeId/goal',
+    name: 'hr-member-goal',
+    component: () => import('@/views/hr/MemberGoalView.vue'),
+    meta: { requiresAuth: true, section: 'hr' }
+  },
   // 인사 상세 하위 경로가 아직 없을 때 빈 화면 대신 마이페이지로 안전 리다이렉트
   {
     path: '/hr/:pathMatch(.*)*',
