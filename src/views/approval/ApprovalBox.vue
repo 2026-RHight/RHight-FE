@@ -1,11 +1,144 @@
 <template>
-  <div class="page-container">
-    <h1>전자 결재 문서함</h1>
-    <p>완료된 결재 문서를 보관하는 페이지입니다.</p>
+  <div class="box-container">
+    <div class="page-header">
+      <h2>전자 결재 문서함</h2>
+      <p class="subtitle">모든 결재 문서를 종류별로 확인하고 관리할 수 있습니다.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Total -->
+      <DashboardCard 
+        title="전체 문서함" 
+        :items="totalItems" 
+        count-label="건"
+        link-type="all"
+        @click-item="openDetail"
+      />
+      
+      <!-- In Progress -->
+      <DashboardCard 
+        title="처리중인 문서함" 
+        :items="inProgressItems" 
+        count-label="건"
+        link-type="ing"
+        @click-item="openDetail"
+      />
+
+      <!-- Hold/Rejected -->
+      <DashboardCard 
+        title="보류/반려 문서함" 
+        :items="issueItems" 
+        count-label="건"
+        link-type="issue"
+        @click-item="openDetail"
+      />
+
+      <!-- Completed -->
+      <DashboardCard 
+        title="완료 문서함" 
+        :items="completedItems" 
+        count-label="건"
+        link-type="completed"
+        @click-item="openDetail"
+      />
+
+      <!-- Temporary -->
+      <DashboardCard 
+        title="임시 보관함" 
+        :items="tempItems" 
+        count-label="건"
+        link-type="temp"
+        @click-item="openDetail"
+        is-temp
+      />
+    </div>
+
+    <ApprovalDetailModal 
+      :is-open="isDetailOpen" 
+      :item="selectedItem" 
+      @close="isDetailOpen = false"
+      @action="handleModalAction"
+    />
   </div>
 </template>
 
+<script setup>
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { mockApprovalBox } from '@/utils/approvalData';
+import DashboardCard from './components/DashboardCard.vue';
+import ApprovalDetailModal from './components/ApprovalDetailModal.vue';
+
+const router = useRouter();
+const allDocuments = ref([...mockApprovalBox]);
+
+const totalItems = computed(() => allDocuments.value.slice(0, 10));
+const inProgressItems = computed(() => allDocuments.value.filter(d => d.status === '진행중').slice(0, 10));
+const issueItems = computed(() => allDocuments.value.filter(d => d.status === '반려' || d.status === '보류').slice(0, 10));
+const completedItems = computed(() => allDocuments.value.filter(d => d.status === '완료').slice(0, 10));
+const tempItems = computed(() => allDocuments.value.filter(d => d.status === '임시저장').slice(0, 10));
+
+const isDetailOpen = ref(false);
+const selectedItem = ref({});
+
+const openDetail = (item) => {
+  selectedItem.value = item;
+  isDetailOpen.value = true;
+  
+  // Mark as read locally for the demo
+  if (!item.isRead) {
+    const doc = allDocuments.value.find(d => d.id === item.id);
+    if (doc) doc.isRead = true;
+  }
+};
+
+const handleModalAction = (action) => {
+  console.log('Action performed:', action);
+  if (action.type === 'redraft') {
+    // Navigate to draft with pre-filled state
+    router.push({ name: 'approval-draft', query: { from: action.id } });
+  } else if (action.type === 'delete' || action.type === 'cancel') {
+    // Remove from mock list locally
+    allDocuments.value = allDocuments.value.filter(d => d.id !== action.id);
+  } else if (action.type === 'review') {
+    router.push({ name: 'approval-review' });
+  }
+  isDetailOpen.value = false;
+};
+</script>
+
 <style scoped>
-.page-container { padding: 40px; }
-h1 { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; }
+.box-container {
+  padding: 32px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
