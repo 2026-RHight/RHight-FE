@@ -21,6 +21,25 @@
 
       <div class="divider"></div>
     </template>
+    <!-- 급여 모드 -->
+    <template v-else-if="isSalaryMode">
+      <div class="sidebar-header">
+        <span>급여 관리</span>
+      </div>
+      <div class="menu-section">
+        <div
+            v-for="item in salaryMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath.includes(item.route) }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+      <div class="divider"></div>
+    </template>
     <!-- 전자결재 모드 -->
     <template v-else-if="isApprovalMode">
       <div class="sidebar-header">
@@ -150,6 +169,8 @@ const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 
 // 현재 경로가 /hr 로 시작하면 인사 모드
 const isHrMode = computed(() => route.path.startsWith('/hr'))
+// 현재 경로가 /salary 로 시작하면 급여 모드
+const isSalaryMode = computed(() => route.path.startsWith('/salary'))
 
 const currentPath = computed(() => route.path)
 const isPerformance = computed(() => route.path.startsWith('/performance'))
@@ -218,6 +239,10 @@ const FileTextIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', 
   h('line', { x1:'16', y1:'13', x2:'8', y2:'13' }),
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
 ])
+const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
+  h('line', { x1:'1', y1:'10', x2:'23', y2:'10' }),
+])
 const userMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
@@ -244,6 +269,11 @@ const hrMenus = [
   { label: '마이페이지', icon: UserIcon, route: '/hr/my' },
   { label: '내 조직 조회', icon: UsersIcon, route: '/hr/org' },
   { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
+]
+
+// --- 급여 모드 데이터 ---
+const salaryMenus = [
+  { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
 ]
 
 // --- 전자결재 모드 데이터 ---
