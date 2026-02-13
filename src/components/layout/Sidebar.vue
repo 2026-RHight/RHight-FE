@@ -41,6 +41,7 @@
       <div class="divider"></div>
       <div class="divider"></div>
     </template>
+
     <!-- 급여 모드 -->
     <template v-else-if="isSalaryMode">
       <div class="sidebar-header">
@@ -189,9 +190,10 @@ const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 
 // 현재 경로가 /hr 로 시작하면 인사 모드
 const isHrMode = computed(() => route.path.startsWith('/hr'))
-// 현재 경로가 /attendance 로 시작하면 근태 모드
+
 // 현재 경로가 /attendance 로 시작하면 근태 모드
 const isAttendanceMode = computed(() => route.path.startsWith('/attendance'))
+
 // 현재 경로가 /salary 로 시작하면 급여 모드
 const isSalaryMode = computed(() => route.path.startsWith('/salary'))
 
@@ -313,6 +315,7 @@ const hrMenus = [
   { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
 ]
 
+
 // --- 근태 모드 데이터 ---
 const attendanceMenus = [
   { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
@@ -320,6 +323,7 @@ const attendanceMenus = [
   { label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
   { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
 ]
+
 
 // --- 급여 모드 데이터 ---
 const salaryMenus = [

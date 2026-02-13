@@ -1,5 +1,30 @@
 <template>
   <div class="salary-dashboard">
+    <!-- Password Overlay -->
+    <div v-if="!isVerified" class="password-overlay">
+      <div class="login-card">
+        <div class="icon-lock">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h2>급여 명세서 조회</h2>
+        <p class="desc">개인 정보 보호를 위해 비밀번호를 입력해주세요.</p>
+        
+        <form @submit.prevent="verifyPassword" class="login-form">
+          <div class="input-group">
+            <input 
+              type="password" 
+              v-model="password" 
+              placeholder="비밀번호를 입력하세요" 
+            />
+          </div>
+          <button type="submit" class="btn-submit">확인</button>
+        </form>
+      </div>
+    </div>
+
     <!-- Top Row: Salary Summary -->
     <div class="top-row">
       <!-- 1. This Month's Salary (Main Card) -->
@@ -134,7 +159,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const isVerified = ref(false)
+const password = ref('')
+
+const verifyPassword = () => {
+  if (password.value === 'test1234!') {
+    isVerified.value = true
+  } else {
+    alert('비밀번호가 올바르지 않습니다.')
+    password.value = ''
+  }
+}
 
 const salaryHistory = ref([
   { date: '2026.02.25', month: '2026-02', total: '4,200,000', deduction: '-700,000', net: '3,500,000' },
@@ -157,7 +194,63 @@ const handleDownload = () => {
   flex-direction: column;
   gap: 16px;
   overflow: hidden;
+  position: relative;
 }
+
+/* Password Overlay */
+.password-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid var(--gray200);
+}
+.icon-lock {
+  width: 80px; height: 80px;
+  background: #E8F5FE;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+}
+.salary-dashboard h2 {
+  font-size: 1.5rem; font-weight: 700; color: var(--gray900); margin-bottom: 8px;
+}
+.desc {
+  font-size: 0.95rem; color: var(--gray500); margin-bottom: 32px;
+}
+.login-form {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.input-group input {
+  width: 100%; padding: 14px 16px;
+  border: 1px solid var(--gray300); border-radius: 8px;
+  font-size: 1rem; outline: none; transition: border-color 0.2s;
+}
+.input-group input:focus { border-color: var(--primary); }
+.btn-submit {
+  width: 100%; padding: 14px;
+  background: var(--primary); color: white;
+  border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: background-color 0.2s;
+}
+.btn-submit:hover { background: var(--primary-dark); }
+
 
 /* Common Card */
 .card {
