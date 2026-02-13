@@ -192,9 +192,8 @@ const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 const isHrMode = computed(() => route.path.startsWith('/hr'))
 
 // 현재 경로가 /attendance 로 시작하면 근태 모드
-// 현재 경로가 /attendance 로 시작하면 근태 모드
 const isAttendanceMode = computed(() => route.path.startsWith('/attendance'))
->>>>>>> 957aab114f8bd8308f849f0d2bc3caf405164153
+
 // 현재 경로가 /salary 로 시작하면 급여 모드
 const isSalaryMode = computed(() => route.path.startsWith('/salary'))
 
@@ -288,10 +287,6 @@ const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24'
   h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
   h('line', { x1:'1', y1:'10', x2:'23', y2:'10' }),
 ])
-const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
-  h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
-  h('line', { x1:'1', y1:'10', x2:'23', y2:'10' }),
-])
 const userMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
@@ -320,8 +315,7 @@ const hrMenus = [
   { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
 ]
 
-<<<<<<< HEAD
-=======
+
 // --- 근태 모드 데이터 ---
 const attendanceMenus = [
   { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
@@ -330,7 +324,7 @@ const attendanceMenus = [
   { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
 ]
 
->>>>>>> 957aab114f8bd8308f849f0d2bc3caf405164153
+
 // --- 급여 모드 데이터 ---
 const salaryMenus = [
   { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
