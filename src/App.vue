@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Headerbar from '@/components/layout/Headerbar.vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
@@ -35,5 +35,24 @@ const handleNavClick = (nav) => {
   else if (nav === '인사') router.push('/hr')
   else if (nav === '전자결재') router.push('/approval')
   else if (nav === '성과') router.push('/performance')
+  else if (nav === '근태') router.push('/attendance/my')
+  else if (nav === '급여') router.push('/salary/my')
 }
+
+// 라우트 변경 감지하여 헤더 메뉴 활성화 상태 동기화
+watch(() => route.path, (newPath) => {
+  if (newPath.startsWith('/approval')) {
+    activeNav.value = '전자결재'
+  } else if (newPath.startsWith('/attendance')) {
+    activeNav.value = '근태'
+  } else if (newPath.startsWith('/hr')) {
+    activeNav.value = '인사'
+  } else if (newPath.startsWith('/performance')) {
+    activeNav.value = '성과'
+  } else if (newPath.startsWith('/salary')) {
+    activeNav.value = '급여'
+  } else if (newPath === '/' || newPath === '/main') {
+    activeNav.value = '메인'
+  }
+}, { immediate: true })
 </script>

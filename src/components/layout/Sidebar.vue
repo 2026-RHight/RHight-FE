@@ -21,6 +21,45 @@
 
       <div class="divider"></div>
     </template>
+    <!-- 근태 모드 -->
+    <template v-else-if="isAttendanceMode">
+      <div class="sidebar-header">
+        <span>근태 관리</span>
+      </div>
+      <div class="menu-section">
+        <div
+            v-for="item in attendanceMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="divider"></div>
+    </template>
+    <!-- 급여 모드 -->
+    <template v-else-if="isSalaryMode">
+      <div class="sidebar-header">
+        <span>급여 관리</span>
+      </div>
+      <div class="menu-section">
+        <div
+            v-for="item in salaryMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath.includes(item.route) }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+      <div class="divider"></div>
+    </template>
     <!-- 전자결재 모드 -->
     <template v-else-if="isApprovalMode">
       <div class="sidebar-header">
@@ -150,6 +189,11 @@ const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 
 // 현재 경로가 /hr 로 시작하면 인사 모드
 const isHrMode = computed(() => route.path.startsWith('/hr'))
+// 현재 경로가 /attendance 로 시작하면 근태 모드
+// 현재 경로가 /attendance 로 시작하면 근태 모드
+const isAttendanceMode = computed(() => route.path.startsWith('/attendance'))
+// 현재 경로가 /salary 로 시작하면 급여 모드
+const isSalaryMode = computed(() => route.path.startsWith('/salary'))
 
 const currentPath = computed(() => route.path)
 const isPerformance = computed(() => route.path.startsWith('/performance'))
@@ -208,6 +252,24 @@ const TreeIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill
   h('line', { x1:'12', y1:'14', x2:'5', y2:'17' }),
   h('line', { x1:'12', y1:'14', x2:'19', y2:'17' }),
 ])
+const ClockIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('circle', { cx:'12', cy:'12', r:'10' }),
+  h('polyline', { points:'12 6 12 12 16 14' })
+])
+const CalendarIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'3', y:'4', width:'18', height:'18', rx:'2', ry:'2' }),
+  h('line', { x1:'16', y1:'2', x2:'16', y2:'6' }),
+  h('line', { x1:'8', y1:'2', x2:'8', y2:'6' }),
+  h('line', { x1:'3', y1:'10', x2:'21', y2:'10' })
+])
+const ListIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('line', { x1:'8', y1:'6', x2:'21', y2:'6' }),
+  h('line', { x1:'8', y1:'12', x2:'21', y2:'12' }),
+  h('line', { x1:'8', y1:'18', x2:'21', y2:'18' }),
+  h('line', { x1:'3', y1:'6', x2:'3.01', y2:'6' }),
+  h('line', { x1:'3', y1:'12', x2:'3.01', y2:'12' }),
+  h('line', { x1:'3', y1:'18', x2:'3.01', y2:'18' })
+])
 const CheckIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
   h('polyline', { points:'9 11 12 14 22 4' }),
   h('path', { d:'M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' }),
@@ -217,6 +279,11 @@ const FileTextIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', 
   h('polyline', { points:'14 2 14 8 20 8' }),
   h('line', { x1:'16', y1:'13', x2:'8', y2:'13' }),
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
+  h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
+])
+const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
+  h('line', { x1:'1', y1:'10', x2:'23', y2:'10' }),
 ])
 const userMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
@@ -244,6 +311,19 @@ const hrMenus = [
   { label: '마이페이지', icon: UserIcon, route: '/hr/my' },
   { label: '내 조직 조회', icon: UsersIcon, route: '/hr/org' },
   { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
+]
+
+// --- 근태 모드 데이터 ---
+const attendanceMenus = [
+  { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
+  { label: '출퇴근 기록', icon: ListIcon, route: '/attendance/record' },
+  { label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
+  { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
+]
+
+// --- 급여 모드 데이터 ---
+const salaryMenus = [
+  { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
 ]
 
 // --- 전자결재 모드 데이터 ---
