@@ -79,6 +79,30 @@ const routes = [
     meta: { requiresAuth: true },
     component: () => import('@/components/performance/Performance.vue')
   },
+  {
+    path: '/attendance',
+    name: 'attendance',
+    redirect: '/attendance/my',
+    component: () => import('@/views/attendance/AttendanceLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'my', component: () => import('@/views/attendance/AttendanceMain.vue') },
+      { path: 'record', component: () => import('@/views/attendance/AttendanceRecord.vue') },
+      { path: 'request', component: () => import('@/views/attendance/AttendanceMain.vue') }, // Placeholder
+      { path: 'history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
+      { path: 'schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
+    ]
+  },
+  {
+    path: '/salary',
+    name: 'salary',
+    redirect: '/salary/my',
+    component: () => import('@/views/salary/SalaryLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'my', component: () => import('@/views/salary/SalaryMain.vue') },
+    ]
+  },
 ]
 
 const router = createRouter({
