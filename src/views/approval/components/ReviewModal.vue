@@ -12,44 +12,7 @@
       </div>
 
       <div class="modal-body custom-scrollbar">
-        <!-- New 2-Column Info Grid -->
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">문서번호</span>
-            <span class="info-value">{{ item.id }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">기안일</span>
-            <span class="info-value">{{ item.date }}</span>
-          </div>
-          <div class="info-item full-width">
-            <span class="info-label">기안자</span>
-            <div class="drafter-badge">
-              <div class="avatar-sm">{{ item.drafter?.charAt(0) }}</div>
-              <span class="info-value">{{ item.drafter }}</span>
-              <span class="info-subtext">({{ item.position }} / {{ item.department }})</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h4 class="section-title">결재 상세 내용</h4>
-          <div class="document-content">
-            {{ item.content }}
-          </div>
-        </div>
-
-        <div v-if="item.attachments && item.attachments.length > 0" class="section">
-          <h4 class="section-title">첨부 파일 <span class="count">{{ item.attachments.length }}</span></h4>
-          <div class="attachments-container">
-            <div v-for="file in item.attachments" :key="file" class="file-card">
-              <div class="file-icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-              </div>
-              <span class="file-name">{{ file }}</span>
-            </div>
-          </div>
-        </div>
+        <ApprovalDocumentPaper :item="item" />
 
         <div v-if="showRejectReason" class="reject-section animate-slide-up">
           <h4 class="section-title text-danger">반려 사유 입력</h4>
@@ -98,6 +61,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
+import ApprovalDocumentPaper from './ApprovalDocumentPaper.vue';
 
 const props = defineProps({
   isOpen: Boolean,
