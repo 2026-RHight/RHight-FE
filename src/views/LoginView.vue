@@ -42,6 +42,9 @@
           <p class="test-account-info">
             테스트 계정: 사번 <strong>test1234</strong> / 비밀번호 <strong>test1234!</strong>
           </p>
+          <p class="test-account-info">
+            관리자 계정: 사번 <strong>admin1234</strong> / 비밀번호 <strong>admin1234!</strong>
+          </p>
         </div>
 
         <div class="login-footer">
@@ -71,6 +74,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import logo from '@/assets/logo-rhight.png'
 import PasswordResetModal from '@/components/user/PasswordResetModal.vue'
+import { setLoginSession, USER_ROLES } from '@/utils/auth'
 
 const router = useRouter()
 const username = ref('')
@@ -82,6 +86,11 @@ const TEST_ACCOUNT = {
   empNo: 'test1234',
   defaultPassword: 'test1234!',
   ssn: '123456'
+}
+const ADMIN_ACCOUNT = {
+  empNo: 'admin1234',
+  password: 'admin1234!',
+  name: '관리자'
 }
 const TEST_PASSWORD_STORAGE_KEY = 'testAccountPassword'
 
@@ -111,6 +120,19 @@ const handleLogin = () => {
   if (!username.value || !password.value) return
   loginError.value = ''
 
+  const isAdminLogin =
+    username.value === ADMIN_ACCOUNT.empNo && password.value === ADMIN_ACCOUNT.password
+
+  if (isAdminLogin) {
+    setLoginSession({
+      userId: ADMIN_ACCOUNT.empNo,
+      userName: ADMIN_ACCOUNT.name,
+      role: USER_ROLES.admin
+    })
+    router.push('/')
+    return
+  }
+
   const currentPassword = getCurrentTestPassword()
   const isValidAccount = username.value === TEST_ACCOUNT.empNo && password.value === currentPassword
   if (!isValidAccount) {
@@ -119,8 +141,11 @@ const handleLogin = () => {
     return
   }
 
-  // 로그인 성공 처리
-  sessionStorage.setItem('isLoggedIn', 'true')
+  setLoginSession({
+    userId: TEST_ACCOUNT.empNo,
+    userName: '테스트 사용자',
+    role: USER_ROLES.user
+  })
   router.push('/')
 }
 </script>

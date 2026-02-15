@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 
 const routes = [
   {
@@ -12,6 +13,41 @@ const routes = [
     name: 'main',
     component: () => import('@/views/MainView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    redirect: '/admin/main',
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/main',
+    name: 'admin-main',
+    component: () => import('@/views/admin/AdminMain.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
+    path: '/admin/employees',
+    name: 'admin-employees',
+    component: () => import('@/views/admin/AdminEmployeesView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
+    path: '/admin/hr-change',
+    name: 'admin-hr-change',
+    component: () => import('@/views/admin/AdminHrChangeView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
+    path: '/admin/policies',
+    name: 'admin-policies',
+    component: () => import('@/views/admin/AdminPoliciesView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
+    path: '/admin/notices',
+    name: 'admin-notices',
+    component: () => import('@/views/admin/AdminNoticesView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
   },
   {
     path: '/approval',
@@ -111,10 +147,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true'
+  const isLoggedIn = sessionStorage.getItem(AUTH_KEYS.loggedIn) === 'true'
+  const userRole = sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login')
+  } else if (to.meta.requiresAdmin && userRole !== USER_ROLES.admin) {
+    next('/')
   } else if (to.path === '/login' && isLoggedIn) {
     next('/')
   } else {

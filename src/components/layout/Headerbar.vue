@@ -23,6 +23,19 @@
     </nav>
 
     <div class="header-right">
+      <button
+        v-if="isAdmin"
+        type="button"
+        class="admin-mode-btn"
+        :class="{ active: isAdminRoute }"
+        @click="goAdminMode"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        관리자 모드
+      </button>
+
       <button class="header-icon-btn" type="button" title="조직도 사원 검색" @click="showOrgSearchModal = true">
         <svg
           width="18"
@@ -65,9 +78,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import OrgSearchModal from '@/components/org/OrgSearchModal.vue'
+import { clearLoginSession, isAdminRole } from '@/utils/auth'
 
 defineProps({
   activeNav: { type: String, default: '메인' }
@@ -75,12 +89,19 @@ defineProps({
 defineEmits(['navClick'])
 
 const router = useRouter()
+const route = useRoute()
 const navItems = ['메인', '인사', '근태', '급여', '성과', '전자결재']
 const showOrgSearchModal = ref(false)
 const headerSearchKeyword = ref('')
+const isAdmin = computed(() => isAdminRole())
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+
+const goAdminMode = () => {
+  router.push('/admin/main')
+}
 
 const handleLogout = () => {
-  sessionStorage.setItem('isLoggedIn', 'false')
+  clearLoginSession()
   router.push('/login')
 }
 </script>
@@ -130,4 +151,28 @@ const handleLogout = () => {
   transition:all var(--transition);
 }
 .header-logout:hover{background:var(--gray50);color:var(--gray700)}
+
+.admin-mode-btn{
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #BFDBFE;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .79rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-mode-btn:hover{
+  background: #DBEAFE;
+}
+
+.admin-mode-btn.active{
+  border-color: #60A5FA;
+  background: #DBEAFE;
+}
 </style>
