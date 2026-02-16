@@ -1,7 +1,29 @@
 <template>
   <aside class="sidebar">
+    <!-- 관리자 모드 -->
+    <template v-if="isAdminMode">
+      <div class="sidebar-header">
+        <span>관리자</span>
+      </div>
+
+      <div class="menu-section">
+        <div
+          v-for="item in adminMenus"
+          :key="item.label"
+          class="sidebar-item"
+          :class="{ active: currentPath === item.route, disabled: !item.route }"
+          @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+    </template>
+
     <!-- 인사 모드 -->
-    <template v-if="isHrMode">
+    <template v-else-if="isHrMode">
       <div class="sidebar-header">
         <span>인사</span>
       </div>
@@ -185,6 +207,9 @@ const router = useRouter()
 const route = useRoute()
 const perfStore = usePerformanceStore()
 
+// 현재 경로가 /admin 로 시작하면 관리자 모드
+const isAdminMode = computed(() => route.path.startsWith('/admin'))
+
 // 현재 경로가 /approval 로 시작하면 전자결재 모드
 const isApprovalMode = computed(() => route.path.startsWith('/approval'))
 
@@ -287,6 +312,45 @@ const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24'
   h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
   h('line', { x1:'1', y1:'10', x2:'23', y2:'10' }),
 ])
+const UserPlusIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' }),
+  h('circle', { cx:'8.5', cy:'7', r:'4' }),
+  h('line', { x1:'20', y1:'8', x2:'20', y2:'14' }),
+  h('line', { x1:'17', y1:'11', x2:'23', y2:'11' })
+])
+const RefreshCwIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('polyline', { points:'23 4 23 10 17 10' }),
+  h('polyline', { points:'1 20 1 14 7 14' }),
+  h('path', { d:'M3.51 9a9 9 0 0114.13-3.36L23 10' }),
+  h('path', { d:'M20.49 15a9 9 0 01-14.13 3.36L1 14' })
+])
+const ShieldIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' })
+])
+const BellIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9' }),
+  h('path', { d:'M13.73 21a2 2 0 01-3.46 0' })
+])
+const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('line', { x1:'4', y1:'21', x2:'4', y2:'14' }),
+  h('line', { x1:'4', y1:'10', x2:'4', y2:'3' }),
+  h('line', { x1:'12', y1:'21', x2:'12', y2:'12' }),
+  h('line', { x1:'12', y1:'8', x2:'12', y2:'3' }),
+  h('line', { x1:'20', y1:'21', x2:'20', y2:'16' }),
+  h('line', { x1:'20', y1:'12', x2:'20', y2:'3' }),
+  h('line', { x1:'1', y1:'14', x2:'7', y2:'14' }),
+  h('line', { x1:'9', y1:'8', x2:'15', y2:'8' }),
+  h('line', { x1:'17', y1:'16', x2:'23', y2:'16' })
+])
+
+const adminMenus = [
+  { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
+  { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
+  { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
+  { label: '급여 관리', icon: CreditCardIcon, route: '' },
+  { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
+]
 const userMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
@@ -391,6 +455,14 @@ const handleNavigate = (route) => {
 .sidebar-item:hover{background:var(--gray200);color:var(--gray700)}
 .sidebar-item svg{opacity:0.5;flex-shrink:0}
 .sidebar-item.active { background: var(--gray200); color: var(--primary); font-weight: 600; }
+.sidebar-item.disabled {
+  opacity: .55;
+  cursor: default;
+}
+.sidebar-item.disabled:hover {
+  background: transparent;
+  color: var(--gray600);
+}
 
 /* Divider */
 .divider {
