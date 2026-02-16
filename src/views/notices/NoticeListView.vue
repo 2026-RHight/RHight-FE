@@ -28,7 +28,7 @@
       <div v-if="notices.length === 0" class="empty">검색 결과가 없습니다.</div>
 
       <div v-for="notice in pagedNotices" :key="notice.id" class="list-row">
-        <button class="title-btn" type="button" @click="goDetail(notice.id)">{{ notice.title }}</button>
+        <button class="title-btn" type="button" @click="openDetailModal(notice)">{{ notice.title }}</button>
         <div class="font-num">{{ notice.createdAt }}</div>
         <div>{{ notice.department }} ({{ notice.author }})</div>
         <div><span class="type-chip">{{ notice.typeLabel }}</span></div>
@@ -40,19 +40,22 @@
         <button type="button" class="page-btn" :disabled="currentPage === totalPages" @click="currentPage++">다음</button>
       </div>
     </section>
+
+    <NoticeDetailModal :open="showDetailModal" :notice="selectedNotice" @close="closeDetailModal" />
   </div>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import NoticeDetailModal from '@/components/notices/NoticeDetailModal.vue'
 import { NOTICE_TYPE_OPTIONS, searchNotices } from '@/mocks/notices'
 
-const router = useRouter()
 const PAGE_SIZE = 10
 const keyword = ref('')
 const selectedType = ref('ALL')
 const currentPage = ref(1)
+const showDetailModal = ref(false)
+const selectedNotice = ref(null)
 
 const notices = computed(() => searchNotices({ keyword: keyword.value, type: selectedType.value }))
 const totalPages = computed(() => Math.max(1, Math.ceil(notices.value.length / PAGE_SIZE)))
@@ -69,8 +72,14 @@ watch(totalPages, (next) => {
   if (currentPage.value > next) currentPage.value = next
 })
 
-const goDetail = (id) => {
-  router.push(`/notices/${id}`)
+const openDetailModal = (notice) => {
+  selectedNotice.value = notice
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedNotice.value = null
 }
 </script>
 

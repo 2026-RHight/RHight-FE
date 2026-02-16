@@ -7,24 +7,36 @@
     <div class="card-body card-body-fill">
       <div v-for="item in notices" :key="item.id" class="notice-item">
         <div class="notice-dot"></div>
-        <button class="notice-title" type="button" @click="goDetail(item.id)">{{ item.title }}</button>
+        <button class="notice-title" type="button" @click="openDetail(item)">{{ item.title }}</button>
         <div class="notice-who">{{ item.department }} ({{ item.author }})</div>
         <div class="notice-date font-num">{{ item.createdAt }}</div>
       </div>
     </div>
   </div>
+
+  <NoticeDetailModal :open="showDetailModal" :notice="selectedNotice" @close="closeDetail" />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import NoticeDetailModal from '@/components/notices/NoticeDetailModal.vue'
 import { getDashboardNotices } from '@/mocks/notices'
 
 const router = useRouter()
 const notices = computed(() => getDashboardNotices({ limit: 6 }))
+const showDetailModal = ref(false)
+const selectedNotice = ref(null)
 
 const goList = () => router.push('/notices')
-const goDetail = (id) => router.push(`/notices/${id}`)
+const openDetail = (notice) => {
+  selectedNotice.value = notice
+  showDetailModal.value = true
+}
+const closeDetail = () => {
+  showDetailModal.value = false
+  selectedNotice.value = null
+}
 </script>
 
 <style scoped>

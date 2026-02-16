@@ -117,25 +117,12 @@
       </div>
     </div>
 
-    <div v-if="showDetailModal && selectedNotice" class="overlay" @click.self="closeDetailModal">
-      <div class="modal detail-modal">
-        <h2>공지사항 상세</h2>
-        <div class="detail-head">
-          <span class="type-chip">{{ selectedNotice.typeLabel }}</span>
-          <h3>{{ selectedNotice.title }}</h3>
-          <p>
-            {{ selectedNotice.department }} ({{ selectedNotice.author }})
-            <span class="font-num">{{ selectedNotice.createdAt }}</span>
-          </p>
-        </div>
-        <div class="detail-content">
-          {{ selectedNotice.content }}
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" @click="closeDetailModal">닫기</button>
-        </div>
-      </div>
-    </div>
+    <NoticeDetailModal
+      :open="showDetailModal"
+      :notice="selectedNotice"
+      compact
+      @close="closeDetailModal"
+    />
 
     <div v-if="toastMessage" class="toast">{{ toastMessage }}</div>
   </section>
@@ -143,6 +130,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import NoticeDetailModal from '@/components/notices/NoticeDetailModal.vue'
 import { AUTH_KEYS } from '@/utils/auth'
 import { NOTICE_TYPE_OPTIONS, createNotice, searchNotices } from '@/mocks/notices'
 
@@ -383,30 +371,6 @@ const submitCreate = () => {
   padding: 18px;
 }
 .modal h2 { margin: 0 0 14px; color: var(--gray800); font-size: 1.2rem; }
-.detail-modal { width: min(800px, calc(100vw - 36px)); }
-.detail-head {
-  border-bottom: 1px solid var(--gray100);
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-}
-.detail-head h3 {
-  margin: 10px 0 6px;
-  color: var(--gray800);
-  font-size: 1.08rem;
-}
-.detail-head p {
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  color: var(--gray500);
-  font-size: .82rem;
-}
-.detail-content {
-  min-height: 180px;
-  line-height: 1.65;
-  color: var(--gray700);
-  white-space: pre-line;
-}
 .field { display: grid; gap: 8px; margin-bottom: 12px; }
 .field span { color: var(--gray600); font-size: .85rem; font-weight: 700; }
 .field input,
