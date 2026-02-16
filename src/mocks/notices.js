@@ -1,4 +1,6 @@
-const notices = [
+import { ref } from 'vue'
+
+const noticesState = ref([
   {
     id: 'N-202602-001',
     title: '2026년 인사 평가 일정 안내',
@@ -154,7 +156,7 @@ const notices = [
     typeLabel: '인사 발령 공지',
     content: '1분기 인사 운영 목표와 주요 추진 항목을 공유드립니다.'
   }
-]
+])
 
 export const NOTICE_TYPE_OPTIONS = [
   { value: 'ALL', label: '전체 유형' },
@@ -165,7 +167,19 @@ export const NOTICE_TYPE_OPTIONS = [
 
 const parseDate = (dateText) => new Date(dateText.replace(/\./g, '-'))
 
-const sorted = () => [...notices].sort((a, b) => parseDate(b.createdAt) - parseDate(a.createdAt))
+const sorted = () =>
+  [...noticesState.value].sort((a, b) => parseDate(b.createdAt) - parseDate(a.createdAt))
+
+const typeLabelOf = (type) =>
+  NOTICE_TYPE_OPTIONS.find((item) => item.value === type)?.label || '기타'
+
+const todayText = () => {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}.${m}.${day}`
+}
 
 export const getDashboardNotices = ({ limit = 6 } = {}) => sorted().slice(0, limit)
 
@@ -179,4 +193,20 @@ export const searchNotices = ({ keyword = '', type = 'ALL' } = {}) => {
     const typeMatch = type === 'ALL' ? true : item.type === type
     return titleMatch && typeMatch
   })
+}
+
+export const createNotice = ({ title, type, content, author }) => {
+  const newNotice = {
+    id: `N-${Date.now()}`,
+    title: title.trim(),
+    createdAt: todayText(),
+    department: '인사팀',
+    author: (author || '관리자').trim(),
+    type,
+    typeLabel: typeLabelOf(type),
+    content: content.trim()
+  }
+
+  noticesState.value.unshift(newNotice)
+  return newNotice
 }
