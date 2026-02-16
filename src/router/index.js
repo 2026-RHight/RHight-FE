@@ -15,6 +15,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/notices',
+    name: 'notice-list',
+    component: () => import('@/views/notices/NoticeListView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/admin',
     redirect: '/admin/main',
     meta: { requiresAuth: true, requiresAdmin: true }
