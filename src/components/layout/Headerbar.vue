@@ -36,7 +36,30 @@
         관리자 모드
       </button>
 
-      <button class="header-icon-btn" type="button" title="조직도 사원 검색" @click="showOrgSearchModal = true">
+      <button
+        class="header-icon-btn"
+        type="button"
+        title="공지사항"
+        aria-label="공지사항"
+        @click="goNotices"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 11V9a2 2 0 0 1 2-2h2l9-3v16l-9-3H5a2 2 0 0 1-2-2v-2" />
+          <path d="M7 17v4" />
+          <path d="M19 8a3 3 0 0 1 0 8" />
+        </svg>
+      </button>
+
+      <button class="header-icon-btn" type="button" title="사원 찾기" aria-label="사원 찾기" @click="showOrgSearchModal = true">
         <svg
           width="18"
           height="18"
@@ -98,6 +121,10 @@ const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const goAdminMode = () => {
   router.push('/admin/main')
+}
+
+const goNotices = () => {
+  router.push('/notices')
 }
 
 const handleLogout = () => {

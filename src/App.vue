@@ -51,6 +51,8 @@ watch(() => route.path, (newPath) => {
     activeNav.value = '성과'
   } else if (newPath.startsWith('/salary')) {
     activeNav.value = '급여'
+  } else if (newPath.startsWith('/notices')) {
+    activeNav.value = '메인'
   } else if (newPath === '/' || newPath === '/main') {
     activeNav.value = '메인'
   }
