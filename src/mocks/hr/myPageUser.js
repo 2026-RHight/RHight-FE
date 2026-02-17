@@ -1,4 +1,5 @@
 export const hrMyPageUserMock = {
+  profileImage: '',
   name: '김세현',
   team: '모바일1팀',
   jobTitle: '백엔드 개발자',

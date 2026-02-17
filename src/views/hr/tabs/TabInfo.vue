@@ -89,6 +89,23 @@
       <h2 class="modal-title">기본 정보 수정</h2>
       <div class="modal-fields">
         <div class="modal-field">
+          <label>프로필 이미지</label>
+          <div class="profile-image-row">
+            <div class="profile-image-preview">
+              <img v-if="editForm.profileImage" :src="editForm.profileImage" alt="프로필 이미지" />
+              <span v-else>{{ user.name.slice(-2) }}</span>
+            </div>
+            <button class="btn-upload" type="button" @click="triggerProfileFileInput">이미지 변경</button>
+            <input
+              ref="profileFileInputRef"
+              type="file"
+              accept="image/*"
+              style="display:none"
+              @change="handleProfileImageSelect"
+            />
+          </div>
+        </div>
+        <div class="modal-field">
           <label>연락처</label>
           <input v-model="editForm.phone" type="text" placeholder="010-0000-0000" />
         </div>
@@ -203,19 +220,35 @@ const props = defineProps({ user: { type: Object, required: true } })
 
 // ── 기본 정보 수정 ──
 const showEditBasic = ref(false)
-const editForm = reactive({ phone: '', address: '' })
+const editForm = reactive({ profileImage: '', phone: '', address: '' })
+const profileFileInputRef = ref(null)
 const emit = defineEmits(['update:user'])
 
 watch(showEditBasic, (val) => {
   if (val) {
+    editForm.profileImage = props.user.profileImage || ''
     editForm.phone = props.user.phone
     editForm.address = props.user.address
   }
 })
 
+const triggerProfileFileInput = () => profileFileInputRef.value?.click()
+const handleProfileImageSelect = (e) => {
+  const file = e.target.files?.[0]
+  if (!file || !String(file.type).startsWith('image/')) return
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    editForm.profileImage = String(reader.result || '')
+  }
+  reader.readAsDataURL(file)
+  e.target.value = ''
+}
+
 const saveBasicInfo = () => {
   emit('update:user', {
     ...props.user,
+    profileImage: editForm.profileImage,
     phone: editForm.phone,
     address: editForm.address
   })
@@ -367,6 +400,20 @@ const closePwModal = () => { showChangePw.value = false }
 .modal-field input.input-error{border-color:#EF4444;box-shadow:0 0 0 3px #FEF2F2}
 .modal-field select{appearance:none;background:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center,#fff}
 .modal-field-row{display:flex;gap:12px}.modal-field-row .modal-field{flex:1}
+.profile-image-row{display:flex;align-items:center;gap:12px}
+.profile-image-preview{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#99F6E4,#0891B2);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0
+}
+.profile-image-preview img{width:100%;height:100%;object-fit:cover}
+.profile-image-preview span{color:#fff;font-weight:700}
+.btn-upload{
+  height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--gray200);
+  background:#fff;color:var(--gray600);font-size:.8rem;font-weight:600;cursor:pointer
+}
+.btn-upload:hover{border-color:var(--primary);color:var(--primary)}
 .field-error{font-size:.75rem;color:#EF4444}
 .file-upload{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:1.5px dashed var(--gray300);border-radius:var(--radius-xs);color:var(--gray400);font-size:.82rem;cursor:pointer;transition:all .15s}
 .file-upload:hover{border-color:var(--primary);color:var(--primary);background:var(--accent)}

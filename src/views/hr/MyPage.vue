@@ -7,7 +7,8 @@
     <div class="profile-header">
       <div class="profile-left">
         <div class="profile-avatar">
-          <span class="avatar-text">{{ user.name.slice(-2) }}</span>
+          <img v-if="user.profileImage" :src="user.profileImage" alt="프로필 이미지" class="avatar-image" />
+          <span v-else class="avatar-text">{{ user.name.slice(-2) }}</span>
           <span class="status-dot online"></span>
         </div>
         <div class="profile-info">
@@ -84,6 +85,7 @@ if (sessionLastLogin) {
 .profile-left{display:flex;gap:16px;align-items:center}
 .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#99F6E4,#0891B2);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
 .avatar-text{font-size:1.1rem;font-weight:700;color:#fff}
+.avatar-image{width:100%;height:100%;border-radius:50%;object-fit:cover;border:1px solid var(--gray200);background:#fff}
 .status-dot{position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;border:2.5px solid #fff}
 .status-dot.online{background:#22C55E}
 .profile-name-row{display:flex;align-items:center;gap:8px}
