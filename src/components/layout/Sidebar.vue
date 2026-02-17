@@ -455,23 +455,25 @@ const salaryMenus = [
   { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
 ]
 
-const approvalChildren = [
-  { label: '전자 결재 기안', route: '/approval/draft' },
-  { label: '전자 결재 현황', route: '/approval/status' },
-  { label: '전자 결재 문서함', route: '/approval/box' },
-]
+const approvalMenus = computed(() => {
+  const children = [
+    { label: '전자 결재 기안', route: '/approval/draft' },
+    { label: '전자 결재 현황', route: '/approval/status' },
+    { label: '전자 결재 문서함', route: '/approval/box' },
+  ]
 
-if (['manager', 'admin'].includes(userRank.value)) {
-  approvalChildren.push({ label: '전자 결재 검토', route: '/approval/review' })
-}
-
-const approvalMenus = [
-  {
-    label: '전자결재 메뉴', // 메뉴 그룹명
-    icon: ApprovalIcon,
-    children: approvalChildren
+  if (['manager', 'admin'].includes(userRank.value)) {
+    children.push({ label: '전자 결재 검토', route: '/approval/review' })
   }
-]
+
+  return [
+    {
+      label: '전자결재 메뉴', // 메뉴 그룹명
+      icon: ApprovalIcon,
+      children: children
+    }
+  ]
+})
 
 // 메뉴 토글 상태 관리
 const openMenus = ref({ '전자결재 메뉴': true }) 
