@@ -144,7 +144,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import EmployeePickerModal from '@/components/org/EmployeePickerModal.vue'
 
 const teamOptions = ['모바일1팀', '개발1팀', '개발2팀', '디자인팀', 'QA팀', '인사팀', '영업1팀', '영업2팀']
-const jobOptions = ['백엔드 개발', '프론트엔드 개발', '모바일 개발', '디자인', '기획', '인사 운영']
+const jobOptions = ['백엔드 개발', '프론트엔드 개발', '모바일 개발', 'QA엔지니어', '디자인', '기획', '인사 운영']
 const positionOptions = ['팀원', '선임', '파트장', '팀장', '실장', '본부장']
 const gradeOptions = ['사원', '주임', '대리', '과장', '차장', '부장']
 const employmentStatusOptions = ['재직', '휴직', '사직', '퇴직']
@@ -254,6 +254,15 @@ const changeTypeOf = (field, afterValue) => {
   if (field === 'employmentStatus') return afterValue
   return '발령'
 }
+const fieldLabelMap = {
+  team: '소속 팀',
+  job: '직무',
+  position: '직책',
+  grade: '직급',
+  employmentStatus: '재직 상태',
+  workType: '근무 형태',
+  workLocation: '근무지'
+}
 
 const syncFormFromSelected = () => {
   if (!selectedEmployee.value) return
@@ -314,19 +323,42 @@ const applyHrChanges = () => {
 
   const emp = selectedEmployee.value
   const fields = ['team', 'job', 'position', 'grade', 'employmentStatus', 'workType', 'workLocation']
+  const pendingChanges = fields
+    .map((field) => {
+      const before = emp[field]
+      const after = editForm[field]
+      if (before === after) return null
+      return { field, label: fieldLabelMap[field] || field, before, after }
+    })
+    .filter(Boolean)
+
+  if (pendingChanges.length === 0) {
+    resultMessage.value = '변경된 항목이 없어 적용할 내용이 없습니다.'
+    return
+  }
+
+  const confirmMessage = [
+    '변경하시겠습니까?',
+    '',
+    `${emp.name} 사원 인사 정보 변경`,
+    `적용일: ${toDotDate(editForm.effectiveDate)}`,
+    '',
+    ...pendingChanges.map((item) => `${item.label}: ${item.before} -> ${item.after}`)
+  ].join('\n')
+
+  if (!window.confirm(confirmMessage)) return
+
   let changedCount = 0
 
-  fields.forEach((field) => {
-    const before = emp[field]
-    const after = editForm[field]
-    if (before !== after) {
-      addHistory(field, before, after, editForm.effectiveDate)
-      emp[field] = after
-      changedCount += 1
-    }
+  pendingChanges.forEach((item) => {
+    addHistory(item.field, item.before, item.after, editForm.effectiveDate)
+    emp[item.field] = item.after
+    changedCount += 1
   })
 
-  emp.lastAppliedDate = toDotDate(editForm.effectiveDate)
+  if (changedCount > 0) {
+    emp.lastAppliedDate = toDotDate(editForm.effectiveDate)
+  }
   resultMessage.value =
     changedCount > 0
       ? `${emp.name}의 인사 정보 ${changedCount}건이 적용되었습니다.`
@@ -341,7 +373,9 @@ const normalizeJob = (value) => {
   const map = {
     백엔드개발자: '백엔드 개발',
     프론트엔드개발자: '프론트엔드 개발',
-    QA엔지니어: '모바일 개발'
+    QA엔지니어: 'QA엔지니어',
+    QA: 'QA엔지니어',
+    품질보증: 'QA엔지니어'
   }
   const key = String(value || '').replaceAll(' ', '')
   return map[key] || value

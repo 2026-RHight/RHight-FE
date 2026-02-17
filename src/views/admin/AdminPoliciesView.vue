@@ -276,11 +276,12 @@ const filteredHistory = computed(() => {
 const splitLines = (text) =>
   String(text ?? '')
     .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+    .filter((line) => line.trim().length > 0)
 const createCountMap = (lines) => {
   const map = new Map()
-  lines.forEach((line) => map.set(line, (map.get(line) ?? 0) + 1))
+  lines.forEach((line) => {
+    map.set(line, (map.get(line) ?? 0) + 1)
+  })
   return map
 }
 const buildDiffLines = (sourceLines, oppositeCounts, changedStatus) => {
