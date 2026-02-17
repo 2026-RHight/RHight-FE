@@ -132,6 +132,7 @@ const routes = [
       { path: 'manuals/upload', name: 'kms-manual-upload', component: () => import('@/views/kms/KmsManualUploadView.vue') },
       { path: 'manuals/edit/:manualId', name: 'kms-manual-edit', component: () => import('@/views/kms/KmsManualEditView.vue') },
       { path: 'archive', name: 'kms-archive', component: () => import('@/views/kms/KmsArchiveView.vue') },
+      { path: 'archive/manage/:archiveId', name: 'kms-archive-manage', component: () => import('@/views/kms/KmsArchiveManageView.vue') },
       { path: 'archive/:archiveId', name: 'kms-archive-detail', component: () => import('@/views/kms/KmsArchiveDetailView.vue') },
     ]
   },
