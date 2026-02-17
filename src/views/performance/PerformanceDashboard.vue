@@ -1,7 +1,7 @@
 <template>
   <div class="perf-dashboard">
     <!-- Top Section: Key Metrics -->
-    <div class="perf-metrics">
+    <div class="perf-metrics" :class="{ 'perf-metrics--manager': isPerformanceManager }">
       <!-- Metric 1 -->
       <div class="metric-card">
         <div class="metric-deco blue"></div>
@@ -52,6 +52,27 @@
           </div>
         </div>
       </div>
+
+      <button
+        v-if="isPerformanceManager"
+        type="button"
+        class="metric-card metric-card--pending"
+        @click="perfStore.setPage('approval-list')"
+      >
+        <div class="metric-deco orange"></div>
+        <div class="metric-body">
+          <h3 class="metric-label">승인 대기</h3>
+          <div class="metric-value-row">
+            <span class="metric-num">{{ pendingApprovalCount }}건</span>
+            <span class="metric-change orange">
+              <Target :size="13" /> 확인 필요
+            </span>
+          </div>
+          <div class="metric-bar">
+            <div class="metric-fill orange" style="width: 100%"></div>
+          </div>
+        </div>
+      </button>
     </div>
 
     <!-- Middle Section: Monthly Trend -->
@@ -88,8 +109,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { TrendingUp, Target, Award, MessageSquare } from 'lucide-vue-next'
 import { Line } from 'vue-chartjs'
+import { usePerformanceStore } from '@/store/performance'
+import { AUTH_KEYS } from '@/utils/auth'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -101,6 +125,12 @@ import {
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler)
+
+const perfStore = usePerformanceStore()
+const PERFORMANCE_MANAGER_USER_IDS = ['admin1234']
+const currentUserId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
+const isPerformanceManager = computed(() => PERFORMANCE_MANAGER_USER_IDS.includes(currentUserId.value))
+const pendingApprovalCount = 12
 
 const chartData = {
   labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
@@ -170,6 +200,9 @@ const feedbacks = [
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
+.perf-metrics--manager {
+  grid-template-columns: repeat(4, 1fr);
+}
 
 .metric-card {
   background: #fff;
@@ -193,6 +226,7 @@ const feedbacks = [
 .metric-deco.blue { background: #3b82f6; }
 .metric-deco.green { background: #22c55e; }
 .metric-deco.purple { background: #a855f7; }
+.metric-deco.orange { background: #f59e0b; }
 
 .metric-body { position: relative; }
 
@@ -228,6 +262,7 @@ const feedbacks = [
 .metric-change.blue { color: #3b82f6; }
 .metric-change.green { color: #22c55e; }
 .metric-change.purple { color: #a855f7; }
+.metric-change.orange { color: #d97706; }
 
 .metric-bar {
   width: 100%;
@@ -246,6 +281,31 @@ const feedbacks = [
 .metric-fill.blue { background: #3b82f6; }
 .metric-fill.green { background: #22c55e; }
 .metric-fill.purple { background: #a855f7; }
+.metric-fill.orange { background: #f59e0b; }
+
+.metric-card--pending {
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.metric-card--pending:hover {
+  transform: translateY(-2px);
+  border-color: #fcd34d;
+  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.15);
+}
+
+@media (max-width: 1280px) {
+  .perf-metrics,
+  .perf-metrics--manager {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .perf-metrics,
+  .perf-metrics--manager {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* ── Chart Card: 남은 공간 채우기 ── */
 .perf-chart-card {

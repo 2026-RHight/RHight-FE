@@ -1,6 +1,7 @@
 <template>
   <div class="performance-content">
     <PerformanceDashboard v-if="perfStore.activePage === 'dashboard'" />
+    <ManagerApprovalList v-else-if="perfStore.activePage === 'approval-list'" />
     <PerformanceRegistration v-else-if="perfStore.activePage === 'registration'" />
     <PerformanceInquiry v-else-if="perfStore.activePage === 'inquiry'" />
     <PerformanceMonthly v-else-if="perfStore.activePage === 'monthly'" />
@@ -11,10 +12,11 @@
 <script setup>
 import { usePerformanceStore } from '@/store/performance'
 import PerformanceDashboard from './PerformanceDashboard.vue'
+import ManagerApprovalList from './ManagerApprovalList.vue'
 import PerformanceRegistration from "./PerformanceRegistration.vue";
-import PerformanceInquiry from "@/components/performance/PerformanceInquiry.vue";
-import PerformanceMonthly from "@/components/performance/PerformanceMonthly.vue";
-import PeerReview from "@/components/performance/PeerReview.vue";
+import PerformanceInquiry from './PerformanceInquiry.vue'
+import PerformanceMonthly from './PerformanceMonthly.vue'
+import PeerReview from './PeerReview.vue'
 
 
 const perfStore = usePerformanceStore()

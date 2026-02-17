@@ -119,7 +119,7 @@ const routes = [
     path: '/performance',
     name: 'performance',
     meta: { requiresAuth: true },
-    component: () => import('@/components/performance/Performance.vue')
+    component: () => import('@/views/performance/Performance.vue')
   },
   {
     path: '/attendance',
