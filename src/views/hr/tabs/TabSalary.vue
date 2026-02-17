@@ -72,10 +72,12 @@ const salaryHistory = ref(createHrSalaryHistoryMock())
 const isVerified = ref(false)
 const passwordInput = ref('')
 const passwordError = ref('')
+const getPasswordStorageKey = (userId) => `accountPassword:${userId}`
 
 const expectedPassword = computed(() => {
   const userId = sessionStorage.getItem(AUTH_KEYS.userId) || ''
-  return userId ? `${userId}!` : ''
+  if (!userId) return ''
+  return localStorage.getItem(getPasswordStorageKey(userId)) || `${userId}!`
 })
 
 const formatWon = (amount) => {

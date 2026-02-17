@@ -197,6 +197,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
+import { AUTH_KEYS } from '@/utils/auth'
 
 const props = defineProps({ user: { type: Object, required: true } })
 
@@ -253,8 +254,8 @@ const showChangePw = ref(false)
 const pwSuccess = ref(false)
 const pwForm = reactive({ current: '', newPw: '', confirm: '' })
 const pwErrors = reactive({ current: '', confirm: '' })
-const TEST_PASSWORD_STORAGE_KEY = 'testAccountPassword'
-const TEST_DEFAULT_PASSWORD = 'test1234!'
+const getPasswordStorageKey = (userId) => `accountPassword:${userId}`
+const getDefaultPassword = (userId) => (userId ? `${userId}!` : '')
 
 watch(showChangePw, (val) => {
   if (val) {
@@ -265,7 +266,8 @@ watch(showChangePw, (val) => {
 })
 
 const getCurrentPassword = () => {
-  return localStorage.getItem(TEST_PASSWORD_STORAGE_KEY) || TEST_DEFAULT_PASSWORD
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId) || ''
+  return localStorage.getItem(getPasswordStorageKey(userId)) || getDefaultPassword(userId)
 }
 
 const pwRules = computed(() => {
@@ -294,7 +296,8 @@ const changePassword = () => {
     return
   }
 
-  localStorage.setItem(TEST_PASSWORD_STORAGE_KEY, pwForm.newPw)
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId) || ''
+  localStorage.setItem(getPasswordStorageKey(userId), pwForm.newPw)
   pwSuccess.value = true
   setTimeout(() => { showChangePw.value = false }, 1500)
 }
