@@ -1,10 +1,7 @@
 <template>
   <div class="card fade-up delay-4 anniversary-card">
     <div class="card-header">
-      <h3>팀 기념일 (생일)</h3>
-      <span class="add-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      </span>
+      <h3>팀 기념일</h3>
     </div>
     <div class="card-body" style="padding:8px 18px">
       <div v-for="(item, i) in items" :key="i" class="bday-item">
@@ -39,8 +36,6 @@ const items = [
 </script>
 
 <style scoped>
-.add-icon{color:var(--gray400);cursor:pointer;display:flex}
-.add-icon:hover{color:var(--primary)}
 .bday-item{
   display:flex;align-items:center;gap:9px;
   padding:8px 0;border-bottom:1px solid var(--gray100);
