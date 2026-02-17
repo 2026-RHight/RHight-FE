@@ -41,6 +41,7 @@
 
     <!-- 탭 컨텐츠 -->
     <TabInfo v-if="activeTab === 'info'" :user="user" @update:user="user = $event"/>
+    <TabSalary v-else-if="activeTab === 'salary'" />
     <TabHistory v-else-if="activeTab === 'history'" :employee-id="user.empNo" />
     <TabCertificate v-else-if="activeTab === 'certificate'" :user="user" />
     <!-- 추후 탭 추가 -->
@@ -51,9 +52,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import TabInfo from './tabs/TabInfo.vue'
+import TabSalary from './tabs/TabSalary.vue'
 import TabHistory from './tabs/TabHistory.vue'
 import TabCertificate from './tabs/TabCertificate.vue'
 import { createHrMyPageUserMock } from '@/mocks/hr/myPageUser'
+import { AUTH_KEYS } from '@/utils/auth'
 
 const activeTab = ref('info')
 const tabs = [
@@ -66,6 +69,10 @@ const tabs = [
 const activeTabLabel = computed(() => tabs.find(t => t.key === activeTab.value)?.label)
 
 const user = ref(createHrMyPageUserMock())
+const sessionLastLogin = sessionStorage.getItem(AUTH_KEYS.lastLoginAt)
+if (sessionLastLogin) {
+  user.value.lastLogin = sessionLastLogin
+}
 </script>
 
 <style scoped>

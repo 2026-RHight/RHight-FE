@@ -106,6 +106,16 @@ const clearLoginError = () => {
   loginError.value = ''
 }
 
+const formatLoginTimestamp = () => {
+  const now = new Date()
+  const yyyy = String(now.getFullYear())
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  const hh = String(now.getHours()).padStart(2, '0')
+  const min = String(now.getMinutes()).padStart(2, '0')
+  return `${yyyy}.${mm}.${dd} ${hh}:${min}`
+}
+
 const handleReset = ({ empNo, ssn }) => {
   if (empNo !== TEST_ACCOUNT.empNo || ssn !== TEST_ACCOUNT.ssn) {
     alert('사번 또는 주민등록번호가 올바르지 않습니다.')
@@ -127,7 +137,8 @@ const handleLogin = () => {
     setLoginSession({
       userId: ADMIN_ACCOUNT.empNo,
       userName: ADMIN_ACCOUNT.name,
-      role: USER_ROLES.admin
+      role: USER_ROLES.admin,
+      lastLoginAt: formatLoginTimestamp()
     })
     router.push('/')
     return
@@ -144,7 +155,8 @@ const handleLogin = () => {
   setLoginSession({
     userId: TEST_ACCOUNT.empNo,
     userName: '테스트 사용자',
-    role: USER_ROLES.user
+    role: USER_ROLES.user,
+    lastLoginAt: formatLoginTimestamp()
   })
   router.push('/')
 }
