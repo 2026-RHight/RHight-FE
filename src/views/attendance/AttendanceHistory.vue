@@ -18,7 +18,7 @@
         <div class="card-content">
           <span class="card-label">결재 대기</span>
           <div class="card-value-row">
-            <span class="card-value orange">1</span>
+            <span class="card-value orange">{{ stats.pending }}</span>
             <span class="card-unit">건</span>
           </div>
         </div>
@@ -31,7 +31,7 @@
         <div class="card-content">
           <span class="card-label">승인 완료</span>
           <div class="card-value-row">
-            <span class="card-value green">3</span>
+            <span class="card-value green">{{ stats.approved }}</span>
             <span class="card-unit">건</span>
           </div>
         </div>
@@ -44,7 +44,7 @@
         <div class="card-content">
           <span class="card-label">반려</span>
           <div class="card-value-row">
-            <span class="card-value red">1</span>
+            <span class="card-value red">{{ stats.rejected }}</span>
             <span class="card-unit">건</span>
           </div>
         </div>
@@ -104,21 +104,47 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useAttendanceStore } from '@/store/attendance'
 
-const historyList = ref([
-  { date: '2026.02.13', type: '휴가', title: '연차 신청 (1일)', targetDate: '2026.02.20', approver: 'Steve 매니저', status: '대기' },
-  { date: '2026.02.12', type: '연장', title: '연장근무 신청 (2h)', targetDate: '2026.02.12', approver: 'Steve 매니저', status: '승인' },
-  { date: '2026.02.10', type: '외근', title: '외근 신청 (미팅)', targetDate: '2026.02.11', approver: 'Steve 매니저', status: '승인' },
-  { date: '2026.02.01', type: '휴가', title: '반차 신청 (오후)', targetDate: '2026.02.06', approver: 'Steve 매니저', status: '승인' },
-  { date: '2026.02.02', type: '재택', title: '재택근무 신청', targetDate: '2026.02.03', approver: 'Kim 이사', status: '반려' },
-])
+const store = useAttendanceStore()
+
+// Computes history list from store data
+const historyList = computed(() => {
+  // We want to show all requests for the current user (user1)
+  // Store has filtered logic `myLeaveRequests` but let's just use state directly if needed or use the getter.
+  // The store getter `myLeaveRequests` returns items where userId === 'user0' (wait, I set user0? Let me check store again)
+  // Store: userId: i === 0 ? 'user1' : ... -> So 'user1' is index 0.
+  // Getter: filter(req => req.userId === 'user1')
+  
+  return store.leaveRequests.filter(req => req.userId === 'user1').map(item => ({
+    date: item.appliedAt.replace(/-/g, '.'),
+    type: item.type,
+    title: item.title || `${item.type} 신청`, // Fallback title
+    targetDate: item.targetDate ? item.targetDate.replace(/-/g, '.') : item.period,
+    approver: item.approver || 'Steve 매니저',
+    status: mapStatus(item.status)
+  }))
+})
+
+const mapStatus = (status) => {
+  const map = { pending: '대기', approved: '승인', rejected: '반려' }
+  return map[status] || status
+}
+
+// Stats from the list
+const stats = computed(() => {
+  const pending = historyList.value.filter(i => i.status === '대기').length
+  const approved = historyList.value.filter(i => i.status === '승인').length
+  const rejected = historyList.value.filter(i => i.status === '반려').length
+  return { pending, approved, rejected }
+})
 
 const getTypeColor = (type) => {
   if (type === '휴가') return 'pink'
   if (type === '연장') return 'blue'
   if (type === '외근' || type === '출장') return 'gray'
-  if (type === '재택') return 'purple'
+  if (type === '재택' || type === '재택근무') return 'purple'
   return 'gray'
 }
 

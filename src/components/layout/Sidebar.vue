@@ -47,10 +47,15 @@
     <template v-else-if="isAttendanceMode">
       <div class="sidebar-header">
         <span>근태 관리</span>
+        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': isAttendanceManager }">
+          {{ isAttendanceManager ? '관리자' : '사용자' }}
+        </span>
       </div>
-      <div class="menu-section">
+
+      <template v-if="isAttendanceManager">
+        <div class="sidebar-section-label">내 근태 관리</div>
         <div
-            v-for="item in attendanceMenus"
+            v-for="item in myAttendanceMenus"
             :key="item.label"
             class="sidebar-item"
             :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
@@ -59,7 +64,33 @@
           <component :is="item.icon" />
           {{ item.label }}
         </div>
-      </div>
+
+        <div class="sidebar-divider" />
+        <div class="sidebar-section-label">팀 관리</div>
+        <div
+            v-for="item in teamAttendanceMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath.includes(item.route) }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </template>
+      <template v-else>
+        <div
+            v-for="item in myAttendanceMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </template>
+
       <div class="divider"></div>
       <div class="divider"></div>
     </template>
@@ -227,6 +258,7 @@ const isPerformance = computed(() => route.path.startsWith('/performance'))
 const currentUserId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
 const PERFORMANCE_MANAGER_USER_IDS = ['admin1234']
 const isPerformanceManager = computed(() => PERFORMANCE_MANAGER_USER_IDS.includes(currentUserId.value))
+const isAttendanceManager = computed(() => ['admin1234'].includes(currentUserId.value))
 
 // SVG icon components (inline)
 const StarIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
@@ -401,12 +433,22 @@ const hrMenus = [
 
 
 // --- 근태 모드 데이터 ---
-const attendanceMenus = [
+// --- 근태 모드 데이터 ---
+const myAttendanceMenus = [
   { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
   { label: '출퇴근 기록', icon: ListIcon, route: '/attendance/record' },
   { label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
   { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
 ]
+
+const teamAttendanceMenus = [
+  { label: '근태 관리', icon: UsersIcon, route: '/attendance/manage' },
+  { label: '유연근무관리', icon: SlidersIcon, route: '/attendance/flexible' },
+]
+
+const attendanceMenus = computed(() => {
+  return isAttendanceManager.value ? [...myAttendanceMenus, ...teamAttendanceMenus] : myAttendanceMenus
+})
 
 
 // --- 급여 모드 데이터 ---
