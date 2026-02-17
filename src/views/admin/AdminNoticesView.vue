@@ -1,10 +1,5 @@
 <template>
   <section class="admin-page">
-    <header class="head">
-      <h1>공지사항 관리</h1>
-      <p>인사팀 공지사항을 등록하고 최신 목록을 확인합니다.</p>
-    </header>
-
     <article class="card">
       <div class="card-head">
         <h3>공지 목록</h3>
@@ -230,9 +225,6 @@ const submitCreate = () => {
 
 <style scoped>
 .admin-page { max-width: 1200px; }
-.head { margin-top: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
-.head h1 { margin: 0; color: var(--gray800); }
-.head p { margin: 6px 0 0; color: var(--gray500); }
 .card { margin-top: 12px; background: #fff; border: 1px solid var(--gray200); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
 .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .card-head h3 { margin: 0; color: var(--gray800); }
