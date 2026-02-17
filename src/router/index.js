@@ -133,6 +133,8 @@ const routes = [
       { path: 'request', component: () => import('@/views/attendance/AttendanceMain.vue') }, // Placeholder
       { path: 'history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
       { path: 'schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
+      { path: 'manage', component: () => import('@/views/attendance/AttendanceManage.vue') },
+      { path: 'flexible', component: () => import('@/views/attendance/FlexibleWorkManage.vue') },
     ]
   },
   {

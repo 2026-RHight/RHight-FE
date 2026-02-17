@@ -258,13 +258,16 @@
             <span class="more-link">더보기</span>
           </div>
           <div class="history-list">
-            <div class="history-item">
+             <div class="history-item" v-for="app in recentApplications" :key="app.id">
               <div class="h-top">
-                <span class="status-badge-sm warning">결재 대기</span>
-                <span class="h-date">02.20</span>
+                <span class="status-badge-sm" :class="getApprStatusClass(app.status)">{{ getApprStatusLabel(app.status) }}</span>
+                <span class="h-date">{{ app.appliedAt.substring(5).replace('-', '.') }}</span>
               </div>
-              <div class="h-title">2월 정기 휴가 (1일)</div>
+              <div class="h-title">{{ app.title }}</div>
             </div>
+             <div v-if="recentApplications.length === 0" class="no-data-text">
+                신청 내역이 없습니다.
+             </div>
           </div>
         </div>
       </div>
@@ -273,7 +276,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useAttendanceStore } from '@/store/attendance'
+
+const store = useAttendanceStore()
+
+const recentApplications = computed(() => {
+  // Sort by appliedAt desc
+  return [...store.myLeaveRequests]
+    .sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
+    .slice(0, 2)
+})
+
+const getApprStatusLabel = (s) => ({ pending: '결재 대기', approved: '승인됨', rejected: '반려됨' }[s])
+const getApprStatusClass = (s) => ({ pending: 'warning', approved: 'success', rejected: 'danger' }[s])
 
 // -- Clock Logic --
 const currentDate = ref('')
@@ -689,7 +705,7 @@ onUnmounted(() => {
   color: var(--primary);
 }
 .bar-orange {
-  background: #BV1200; /* Typo in color? Using var */
+
   background: #FFF3E0;
   color: var(--orange);
 }
@@ -783,6 +799,15 @@ onUnmounted(() => {
   background: #FFF8E1;
   color: #FBC02D;
 }
+.status-badge-sm.success {
+  background: #DCFCE7;
+  color: #166534;
+}
+.status-badge-sm.danger {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.no-data-text { font-size: 0.9rem; color: var(--gray500); text-align: center; padding: 12px; }
 .h-date {
   font-size: 0.8rem;
   color: var(--gray400);
