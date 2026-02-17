@@ -146,6 +146,8 @@ const routes = [
       { path: 'history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
       { path: 'schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
       { path: 'team', component: () => import('@/views/attendance/AttendanceTeamManage.vue'), meta: { requiresAuth: true, roles: ['manager', 'admin'] } },
+      { path: 'manage', component: () => import('@/views/attendance/AttendanceManage.vue') },
+      { path: 'flexible', component: () => import('@/views/attendance/FlexibleWorkManage.vue') },
     ]
   },
   {
