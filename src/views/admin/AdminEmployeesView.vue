@@ -1,10 +1,5 @@
 <template>
   <section class="admin-page">
-    <header class="head">
-      <h1>사원 등록</h1>
-      <p>신규 사원 등록 및 계정 발급을 관리합니다.</p>
-    </header>
-
     <div class="layout">
       <article class="card form-card">
         <h3>신규 사원 등록</h3>
@@ -306,9 +301,6 @@ const createAccount = () => {
 
 <style scoped>
 .admin-page { max-width: 1200px; }
-.head { margin-top: 12px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
-.head h1 { margin: 0; color: var(--gray800); }
-.head p { margin: 6px 0 0; color: var(--gray500); }
 .layout { margin-top: 12px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 12px; }
 .card { background: #fff; border: 1px solid var(--gray200); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
 .card h3 { margin: 0 0 12px; color: var(--gray800); }
