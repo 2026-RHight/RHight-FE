@@ -383,8 +383,10 @@ const historyStatusText = (status) => {
 }
 
 .member-detail {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
+  height: min(78vh, 820px);
 }
 
 .detail-head {
@@ -409,6 +411,11 @@ const historyStatusText = (status) => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  align-content: start;
 }
 
 .detail-card {
