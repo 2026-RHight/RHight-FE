@@ -127,31 +127,40 @@
     <template v-else-if="isPerformance">
       <div class="sidebar-header">
         <span>성과 관리</span>
-        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': perfStore.role === 'manager' }">
-          {{ perfStore.role === 'manager' ? '관리자' : '사용자' }}
+        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': isPerformanceManager }">
+          {{ isPerformanceManager ? '관리자' : '사용자' }}
         </span>
       </div>
 
-      <!-- 관리자 메뉴 -->
-      <template v-if="perfStore.role === 'manager'">
-        <div class="sidebar-section-label">팀 관리</div>
+      <template v-if="isPerformanceManager">
+        <div class="sidebar-section-label">내 성과 관리</div>
         <div
-            v-for="item in managerMenuItems"
+            v-for="item in myPerformanceMenuItems"
             :key="item.id"
             class="sidebar-item"
             :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
             @click="perfStore.setPage(item.id)"
         >
           <component :is="item.icon" />
-          <span class="sidebar-item-text">{{ item.name }}</span>
-          <span v-if="item.badge" class="sidebar-badge">{{ item.badge }}</span>
+          {{ item.name }}
         </div>
+
         <div class="sidebar-divider" />
-        <div class="sidebar-section-label">내 성과</div>
+        <div class="sidebar-section-label">팀 관리</div>
+        <div
+            v-for="item in teamManagementMenuItems"
+            :key="item.id"
+            class="sidebar-item"
+            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+            @click="perfStore.setPage(item.id)"
+        >
+          <component :is="item.icon" />
+          {{ item.name }}
+        </div>
       </template>
-      <!-- 사용자 메뉴 -->
       <div
-          v-for="item in userMenuItems"
+          v-else
+          v-for="item in myPerformanceMenuItems"
           :key="item.id"
           class="sidebar-item"
           :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
@@ -159,16 +168,6 @@
       >
         <component :is="item.icon" />
         {{ item.name }}
-      </div>
-
-      <!-- 모드 전환 버튼 -->
-      <div class="sidebar-toggle">
-        <div class="sidebar-item sidebar-item--toggle" @click="perfStore.toggleRole()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-          {{ perfStore.role === 'manager' ? '사용자 모드로 전환' : '관리자 모드로 전환' }}
-        </div>
       </div>
     </template>
 
@@ -199,9 +198,10 @@
 </template>
 
 <script setup>
-import { h, ref, computed } from 'vue'
+import { h, ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePerformanceStore } from '@/store/performance'
+import { AUTH_KEYS } from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -224,6 +224,9 @@ const isSalaryMode = computed(() => route.path.startsWith('/salary'))
 
 const currentPath = computed(() => route.path)
 const isPerformance = computed(() => route.path.startsWith('/performance'))
+const currentUserId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
+const PERFORMANCE_MANAGER_USER_IDS = ['admin1234']
+const isPerformanceManager = computed(() => PERFORMANCE_MANAGER_USER_IDS.includes(currentUserId.value))
 
 // SVG icon components (inline)
 const StarIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
@@ -351,20 +354,37 @@ const adminMenus = [
   { label: '급여 관리', icon: CreditCardIcon, route: '' },
   { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
 ]
-const userMenuItems = [
+const myPerformanceMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
   { id: 'inquiry', name: '성과 조회', icon: SearchIcon },
   { id: 'monthly', name: '월별 성과', icon: ChartIcon },
-  { id: 'peer-review', name: '동료 평가', icon: UsersIcon },
 ]
 
-const managerMenuItems = [
-  { id: 'manager-dashboard', name: '팀 대시보드', icon: DashboardIcon },
-  { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon, badge: 12 },
-  { id: 'team-evaluation', name: '팀원 평가', icon: FileTextIcon },
+const teamManagementMenuItems = [
+  { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon },
+  { id: 'team-evaluation', name: '팀원 평가', icon: UsersIcon },
   { id: 'team-stats', name: '부서 성과 통계', icon: ChartIcon },
 ]
+
+const managerPerformanceMenuItems = [
+  ...teamManagementMenuItems,
+  ...myPerformanceMenuItems,
+]
+
+const performanceMenuItems = computed(() => (
+  isPerformanceManager.value ? managerPerformanceMenuItems : myPerformanceMenuItems
+))
+const performanceMenuIds = computed(() => performanceMenuItems.value.map(item => item.id))
+const myPerformanceMenuIds = computed(() => myPerformanceMenuItems.map(item => item.id))
+
+watch([isPerformance, isPerformanceManager, performanceMenuIds], ([performance, manager]) => {
+  if (!performance) return
+  if (!performanceMenuIds.value.includes(perfStore.activePage)) {
+    const nextPage = manager ? myPerformanceMenuIds.value[0] : myPerformanceMenuIds.value[0]
+    perfStore.setPage(nextPage)
+  }
+}, { immediate: true })
 
 // --- 메인 모드 데이터 ---
 const shortcuts = [
