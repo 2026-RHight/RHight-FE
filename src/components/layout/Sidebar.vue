@@ -47,20 +47,51 @@
     <template v-else-if="isAttendanceMode">
       <div class="sidebar-header">
         <span>근태 관리</span>
+        <span v-if="['manager', 'admin'].includes(userRank)" class="sidebar-role-badge sidebar-role-badge--manager">관리자</span>
       </div>
-      <div class="menu-section">
+
+      <template v-if="['manager', 'admin'].includes(userRank)">
+        <div class="sidebar-section-label">내 근태 관리</div>
         <div
-            v-for="item in attendanceMenus"
+            v-for="item in myAttendanceMenus"
             :key="item.label"
             class="sidebar-item"
-            :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            :class="{ 'active': currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
             @click="handleNavigate(item.route)"
         >
           <component :is="item.icon" />
           {{ item.label }}
         </div>
-      </div>
-      <div class="divider"></div>
+
+        <div class="divider"></div>
+        <div class="sidebar-section-label">팀 관리</div>
+        <div
+            v-for="item in teamAttendanceMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ 'active': currentPath.includes(item.route) }"
+            @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="menu-section">
+          <div
+              v-for="item in myAttendanceMenus"
+              :key="item.label"
+              class="sidebar-item"
+              :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+              @click="handleNavigate(item.route)"
+          >
+            <component :is="item.icon" />
+            {{ item.label }}
+          </div>
+        </div>
+      </template>
+      
       <div class="divider"></div>
     </template>
 
@@ -349,9 +380,10 @@ const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', f
 const adminMenus = [
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
   { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
-  { label: '급여 관리', icon: CreditCardIcon, route: '' },
+  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' },
   { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
 ]
 const myPerformanceMenuItems = [
@@ -400,23 +432,28 @@ const hrMenus = [
 ]
 
 
+// --- 전자결재 모드 데이터 ---
+const userRank = computed(() => {
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId)
+  return ['admin1234'].includes(userId) ? 'manager' : 'user'
+})
+
 // --- 근태 모드 데이터 ---
-const attendanceMenus = [
+const myAttendanceMenus = [
   { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
   { label: '출퇴근 기록', icon: ListIcon, route: '/attendance/record' },
   { label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
   { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
 ]
 
+const teamAttendanceMenus = [
+  { label: '팀 근태 관리', icon: UsersIcon, route: '/attendance/team' }
+]
 
 // --- 급여 모드 데이터 ---
 const salaryMenus = [
   { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
 ]
-
-// --- 전자결재 모드 데이터 ---
-// Mock User Rank
-const userRank = 'manager' 
 
 const approvalChildren = [
   { label: '전자 결재 기안', route: '/approval/draft' },
@@ -424,7 +461,7 @@ const approvalChildren = [
   { label: '전자 결재 문서함', route: '/approval/box' },
 ]
 
-if (['manager', 'admin'].includes(userRank)) {
+if (['manager', 'admin'].includes(userRank.value)) {
   approvalChildren.push({ label: '전자 결재 검토', route: '/approval/review' })
 }
 
