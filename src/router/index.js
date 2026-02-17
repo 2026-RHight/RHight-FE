@@ -122,6 +122,20 @@ const routes = [
     component: () => import('@/views/performance/Performance.vue')
   },
   {
+    path: '/kms',
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', name: 'kms-main', component: () => import('@/views/kms/KmsMainView.vue') },
+      { path: 'manuals', name: 'kms-manuals', component: () => import('@/views/kms/KmsManualDashboardView.vue') },
+      { path: 'manuals/category/:categoryKey', name: 'kms-manual-category', component: () => import('@/views/kms/KmsManualCategoryView.vue') },
+      { path: 'manuals/detail/:manualId', name: 'kms-manual-detail', component: () => import('@/views/kms/KmsManualDetailView.vue') },
+      { path: 'manuals/upload', name: 'kms-manual-upload', component: () => import('@/views/kms/KmsManualUploadView.vue') },
+      { path: 'manuals/edit/:manualId', name: 'kms-manual-edit', component: () => import('@/views/kms/KmsManualEditView.vue') },
+      { path: 'archive', name: 'kms-archive', component: () => import('@/views/kms/KmsArchiveView.vue') },
+      { path: 'archive/:archiveId', name: 'kms-archive-detail', component: () => import('@/views/kms/KmsArchiveDetailView.vue') },
+    ]
+  },
+  {
     path: '/attendance',
     name: 'attendance',
     redirect: '/attendance/my',

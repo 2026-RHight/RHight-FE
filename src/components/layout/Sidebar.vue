@@ -198,7 +198,48 @@
           @click="perfStore.setPage(item.id)"
       >
         <component :is="item.icon" />
-        {{ item.name }}
+          {{ item.name }}
+      </div>
+    </template>
+
+    <template v-else-if="isKmsMode">
+      <div class="sidebar-header">
+        <span>KMS</span>
+      </div>
+
+      <div
+        class="sidebar-item"
+        :class="{ 'sidebar-item--active': isMenuActive(kmsDashboardMenu) }"
+        @click="handleNavigate(kmsDashboardMenu.route)"
+      >
+        <component :is="kmsDashboardMenu.icon" />
+        {{ kmsDashboardMenu.label }}
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">업무 메뉴얼</div>
+      <div
+        v-for="item in kmsManualMenus"
+        :key="item.label"
+        class="sidebar-item"
+        :class="{ 'sidebar-item--active': isMenuActive(item) }"
+        @click="handleNavigate(item.route)"
+      >
+        <component :is="item.icon" />
+        {{ item.label }}
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">아카이브</div>
+      <div
+        v-for="item in kmsArchiveMenus"
+        :key="item.label"
+        class="sidebar-item"
+        :class="{ 'sidebar-item--active': isMenuActive(item) }"
+        @click="handleNavigate(item.route)"
+      >
+        <component :is="item.icon" />
+        {{ item.label }}
       </div>
     </template>
 
@@ -252,6 +293,7 @@ const isAttendanceMode = computed(() => route.path.startsWith('/attendance'))
 
 // 현재 경로가 /salary 로 시작하면 급여 모드
 const isSalaryMode = computed(() => route.path.startsWith('/salary'))
+const isKmsMode = computed(() => route.path.startsWith('/kms'))
 
 const currentPath = computed(() => route.path)
 const isPerformance = computed(() => route.path.startsWith('/performance'))
@@ -342,6 +384,9 @@ const FileTextIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', 
   h('line', { x1:'16', y1:'13', x2:'8', y2:'13' }),
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
   h('line', { x1:'16', y1:'17', x2:'8', y2:'17' }),
+])
+const FolderIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('path', { d:'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' }),
 ])
 const CreditCardIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
   h('rect', { x:'1', y:'4', width:'22', height:'16', rx:'2', ry:'2' }),
@@ -478,6 +523,22 @@ const approvalMenus = [
   }
 ]
 
+const kmsManualMenus = [
+  {
+    label: '메뉴얼 대시보드',
+    icon: FileTextIcon,
+    route: '/kms/manuals',
+    routePrefixes: ['/kms/manuals/category', '/kms/manuals/detail', '/kms/manuals/edit']
+  },
+  { label: '메뉴얼 업로드', icon: PlusIcon, route: '/kms/manuals/upload' },
+]
+
+const kmsArchiveMenus = [
+  { label: '회의록 아카이브', icon: FolderIcon, route: '/kms/archive', routePrefix: '/kms/archive' },
+]
+
+const kmsDashboardMenu = { label: 'KMS 대시보드', icon: DashboardIcon, route: '/kms' }
+
 // 메뉴 토글 상태 관리
 const openMenus = ref({ '전자결재 메뉴': true }) 
 
@@ -486,6 +547,13 @@ const toggleMenu = (label) => {
 }
 
 const isOpen = (label) => !!openMenus.value[label]
+
+const isMenuActive = (item) => {
+  if (currentPath.value === item.route) return true
+  if (item.routePrefix && currentPath.value.startsWith(item.routePrefix)) return true
+  if (item.routePrefixes) return item.routePrefixes.some((prefix) => currentPath.value.startsWith(prefix))
+  return false
+}
 
 const handleNavigate = (route) => {
   if (route) {
