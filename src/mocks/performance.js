@@ -190,8 +190,6 @@ export const TEAM_EVALUATION_MEMBERS = [
 
 export const PEER_REVIEW_COLLEAGUES = [
   { name: '김서연', team: '디자인팀', color: '#3b82f6', evaluated: false },
-  { name: '이승주', team: '개발팀', color: '#22c55e', evaluated: true },
+  { name: '이승주', team: '개발팀', color: '#22c55e', evaluated: false },
   { name: '박준호', team: '기획팀', color: '#f59e0b', evaluated: false },
-  { name: '손흥민', team: '영업팀', color: '#ef4444', evaluated: false },
-  { name: '페이커', team: '개발팀', color: '#a855f7', evaluated: true },
 ]
