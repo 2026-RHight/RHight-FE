@@ -139,16 +139,11 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { Users, Shield, MessageSquare, Send, CheckCircle2 } from 'lucide-vue-next'
+import { PEER_REVIEW_COLLEAGUES } from '@/mocks/performance'
 
-const colleagues = [
-  { name: '김서연', team: '전략 기획팀', color: '#3b82f6', evaluated: false },
-  { name: '이승주', team: '개발팀', color: '#22c55e', evaluated: true },
-  { name: '박지성', team: '마케팅팀', color: '#f59e0b', evaluated: false },
-  { name: '손흥민', team: '영업팀', color: '#ef4444', evaluated: false },
-  { name: '페이커', team: '개발팀', color: '#a855f7', evaluated: true },
-]
+const colleagues = ref(PEER_REVIEW_COLLEAGUES.map((item) => ({ ...item })))
 
-const evaluatedCount = computed(() => colleagues.filter(c => c.evaluated).length)
+const evaluatedCount = computed(() => colleagues.value.filter((c) => c.evaluated).length)
 
 const selectedColleague = ref(null)
 const showModal = ref(false)
@@ -184,7 +179,7 @@ function closeModal() {
 function closeAndNext() {
   if (selectedColleague.value) selectedColleague.value.evaluated = true
   showModal.value = false
-  const next = colleagues.find(c => !c.evaluated)
+  const next = colleagues.value.find((c) => !c.evaluated)
   if (next) selectColleague(next)
   else selectedColleague.value = null
 }
@@ -197,7 +192,8 @@ function closeAndNext() {
 .peer-wrap {
   display: flex;
   gap: 16px;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 /* ════════════════════════════════

@@ -176,6 +176,7 @@
 import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, BarChart3, FileText, TrendingUp, Users, Award, Star } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
+import { PERFORMANCE_MONTHLY } from '@/mocks/performance'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -187,8 +188,8 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
-const currentYear = ref(2023)
-const currentMonth = ref(6)
+const currentYear = ref(PERFORMANCE_MONTHLY.initialYear)
+const currentMonth = ref(PERFORMANCE_MONTHLY.initialMonth)
 
 const lastDay = computed(() => new Date(currentYear.value, currentMonth.value, 0).getDate())
 
@@ -211,18 +212,18 @@ function nextMonth() {
 }
 
 const stats = [
-  { label: '업무 달성률', value: '98%', icon: TrendingUp, bgColor: '#eff6ff', iconColor: '#3b82f6' },
-  { label: '협업 지수', value: '4.8', icon: Users, bgColor: '#f0fdf4', iconColor: '#22c55e' },
-  { label: '성장 지수', value: 'A+', icon: Award, bgColor: '#fef3c7', iconColor: '#f59e0b' },
-  { label: '종합 점수', value: '96.5', icon: Star, bgColor: '#faf5ff', iconColor: '#a855f7' },
+  { ...PERFORMANCE_MONTHLY.stats[0], icon: TrendingUp, bgColor: '#eff6ff', iconColor: '#3b82f6' },
+  { ...PERFORMANCE_MONTHLY.stats[1], icon: Users, bgColor: '#f0fdf4', iconColor: '#22c55e' },
+  { ...PERFORMANCE_MONTHLY.stats[2], icon: Award, bgColor: '#fef3c7', iconColor: '#f59e0b' },
+  { ...PERFORMANCE_MONTHLY.stats[3], icon: Star, bgColor: '#faf5ff', iconColor: '#a855f7' },
 ]
 
 const chartData = {
-  labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+  labels: PERFORMANCE_MONTHLY.chartLabels,
   datasets: [
     {
       label: '내 점수',
-      data: [85, 92, 88, 95, 90, 98],
+      data: PERFORMANCE_MONTHLY.myScores,
       backgroundColor: 'rgba(8, 145, 178, 0.85)',
       borderRadius: { topLeft: 5, topRight: 5 },
       barPercentage: 0.5,
@@ -230,7 +231,7 @@ const chartData = {
     },
     {
       label: '팀 평균',
-      data: [80, 82, 81, 83, 85, 84],
+      data: PERFORMANCE_MONTHLY.teamScores,
       backgroundColor: 'rgba(203, 213, 225, 0.7)',
       borderRadius: { topLeft: 5, topRight: 5 },
       barPercentage: 0.5,
@@ -290,63 +291,7 @@ function closeFeedbackModal() {
   showFeedbackModal.value = false
 }
 
-const detailItems = [
-  {
-    id: 1,
-    type: 'team',
-    title: 'Q2 마케팅 캠페인 기획 및 실행',
-    date: '06.01 ~ 06.15',
-    progress: 100,
-    score: 98,
-    description: '신규 고객 유입 확대를 목표로 채널별 메시지를 최적화하고, 주간 단위 성과 분석 기반으로 운영 전략을 조정했습니다.',
-    achievement: '전환율 22% 상승, CAC 14% 절감',
-    feedbacks: [
-      { id: 1, author: '김팀장', date: '2023.06.16', text: '캠페인 운영 속도가 매우 좋았고 리포트 품질도 높았습니다.' },
-      { id: 2, author: '박매니저', date: '2023.06.18', text: '다음 분기에는 세그먼트별 실험 설계를 더 세분화하면 좋겠습니다.' },
-    ],
-  },
-  {
-    id: 2,
-    type: 'individual',
-    title: 'Vue 3 마이그레이션 완료',
-    date: '06.05 ~ 06.20',
-    progress: 100,
-    score: 95,
-    description: '레거시 Vue2 컴포넌트를 Vue3 Composition API 기반으로 전환하고, 공통 상태 관리와 라우팅 구조를 정리했습니다.',
-    achievement: '핵심 화면 100% 전환, 렌더링 성능 개선',
-    feedbacks: [
-      { id: 1, author: '이리드', date: '2023.06.21', text: '전환 중 장애 없이 배포한 점이 인상적이었습니다.' },
-      { id: 2, author: '정아키텍트', date: '2023.06.22', text: '테스트 코드 커버리지를 더 보강하면 유지보수성이 더 높아질 것 같습니다.' },
-    ],
-  },
-  {
-    id: 3,
-    type: 'team',
-    title: '신규 고객사 온보딩 프로세스 개선',
-    date: '06.10 ~ 06.30',
-    progress: 85,
-    score: 92,
-    description: '온보딩 단계별 체크리스트와 자동 안내 플로우를 도입해 초기 정착 속도를 높이는 작업을 진행했습니다.',
-    achievement: '온보딩 완료 기간 평균 2.3일 단축',
-    feedbacks: [
-      { id: 1, author: '최팀장', date: '2023.06.28', text: '고객 관점에서 절차를 단순화한 접근이 좋았습니다.' },
-    ],
-  },
-  {
-    id: 4,
-    type: 'individual',
-    title: '사내 기술 세미나 발표',
-    date: '06.18',
-    progress: 100,
-    score: 97,
-    description: '프론트엔드 성능 최적화 사례를 주제로 사내 기술 세미나를 발표하고 Q&A 세션을 진행했습니다.',
-    achievement: '참석자 만족도 4.9/5.0',
-    feedbacks: [
-      { id: 1, author: '조리더', date: '2023.06.19', text: '실무 사례 중심 구성이라 이해하기 쉬웠습니다.' },
-      { id: 2, author: '한선임', date: '2023.06.19', text: '다음에는 실습형 세션도 추가해보면 좋겠습니다.' },
-    ],
-  },
-]
+const detailItems = PERFORMANCE_MONTHLY.detailItems
 </script>
 
 <style scoped>
@@ -357,7 +302,8 @@ const detailItems = [
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 .monthly-card {
@@ -490,10 +436,9 @@ const detailItems = [
    차트
    ════════════════════════════════ */
 .chart-card {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  flex: 0 0 auto;
 }
 
 .chart-header {
@@ -546,7 +491,8 @@ const detailItems = [
 }
 
 .chart-wrap {
-  flex: 1;
+  flex: 0 0 auto;
+  height: 260px;
   min-height: 260px;
 }
 

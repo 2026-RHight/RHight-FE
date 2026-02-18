@@ -4,7 +4,7 @@
       <Headerbar :active-nav="activeNav" @nav-click="handleNavClick" />
       <div class="app-body">
         <Sidebar />
-        <main class="main-content">
+        <main class="main-content" :class="{ 'main-content--performance': isPerformanceRoute }">
           <router-view />
         </main>
       </div>
@@ -26,6 +26,7 @@ const router = useRouter()
 const route = useRoute()
 const perfStore = usePerformanceStore()
 const activeNav = ref('메인')
+const isPerformanceRoute = computed(() => route.path.startsWith('/performance'))
 
 // 로그인 페이지에서는 레이아웃 숨기기
 const showLayout = computed(() => route.path !== '/login')
