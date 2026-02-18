@@ -5,9 +5,18 @@
         <span>관리자</span>
       </div>
 
+      <div
+        class="sidebar-item"
+        :class="{ active: currentPath === adminDashboardMenu.route }"
+        @click="handleNavigate(adminDashboardMenu.route)"
+      >
+        <component :is="adminDashboardMenu.icon" />
+        {{ adminDashboardMenu.label }}
+      </div>
+
       <div class="menu-section">
         <div
-            v-for="item in adminMenus"
+            v-for="item in adminOtherMenus"
             :key="item.label"
             class="sidebar-item"
             :class="{ active: currentPath === item.route, disabled: !item.route }"
@@ -413,14 +422,16 @@ const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', f
 ])
 
 const adminMenus = [
+  { label: '인사 정보 조회', icon: DashboardIcon, route: '/admin/main' },
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
   { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
   { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
-  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' },
-  { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
+  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' }
 ]
+const adminDashboardMenu = adminMenus[0]
+const adminOtherMenus = adminMenus.slice(1)
 const myPerformanceMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
