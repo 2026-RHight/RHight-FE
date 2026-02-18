@@ -18,11 +18,13 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { usePerformanceStore } from '@/store/performance'
 import Headerbar from '@/components/layout/Headerbar.vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
 
 const router = useRouter()
 const route = useRoute()
+const perfStore = usePerformanceStore()
 const activeNav = ref('메인')
 
 // 로그인 페이지에서는 레이아웃 숨기기
@@ -34,7 +36,10 @@ const handleNavClick = (nav) => {
   if (nav === '메인') router.push('/')
   else if (nav === '인사') router.push('/hr')
   else if (nav === '전자결재') router.push('/approval')
-  else if (nav === '성과') router.push('/performance')
+  else if (nav === '성과') {
+    perfStore.setPage('dashboard')
+    router.push('/performance')
+  }
   else if (nav === '근태') router.push('/attendance/my')
   else if (nav === '급여') router.push('/salary/my')
   else if (nav === 'KMS') router.push('/kms')
