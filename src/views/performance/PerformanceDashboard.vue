@@ -96,25 +96,70 @@
         <MessageSquare :size="18" /> 최근 업무 피드백
       </h3>
       <div class="feedback-list">
-        <div v-for="item in feedbacks" :key="item.id" class="feedback-item">
+        <button
+          v-for="item in feedbacks"
+          :key="item.id"
+          type="button"
+          class="feedback-item"
+          @click="openFeedbackModal(item)"
+        >
           <div class="feedback-head">
             <span class="feedback-author">{{ item.author }}</span>
             <span class="feedback-date">{{ item.date }}</span>
           </div>
           <p class="feedback-text">{{ item.text }}</p>
-        </div>
+        </button>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="selectedFeedback" class="modal-overlay" @click.self="closeFeedbackModal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <h3 class="modal-title">피드백 상세</h3>
+              <button class="modal-close" type="button" @click="closeFeedbackModal">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="modal-meta">
+                <span>{{ selectedFeedback.author }}</span>
+                <span>{{ selectedFeedback.date }}</span>
+              </div>
+              <div class="modal-section">
+                <span class="modal-label">업무명</span>
+                <p class="modal-value">{{ selectedInquiryItem?.title || '-' }}</p>
+              </div>
+              <div class="modal-section">
+                <span class="modal-label">업무 기간</span>
+                <p class="modal-value">{{ selectedInquiryItem?.date || '-' }}</p>
+              </div>
+              <div class="modal-section">
+                <span class="modal-label">성과 조회 상태</span>
+                <p class="modal-value">{{ selectedInquiryItem?.status || '-' }} / {{ selectedInquiryItem?.progress ?? '-' }}%</p>
+              </div>
+              <div class="modal-section">
+                <span class="modal-label">피드백 내용</span>
+                <p class="modal-value">{{ selectedFeedback.text }}</p>
+              </div>
+              <div class="modal-section">
+                <span class="modal-label">업무 상세</span>
+                <p class="modal-value">{{ selectedFeedback.detail }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { TrendingUp, Target, Award, MessageSquare } from 'lucide-vue-next'
 import { Line } from 'vue-chartjs'
 import { usePerformanceStore } from '@/store/performance'
 import { AUTH_KEYS } from '@/utils/auth'
-import { PERFORMANCE_DASHBOARD } from '@/mocks/performance'
+import { PERFORMANCE_DASHBOARD, PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -180,6 +225,19 @@ const chartOptions = {
 }
 
 const feedbacks = PERFORMANCE_DASHBOARD.feedbacks
+const selectedFeedback = ref(null)
+const selectedInquiryItem = computed(() => {
+  if (!selectedFeedback.value) return null
+  return PERFORMANCE_INQUIRY_ITEMS.find((item) => item.id === selectedFeedback.value.inquiryItemId) || null
+})
+
+function openFeedbackModal(item) {
+  selectedFeedback.value = item
+}
+
+function closeFeedbackModal() {
+  selectedFeedback.value = null
+}
 </script>
 
 <style scoped>
@@ -358,6 +416,8 @@ const feedbacks = PERFORMANCE_DASHBOARD.feedbacks
 }
 
 .feedback-item {
+  text-align: left;
+  cursor: pointer;
   padding: 16px;
   background: var(--gray50);
   border-radius: var(--radius-sm);
@@ -395,4 +455,92 @@ const feedbacks = PERFORMANCE_DASHBOARD.feedbacks
   color: var(--gray700);
   line-height: 1.6;
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+  background: #fff;
+  border: 1px solid var(--gray200);
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.22);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray100);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--gray800);
+}
+
+.modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--gray50);
+  color: var(--gray500);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: var(--gray100);
+  color: var(--gray700);
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.modal-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--gray500);
+  margin-bottom: 12px;
+}
+
+.modal-section + .modal-section {
+  margin-top: 10px;
+}
+
+.modal-label {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--gray500);
+  margin-bottom: 4px;
+}
+
+.modal-value {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--gray100);
+  background: var(--gray50);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--gray700);
+  line-height: 1.5;
+}
+
+.modal-enter-active { transition: opacity 0.2s ease; }
+.modal-leave-active { transition: opacity 0.15s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
 </style>
