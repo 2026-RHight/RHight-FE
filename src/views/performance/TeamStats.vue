@@ -32,6 +32,11 @@
             <Radar :data="getChartData(member)" :options="radarOptionsC" />
           </div>
 
+          <div class="c-system-score">
+            <span class="c-system-label">시스템 평가 점수</span>
+            <strong class="c-system-value">{{ member.systemScore }}점</strong>
+          </div>
+
           <div class="c-scores">
             <div v-for="item in member.chartData" :key="item.subject" class="c-score-row">
               <span class="c-score-label">{{ item.subject }}</span>
@@ -78,6 +83,7 @@ const DEFAULT_AVATAR =
 const members = PERFORMANCE_MEMBERS.map((member) => ({
   ...member,
   image: DEFAULT_AVATAR,
+  systemScore: Math.round(member.avgScore * 20),
 }))
 
 const getChartData = (member) => ({
@@ -129,7 +135,7 @@ const radarOptionsC = {
 .stats-body { flex: 1; overflow-y: auto; padding-bottom: 16px; }
 
 .c-list { display: flex; flex-direction: column; gap: 16px; }
-.c-card { display: grid; grid-template-columns: 200px 160px 1fr auto; align-items: center; gap: 24px; padding: 24px 28px; background: rgba(255,255,255,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.02), 0 4px 20px rgba(0,0,0,0.03); transition: all 0.25s; }
+.c-card { display: grid; grid-template-columns: 200px 160px 140px 1fr auto; align-items: center; gap: 24px; padding: 24px 28px; background: rgba(255,255,255,0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.02), 0 4px 20px rgba(0,0,0,0.03); transition: all 0.25s; }
 .c-card:hover { background: rgba(255,255,255,0.88); box-shadow: 0 4px 24px rgba(8,145,178,0.08); border-color: var(--accent2); }
 .c-profile { display: flex; align-items: center; gap: 14px; }
 .c-avatar-wrap { position: relative; flex-shrink: 0; }
@@ -139,6 +145,19 @@ const radarOptionsC = {
 .c-name { font-size: 0.92rem; font-weight: 700; color: var(--gray800); }
 .c-role { font-size: 0.7rem; color: var(--gray400); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .c-chart { width: 160px; height: 130px; flex-shrink: 0; }
+.c-system-score {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--gray200);
+  background: #f8fafc;
+  text-align: center;
+}
+.c-system-label { font-size: 0.68rem; color: var(--gray500); }
+.c-system-value { font-size: 1.05rem; color: var(--primary-dark); font-family: var(--font-num); line-height: 1; }
 .c-scores { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
 .c-score-row { display: flex; align-items: center; gap: 10px; }
 .c-score-label { font-size: 0.7rem; color: var(--gray500); width: 56px; flex-shrink: 0; text-align: right; }
