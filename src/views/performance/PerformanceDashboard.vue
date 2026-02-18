@@ -6,15 +6,15 @@
       <div class="metric-card">
         <div class="metric-deco blue"></div>
         <div class="metric-body">
-          <h3 class="metric-label">이번달 성과 달성</h3>
+          <h3 class="metric-label">개인 KPI 달성률</h3>
           <div class="metric-value-row">
-            <span class="metric-num">20%</span>
+            <span class="metric-num">98%</span>
             <span class="metric-change blue">
-              <TrendingUp :size="13" /> +2.5%
+              <TrendingUp :size="13" /> +3.2%
             </span>
           </div>
           <div class="metric-bar">
-            <div class="metric-fill blue" style="width: 20%"></div>
+            <div class="metric-fill blue" style="width: 98%"></div>
           </div>
         </div>
       </div>
@@ -23,15 +23,15 @@
       <div class="metric-card">
         <div class="metric-deco green"></div>
         <div class="metric-body">
-          <h3 class="metric-label">팀 목표 달성률</h3>
+          <h3 class="metric-label">팀 KPI 달성률</h3>
           <div class="metric-value-row">
-            <span class="metric-num">20%</span>
+            <span class="metric-num">84%</span>
             <span class="metric-change green">
               <Target :size="13" /> On Track
             </span>
           </div>
           <div class="metric-bar">
-            <div class="metric-fill green" style="width: 20%"></div>
+            <div class="metric-fill green" style="width: 84%"></div>
           </div>
         </div>
       </div>
@@ -40,15 +40,15 @@
       <div class="metric-card">
         <div class="metric-deco purple"></div>
         <div class="metric-body">
-          <h3 class="metric-label">분기별 팀 목표</h3>
+          <h3 class="metric-label">이번 달 핵심 목표 진행률</h3>
           <div class="metric-value-row">
-            <span class="metric-num">40%</span>
+            <span class="metric-num">85%</span>
             <span class="metric-change purple">
-              <Award :size="13" /> +5%
+              <Award :size="13" /> +4.1%
             </span>
           </div>
           <div class="metric-bar">
-            <div class="metric-fill purple" style="width: 40%"></div>
+            <div class="metric-fill purple" style="width: 85%"></div>
           </div>
         </div>
       </div>

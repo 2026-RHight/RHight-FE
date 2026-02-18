@@ -5,6 +5,13 @@
       <div class="filter-bar">
         <div class="filter-left">
           <div class="filter-select-wrap">
+            <User :size="14" class="filter-icon" />
+            <select v-model="filterEmployee" class="filter-select">
+              <option value="">전체 팀원</option>
+              <option v-for="employee in employeeOptions" :key="employee" :value="employee">{{ employee }}</option>
+            </select>
+          </div>
+          <div class="filter-select-wrap">
             <Filter :size="14" class="filter-icon" />
             <select v-model="filterStatus" class="filter-select">
               <option value="">전체 상태</option>
@@ -213,7 +220,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle, User } from 'lucide-vue-next'
 import { PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 
 const selectedItem = ref(null)
@@ -221,13 +228,16 @@ const modalTab = ref('detail')
 const resultProgress = ref(85)
 
 const filterStatus = ref('')
+const filterEmployee = ref('')
 const filterMonth = ref('')
 const searchText = ref('')
 
 const items = PERFORMANCE_INQUIRY_ITEMS
+const employeeOptions = computed(() => [...new Set(items.map((item) => item.employeeName).filter(Boolean))])
 
 const filteredItems = computed(() => {
   return items.filter((item) => {
+    if (filterEmployee.value && item.employeeName !== filterEmployee.value) return false
     if (filterStatus.value && item.status !== filterStatus.value) return false
     if (searchText.value && !item.title.includes(searchText.value)) return false
     return true
