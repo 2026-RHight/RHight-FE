@@ -1,13 +1,22 @@
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ 'mode-hr-admin': isAdminMode || isHrMode }">
     <template v-if="isAdminMode">
       <div class="sidebar-header">
         <span>관리자</span>
       </div>
 
+      <div
+        class="sidebar-item"
+        :class="{ active: currentPath === adminDashboardMenu.route }"
+        @click="handleNavigate(adminDashboardMenu.route)"
+      >
+        <component :is="adminDashboardMenu.icon" />
+        {{ adminDashboardMenu.label }}
+      </div>
+
       <div class="menu-section">
         <div
-            v-for="item in adminMenus"
+            v-for="item in adminOtherMenus"
             :key="item.label"
             class="sidebar-item"
             :class="{ active: currentPath === item.route, disabled: !item.route }"
@@ -239,7 +248,7 @@
     <template v-else>
       <div class="sidebar-header">
         <span>바로가기</span>
-        <span class="sidebar-add" title="바로가기 추가">
+        <span class="sidebar-add" title="바로가기 추가" @click="openShortcutModal">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
           </svg>
@@ -255,14 +264,38 @@
         {{ item.label }}
       </div>
     </template>
+
+    <BaseModal v-model="showShortcutModal" width="520px">
+      <h3 class="shortcut-modal-title">바로가기 설정</h3>
+      <p class="shortcut-modal-desc">접근 가능한 메뉴만 선택할 수 있습니다.</p>
+      <div class="shortcut-option-list">
+        <label
+          v-for="item in shortcutOptionsByUser"
+          :key="item.key"
+          class="shortcut-option-item"
+        >
+          <input v-model="draftShortcutKeys" type="checkbox" :value="item.key" />
+          <span>{{ item.label }}</span>
+        </label>
+      </div>
+      <div class="shortcut-modal-actions">
+        <button class="shortcut-btn shortcut-btn--ghost" type="button" @click="showShortcutModal = false">
+          취소
+        </button>
+        <button class="shortcut-btn shortcut-btn--primary" type="button" @click="saveShortcutSelection">
+          저장
+        </button>
+      </div>
+    </BaseModal>
   </aside>
 </template>
 
 <script setup>
-import { h, computed, watch } from 'vue'
+import { h, computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePerformanceStore } from '@/store/performance'
 import { AUTH_KEYS } from '@/utils/auth'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -413,14 +446,16 @@ const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', f
 ])
 
 const adminMenus = [
+  { label: '인사 정보 조회', icon: DashboardIcon, route: '/admin/main' },
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
   { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
   { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
-  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' },
-  { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
+  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' }
 ]
+const adminDashboardMenu = adminMenus[0]
+const adminOtherMenus = adminMenus.slice(1)
 const myPerformanceMenuItems = [
   { id: 'dashboard', name: '대시보드', icon: DashboardIcon },
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
@@ -453,10 +488,95 @@ watch([isPerformance, isPerformanceManager, performanceMenuIds], ([performance, 
 }, { immediate: true })
 
 // --- 메인 모드 데이터 ---
-const shortcuts = [
-  { label: '마이페이지', icon: StarIcon, route: '/hr/my' },
-  { label: '휴가 신청', icon: FileIcon, route: '/hr/leave' },
+const SHORTCUT_STORAGE_PREFIX = 'sidebarShortcuts:'
+const showShortcutModal = ref(false)
+const selectedShortcutKeys = ref([])
+const draftShortcutKeys = ref([])
+
+const baseShortcutOptions = [
+  { key: 'hr-my', label: '마이페이지', icon: StarIcon, route: '/hr/my' },
+  { key: 'hr-org', label: '내 조직 조회', icon: UsersIcon, route: '/hr/org' },
+  { key: 'hr-orgchart', label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
+  { key: 'attendance-my', label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
+  { key: 'attendance-record', label: '출퇴근 기록', icon: ListIcon, route: '/attendance/record' },
+  { key: 'attendance-history', label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
+  { key: 'attendance-schedule', label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
+  { key: 'salary-my', label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
+  { key: 'approval-dashboard', label: '전자결재 대시보드', icon: DashboardIcon, route: '/approval' },
+  { key: 'approval-draft', label: '전자결재 기안', icon: PlusIcon, route: '/approval/draft' },
+  { key: 'approval-status', label: '전자결재 현황', icon: SearchIcon, route: '/approval/status' },
+  { key: 'approval-box', label: '전자결재 문서함', icon: FolderIcon, route: '/approval/box/all' },
 ]
+
+const adminOnlyShortcutOptions = [
+  { key: 'admin-main', label: '인사 정보 조회(관리자)', icon: DashboardIcon, route: '/admin/main' },
+  { key: 'admin-employees', label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
+  { key: 'admin-hr-change', label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { key: 'admin-attendance', label: '근태 관리(관리자)', icon: ClockIcon, route: '/admin/attendance' },
+  { key: 'admin-policies', label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
+  { key: 'admin-notices', label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
+  { key: 'admin-salary', label: '급여 관리(관리자)', icon: CreditCardIcon, route: '/admin/salary' },
+]
+
+const shortcutOptionsByUser = computed(() => (
+  currentUserId.value === 'admin1234'
+    ? [...baseShortcutOptions, ...adminOnlyShortcutOptions]
+    : baseShortcutOptions
+))
+
+const defaultShortcutKeysByUser = computed(() => (
+  currentUserId.value === 'admin1234'
+    ? ['admin-main', 'admin-employees', 'hr-my', 'attendance-my']
+    : ['hr-my', 'hr-org', 'attendance-my']
+))
+
+const shortcuts = computed(() => {
+  const selectedKeySet = new Set(selectedShortcutKeys.value)
+  return shortcutOptionsByUser.value.filter((item) => selectedKeySet.has(item.key))
+})
+
+const getShortcutStorageKey = (userId) => `${SHORTCUT_STORAGE_PREFIX}${userId || 'guest'}`
+
+function loadShortcutKeys(userId) {
+  const optionKeys = new Set(shortcutOptionsByUser.value.map((item) => item.key))
+  const fallback = defaultShortcutKeysByUser.value.filter((key) => optionKeys.has(key))
+  const raw = localStorage.getItem(getShortcutStorageKey(userId))
+  if (!raw) {
+    selectedShortcutKeys.value = fallback
+    return
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    const validated = Array.isArray(parsed)
+      ? parsed.filter((key) => optionKeys.has(key))
+      : fallback
+    selectedShortcutKeys.value = validated.length ? validated : fallback
+  } catch (error) {
+    selectedShortcutKeys.value = fallback
+  }
+}
+
+const saveShortcutKeys = (userId, keys) => {
+  localStorage.setItem(getShortcutStorageKey(userId), JSON.stringify(keys))
+}
+
+const openShortcutModal = () => {
+  draftShortcutKeys.value = [...selectedShortcutKeys.value]
+  showShortcutModal.value = true
+}
+
+const saveShortcutSelection = () => {
+  const optionKeys = new Set(shortcutOptionsByUser.value.map((item) => item.key))
+  const validated = draftShortcutKeys.value.filter((key) => optionKeys.has(key))
+  selectedShortcutKeys.value = validated.length ? validated : [...defaultShortcutKeysByUser.value]
+  saveShortcutKeys(currentUserId.value, selectedShortcutKeys.value)
+  showShortcutModal.value = false
+}
+
+watch(currentUserId, (userId) => {
+  loadShortcutKeys(userId)
+}, { immediate: true })
 
 // --- 인사 모드 데이터 ---
 const hrMenus = [
@@ -578,6 +698,17 @@ const handleNavigate = (route) => {
 .sidebar-item:hover{background:var(--gray200);color:var(--gray700)}
 .sidebar-item svg{opacity:0.5;flex-shrink:0}
 .sidebar-item.active { background: var(--gray200); color: var(--primary); font-weight: 600; }
+
+/* 인사/관리자 사이드바만 KMS 톤으로: 기본 active 하늘색 + hover 시 회색 */
+.sidebar.mode-hr-admin .sidebar-item.active {
+  background: var(--accent);
+  color: var(--primary);
+}
+.sidebar.mode-hr-admin .sidebar-item.active svg { opacity: 1; }
+.sidebar.mode-hr-admin .sidebar-item.active:hover {
+  background: var(--gray200);
+  color: var(--gray700);
+}
 .sidebar-item.disabled {
   opacity: .55;
   cursor: default;
@@ -702,5 +833,65 @@ const handleNavigate = (route) => {
 
 .sub-item.sidebar-item--active .dot {
   background-color: var(--primary);
+}
+
+.shortcut-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gray700);
+}
+
+.shortcut-modal-desc {
+  margin: 8px 0 16px;
+  font-size: 0.85rem;
+  color: var(--gray500);
+}
+
+.shortcut-option-list {
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid var(--gray200);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.shortcut-option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  font-size: 0.9rem;
+  color: var(--gray600);
+}
+
+.shortcut-option-item input {
+  accent-color: var(--primary);
+}
+
+.shortcut-modal-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.shortcut-btn {
+  height: 36px;
+  min-width: 64px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--gray200);
+  background: #fff;
+  color: var(--gray600);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shortcut-btn--primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
 }
 </style>

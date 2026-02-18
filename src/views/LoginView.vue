@@ -264,7 +264,7 @@ const submitResetPassword = () => {
 
 .login-form-wrap {
   width: 100%;
-  max-width: 320px;
+  max-width: none;
 }
 
 .login-logo {

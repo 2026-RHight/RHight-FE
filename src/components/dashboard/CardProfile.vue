@@ -23,9 +23,9 @@
 
 <script setup>
 defineProps({
-  name: { type: String, default: 'Steve' },
-  position: { type: String, default: '매니저' },
-  team: { type: String, default: '전략 기획팀' },
+  name: { type: String, default: '김봉식' },
+  position: { type: String, default: '과장' },
+  team: { type: String, default: '모바일 1팀' },
 })
 defineEmits(['checkin', 'checkout'])
 </script>

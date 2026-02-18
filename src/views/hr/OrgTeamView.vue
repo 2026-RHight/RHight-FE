@@ -6,8 +6,8 @@
       <div class="title-wrap">
         <h1>내 조직 조회</h1>
       </div>
-      <div class="head-actions">
-        <button class="btn-head btn-head-muted" type="button">근태</button>
+      <div v-if="canViewMemberDetail" class="head-actions">
+        <button class="btn-head btn-head-muted" type="button" @click="goToTeamAttendance">근태</button>
         <button class="btn-head btn-head-muted" type="button">목표</button>
       </div>
     </section>
@@ -15,7 +15,7 @@
     <section class="info-bar">
       <strong>{{ currentUser.teamName }}</strong>
       <span>팀원 {{ sortedTeamMembers.length }}명</span>
-      <span v-if="canViewMemberDetail" class="permission-text">팀원 상세 조회 권한 있음</span>
+      <span v-if="canViewMemberDetail" class="permission-text"></span>
     </section>
 
     <section class="member-grid">
@@ -52,7 +52,6 @@
             <h2>{{ selectedMember.name }} 인사 정보</h2>
             <p>팀장 권한 상세 조회</p>
           </div>
-          <span class="view-badge">팀장 뷰</span>
         </div>
 
         <div class="detail-sections">
@@ -137,6 +136,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseModal from '@/components/common/BaseModal.vue'
+import { AUTH_KEYS } from '@/utils/auth'
 import {
   createHrCurrentUserMock,
   createHrTeamMembersMock,
@@ -153,7 +153,7 @@ const hrEvents = ref(createHrEventsMock())
 const showDetailModal = ref(false)
 const selectedMember = ref(null)
 
-const canViewMemberDetail = computed(() => currentUser.value.role === 'TEAM_LEADER')
+const canViewMemberDetail = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) === 'admin1234')
 const sortedTeamMembers = computed(() => sortMembersByRule(teamMembers.value))
 const selectedMemberHistories = computed(() => {
   if (!selectedMember.value?.employeeId) return []
@@ -172,6 +172,10 @@ const openMemberDetail = (member) => {
   showDetailModal.value = true
 }
 
+const goToTeamAttendance = () => {
+  router.push('/attendance/team')
+}
+
 const statusClass = (status) => {
   if (status === '정상') return 'ok'
   if (status === '재택') return 'remote'
@@ -186,7 +190,7 @@ const historyStatusText = (status) => {
 </script>
 
 <style scoped>
-.org-page { max-width: 1200px; }
+.org-page { width: 100%; max-width: none; min-width: 0; }
 
 .breadcrumb { font-size: .78rem; color: var(--gray400); margin-bottom: 4px; }
 

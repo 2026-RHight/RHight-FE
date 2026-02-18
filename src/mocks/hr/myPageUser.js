@@ -1,10 +1,10 @@
 export const hrMyPageUserMock = {
   profileImage: '',
-  name: '김세현',
+  name: '김봉식',
   team: '모바일1팀',
   jobTitle: '백엔드 개발자',
   position: '팀장',
-  email: 'sehyun.kim@rhight.co.kr',
+  email: 'bong@rhight.co.kr',
   phone: '010-1234-5678',
   extension: '1042',
   workLocation: '서울 강남',
