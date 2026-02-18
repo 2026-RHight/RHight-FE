@@ -7,6 +7,7 @@
     <PerformanceInquiry v-else-if="perfStore.activePage === 'inquiry'" />
     <PerformanceMonthly v-else-if="perfStore.activePage === 'monthly'" />
     <PeerReview v-else-if="perfStore.activePage === 'peer-review'" />
+    <TeamStats v-else-if="perfStore.activePage === 'team-stats'" />
   </div>
 </template>
 
@@ -19,6 +20,7 @@ import PerformanceRegistration from "./PerformanceRegistration.vue";
 import PerformanceInquiry from './PerformanceInquiry.vue'
 import PerformanceMonthly from './PerformanceMonthly.vue'
 import PeerReview from './PeerReview.vue'
+import TeamStats from './TeamStats.vue'
 
 
 const perfStore = usePerformanceStore()

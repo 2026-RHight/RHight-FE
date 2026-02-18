@@ -47,11 +47,13 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { manuals, meetingArchives, sortByDateDesc } from '@/mocks/kms'
+import { manuals, sortByDateDesc } from '@/mocks/kms'
+import { useKmsArchiveStore } from '@/store/kmsArchive'
 
 const router = useRouter()
+const archiveStore = useKmsArchiveStore()
 const latestManuals = computed(() => sortByDateDesc(manuals).slice(0, 10))
-const latestArchives = computed(() => sortByDateDesc(meetingArchives).slice(0, 10))
+const latestArchives = computed(() => archiveStore.docs.value.slice(0, 10))
 </script>
 
 <style scoped>

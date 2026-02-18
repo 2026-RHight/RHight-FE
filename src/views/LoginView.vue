@@ -116,6 +116,7 @@ const resetPasswordForm = ref({
 
 const TEST_ACCOUNT = {
   empNo: 'test1234',
+  employeeId: '2402040001',
   defaultPassword: 'test1234!',
   ssn: '123456'
 }
