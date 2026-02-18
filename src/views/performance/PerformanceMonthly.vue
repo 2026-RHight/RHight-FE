@@ -63,7 +63,15 @@
         <span class="detail-count">총 {{ detailItems.length }}건</span>
       </div>
       <div class="detail-list">
-        <div v-for="item in detailItems" :key="item.id" class="detail-row">
+        <div
+          v-for="item in detailItems"
+          :key="item.id"
+          class="detail-row"
+          role="button"
+          tabindex="0"
+          @click="openDetailModal(item)"
+          @keydown.enter="openDetailModal(item)"
+        >
           <div class="detail-row-left">
             <span class="badge" :class="item.type === 'team' ? 'badge-blue' : 'badge-green'">
               {{ item.type === 'team' ? '팀' : '개인' }}
@@ -85,11 +93,87 @@
         </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="selectedDetailItem" class="modal-overlay" @click.self="closeDetailModal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <div class="modal-title-wrap">
+                <span class="badge" :class="selectedDetailItem.type === 'team' ? 'badge-blue' : 'badge-green'">
+                  {{ selectedDetailItem.type === 'team' ? '팀' : '개인' }}
+                </span>
+                <h3 class="modal-title">성과 상세 조회</h3>
+              </div>
+              <button class="icon-close" @click="closeDetailModal">×</button>
+            </div>
+
+            <div class="modal-body">
+              <div class="modal-summary">
+                <h4>{{ selectedDetailItem.title }}</h4>
+                <p>{{ selectedDetailItem.date }}</p>
+              </div>
+
+              <div class="modal-grid">
+                <div class="modal-item">
+                  <span class="modal-label">진행률</span>
+                  <span class="modal-value">{{ selectedDetailItem.progress }}%</span>
+                </div>
+                <div class="modal-item">
+                  <span class="modal-label">점수</span>
+                  <span class="modal-value">{{ selectedDetailItem.score }}점</span>
+                </div>
+              </div>
+
+              <div class="modal-section">
+                <span class="modal-label">업무 상세 내용</span>
+                <p class="modal-box">{{ selectedDetailItem.description }}</p>
+              </div>
+
+              <div class="modal-section" v-if="selectedDetailItem.achievement">
+                <span class="modal-label">성과 요약</span>
+                <p class="modal-box">{{ selectedDetailItem.achievement }}</p>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-outline" @click="closeDetailModal">닫기</button>
+              <button class="btn-primary" @click="openFeedbackModal">피드백 보기</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <Transition name="modal">
+        <div v-if="showFeedbackModal && selectedDetailItem" class="modal-overlay" @click.self="closeFeedbackModal">
+          <div class="modal-card modal-card-sm">
+            <div class="modal-header">
+              <h3 class="modal-title">피드백</h3>
+              <button class="icon-close" @click="closeFeedbackModal">×</button>
+            </div>
+
+            <div class="feedback-list">
+              <div v-for="feedback in selectedDetailItem.feedbacks" :key="feedback.id" class="feedback-item">
+                <div class="feedback-head">
+                  <span class="feedback-author">{{ feedback.author }}</span>
+                  <span class="feedback-date">{{ feedback.date }}</span>
+                </div>
+                <p class="feedback-text">{{ feedback.text }}</p>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn-outline" @click="closeFeedbackModal">닫기</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, h } from 'vue'
+import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, BarChart3, FileText, TrendingUp, Users, Award, Star } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
 import {
@@ -185,11 +269,83 @@ const chartOptions = {
   },
 }
 
+const selectedDetailItem = ref(null)
+const showFeedbackModal = ref(false)
+
+function openDetailModal(item) {
+  selectedDetailItem.value = item
+  showFeedbackModal.value = false
+}
+
+function closeDetailModal() {
+  showFeedbackModal.value = false
+  selectedDetailItem.value = null
+}
+
+function openFeedbackModal() {
+  showFeedbackModal.value = true
+}
+
+function closeFeedbackModal() {
+  showFeedbackModal.value = false
+}
+
 const detailItems = [
-  { id: 1, type: 'team', title: 'Q2 마케팅 캠페인 기획 및 실행', date: '06.01 ~ 06.15', progress: 100, score: 98 },
-  { id: 2, type: 'individual', title: 'Vue 3 마이그레이션 완료', date: '06.05 ~ 06.20', progress: 100, score: 95 },
-  { id: 3, type: 'team', title: '신규 고객사 온보딩 프로세스 개선', date: '06.10 ~ 06.30', progress: 85, score: 92 },
-  { id: 4, type: 'individual', title: '사내 기술 세미나 발표', date: '06.18', progress: 100, score: 97 },
+  {
+    id: 1,
+    type: 'team',
+    title: 'Q2 마케팅 캠페인 기획 및 실행',
+    date: '06.01 ~ 06.15',
+    progress: 100,
+    score: 98,
+    description: '신규 고객 유입 확대를 목표로 채널별 메시지를 최적화하고, 주간 단위 성과 분석 기반으로 운영 전략을 조정했습니다.',
+    achievement: '전환율 22% 상승, CAC 14% 절감',
+    feedbacks: [
+      { id: 1, author: '김팀장', date: '2023.06.16', text: '캠페인 운영 속도가 매우 좋았고 리포트 품질도 높았습니다.' },
+      { id: 2, author: '박매니저', date: '2023.06.18', text: '다음 분기에는 세그먼트별 실험 설계를 더 세분화하면 좋겠습니다.' },
+    ],
+  },
+  {
+    id: 2,
+    type: 'individual',
+    title: 'Vue 3 마이그레이션 완료',
+    date: '06.05 ~ 06.20',
+    progress: 100,
+    score: 95,
+    description: '레거시 Vue2 컴포넌트를 Vue3 Composition API 기반으로 전환하고, 공통 상태 관리와 라우팅 구조를 정리했습니다.',
+    achievement: '핵심 화면 100% 전환, 렌더링 성능 개선',
+    feedbacks: [
+      { id: 1, author: '이리드', date: '2023.06.21', text: '전환 중 장애 없이 배포한 점이 인상적이었습니다.' },
+      { id: 2, author: '정아키텍트', date: '2023.06.22', text: '테스트 코드 커버리지를 더 보강하면 유지보수성이 더 높아질 것 같습니다.' },
+    ],
+  },
+  {
+    id: 3,
+    type: 'team',
+    title: '신규 고객사 온보딩 프로세스 개선',
+    date: '06.10 ~ 06.30',
+    progress: 85,
+    score: 92,
+    description: '온보딩 단계별 체크리스트와 자동 안내 플로우를 도입해 초기 정착 속도를 높이는 작업을 진행했습니다.',
+    achievement: '온보딩 완료 기간 평균 2.3일 단축',
+    feedbacks: [
+      { id: 1, author: '최팀장', date: '2023.06.28', text: '고객 관점에서 절차를 단순화한 접근이 좋았습니다.' },
+    ],
+  },
+  {
+    id: 4,
+    type: 'individual',
+    title: '사내 기술 세미나 발표',
+    date: '06.18',
+    progress: 100,
+    score: 97,
+    description: '프론트엔드 성능 최적화 사례를 주제로 사내 기술 세미나를 발표하고 Q&A 세션을 진행했습니다.',
+    achievement: '참석자 만족도 4.9/5.0',
+    feedbacks: [
+      { id: 1, author: '조리더', date: '2023.06.19', text: '실무 사례 중심 구성이라 이해하기 쉬웠습니다.' },
+      { id: 2, author: '한선임', date: '2023.06.19', text: '다음에는 실습형 세션도 추가해보면 좋겠습니다.' },
+    ],
+  },
 ]
 </script>
 
@@ -438,6 +594,7 @@ const detailItems = [
   padding: 14px 0;
   border-bottom: 1px solid var(--gray100);
   transition: all var(--transition);
+  cursor: pointer;
 }
 
 .detail-row:last-child {
@@ -540,4 +697,232 @@ const detailItems = [
 
 .badge-blue { background: #dbeafe; color: #1e40af; }
 .badge-green { background: #dcfce7; color: #166534; }
+
+/* ════════════════════════════════
+   모달
+   ════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--gray200);
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-card-sm {
+  width: min(620px, 100%);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--gray100);
+}
+
+.modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--gray900);
+}
+
+.icon-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--gray500);
+  background: var(--gray50);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.icon-close:hover {
+  background: var(--gray100);
+  color: var(--gray700);
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-summary h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray900);
+}
+
+.modal-summary p {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--gray500);
+}
+
+.modal-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.modal-item {
+  background: var(--gray50);
+  border: 1px solid var(--gray100);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-label {
+  font-size: 0.76rem;
+  color: var(--gray500);
+  font-weight: 600;
+}
+
+.modal-value {
+  font-size: 0.92rem;
+  color: var(--gray900);
+  font-weight: 700;
+}
+
+.modal-section {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-box {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--gray100);
+  background: var(--gray50);
+  border-radius: 10px;
+  color: var(--gray700);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.feedback-list {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback-item {
+  border: 1px solid var(--gray100);
+  border-radius: 10px;
+  background: var(--gray50);
+  padding: 12px;
+}
+
+.feedback-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.feedback-author {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--gray900);
+}
+
+.feedback-date {
+  font-size: 0.74rem;
+  color: var(--gray400);
+}
+
+.feedback-text {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--gray700);
+  line-height: 1.5;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--gray100);
+  padding: 14px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-outline,
+.btn-primary {
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.btn-outline {
+  border: 1px solid var(--gray200);
+  background: #fff;
+  color: var(--gray700);
+}
+
+.btn-outline:hover {
+  background: var(--gray50);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.96);
+}
+
+.modal-enter-active { transition: all 0.22s ease; }
+.modal-leave-active { transition: all 0.18s ease; }
+.modal-enter-from { opacity: 0; }
+.modal-leave-to { opacity: 0; }
+.modal-enter-from .modal-card { transform: scale(0.96) translateY(8px); opacity: 0; }
+.modal-leave-to .modal-card { transform: scale(0.98); opacity: 0; }
+
+@media (max-width: 768px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-header,
+  .modal-body,
+  .feedback-list,
+  .modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
 </style>
