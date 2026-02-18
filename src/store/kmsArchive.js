@@ -107,7 +107,9 @@ export const useKmsArchiveStore = () => {
       team: payload.team,
       attachments: payload.attachments || [],
       allowDownload: true,
-      allowedScopes: [payload.org, payload.team],
+      allowedScopes: (payload.allowedScopes && payload.allowedScopes.length > 0)
+        ? payload.allowedScopes
+        : [payload.org, payload.team].filter(Boolean),
       allowedUserIds: payload.allowedUserIds || []
     }
 
@@ -125,7 +127,10 @@ export const useKmsArchiveStore = () => {
     target.summary = payload.body.slice(0, 80)
     target.org = payload.org
     target.team = payload.team
-    target.allowedScopes = [payload.org, payload.team]
+    target.allowedScopes = (payload.allowedScopes && payload.allowedScopes.length > 0)
+      ? payload.allowedScopes
+      : [payload.org, payload.team].filter(Boolean)
+    target.allowedUserIds = payload.allowedUserIds || target.allowedUserIds
     target.attachments = payload.attachments || target.attachments
     return target
   }
