@@ -534,7 +534,14 @@ const kmsManualMenus = [
 ]
 
 const kmsArchiveMenus = [
-  { label: '회의록 아카이브', icon: FolderIcon, route: '/kms/archive', routePrefix: '/kms/archive' },
+  {
+    label: '회의록 아카이브',
+    icon: FolderIcon,
+    route: '/kms/archive',
+    routePrefix: '/kms/archive',
+    excludePrefixes: ['/kms/archive/manage']
+  },
+  { label: '아카이브 문서 등록', icon: PlusIcon, route: '/kms/archive/manage/new', routePrefix: '/kms/archive/manage' },
 ]
 
 const kmsDashboardMenu = { label: 'KMS 대시보드', icon: DashboardIcon, route: '/kms' }
@@ -550,7 +557,12 @@ const isOpen = (label) => !!openMenus.value[label]
 
 const isMenuActive = (item) => {
   if (currentPath.value === item.route) return true
-  if (item.routePrefix && currentPath.value.startsWith(item.routePrefix)) return true
+  if (item.routePrefix && currentPath.value.startsWith(item.routePrefix)) {
+    if (item.excludePrefixes) {
+      return !item.excludePrefixes.some((prefix) => currentPath.value.startsWith(prefix))
+    }
+    return true
+  }
   if (item.routePrefixes) return item.routePrefixes.some((prefix) => currentPath.value.startsWith(prefix))
   return false
 }

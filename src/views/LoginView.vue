@@ -84,6 +84,7 @@ const loginError = ref('')
 
 const TEST_ACCOUNT = {
   empNo: 'test1234',
+  employeeId: '2402040001',
   defaultPassword: 'test1234!',
   ssn: '123456'
 }
@@ -142,7 +143,7 @@ const handleLogin = () => {
   }
 
   setLoginSession({
-    userId: TEST_ACCOUNT.empNo,
+    userId: TEST_ACCOUNT.employeeId,
     userName: '테스트 사용자',
     role: USER_ROLES.user
   })
