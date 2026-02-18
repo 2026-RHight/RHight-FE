@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ 'mode-hr-admin': isAdminMode || isHrMode }">
     <template v-if="isAdminMode">
       <div class="sidebar-header">
         <span>관리자</span>
@@ -578,6 +578,17 @@ const handleNavigate = (route) => {
 .sidebar-item:hover{background:var(--gray200);color:var(--gray700)}
 .sidebar-item svg{opacity:0.5;flex-shrink:0}
 .sidebar-item.active { background: var(--gray200); color: var(--primary); font-weight: 600; }
+
+/* 인사/관리자 사이드바만 KMS 톤으로: 기본 active 하늘색 + hover 시 회색 */
+.sidebar.mode-hr-admin .sidebar-item.active {
+  background: var(--accent);
+  color: var(--primary);
+}
+.sidebar.mode-hr-admin .sidebar-item.active svg { opacity: 1; }
+.sidebar.mode-hr-admin .sidebar-item.active:hover {
+  background: var(--gray200);
+  color: var(--gray700);
+}
 .sidebar-item.disabled {
   opacity: .55;
   cursor: default;
