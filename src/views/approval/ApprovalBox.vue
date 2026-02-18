@@ -109,31 +109,43 @@ const handleModalAction = (action) => {
 
 <style scoped>
 .box-container {
-  padding: 32px;
-  background-color: #f8fafc;
-  min-height: 100vh;
+  padding: 24px;
+  min-height: 100%;
+  background: var(--gray50);
+  border-radius: 14px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 }
 
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--gray200);
+  border-radius: 14px;
+  background: #fff;
 }
 
 .page-header h2 {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 8px;
+  color: #212529;
+  margin-bottom: 6px;
 }
 
 .subtitle {
-  color: #64748b;
-  font-size: 1rem;
+  color: #868e96;
+  font-size: 0.92rem;
 }
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 1400px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1024px) {

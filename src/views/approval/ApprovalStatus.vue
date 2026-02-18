@@ -132,77 +132,83 @@ const getStatusClass = (status) => {
 
 <style scoped>
 .status-container {
-  padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 32px;
+  min-height: 100vh;
+  background: var(--gray50);
+  border-radius: 14px;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 32px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--gray200);
+  border-radius: 14px;
+  background: #fff;
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
-  margin-bottom: 8px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #212529;
+  margin-bottom: 6px;
 }
 
 .page-subtitle {
-  color: #6B7280;
-  font-size: 1.1rem;
+  color: #868e96;
+  font-size: 0.92rem;
 }
 
 /* Search Box */
 .search-input-wrapper {
   position: relative;
-  width: 320px;
+  width: 300px;
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9CA3AF;
+  color: #adb5bd;
   font-size: 0.9rem;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px 10px 40px;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 10px 14px 10px 36px;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  font-size: 0.85rem;
   transition: all 0.2s;
   outline: none;
+  background: #fff;
 }
 
 .search-input:focus {
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #339af0;
+  box-shadow: 0 0 0 3px rgba(51, 154, 240, 0.12);
 }
 
 /* Tabs */
 .tabs-row {
-  border-bottom: 1px solid #E5E7EB;
-  margin-bottom: 24px;
+  border-bottom: 1px solid var(--gray200);
+  margin-bottom: 20px;
+  padding: 0 4px;
 }
 
 .tabs {
-  display: flex;
-  gap: 32px;
+  display: flex; gap: 20px;
 }
 
 .tab-btn {
   padding: 12px 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6B7280;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #868e96;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -214,29 +220,29 @@ const getStatusClass = (status) => {
 }
 
 .tab-btn.active {
-  color: #3B82F6;
-  border-bottom-color: #3B82F6;
+  color: #339af0;
+  border-bottom-color: #339af0;
 }
 
 .tab-btn .count {
-  font-size: 0.8rem;
-  background: #F3F4F6;
-  padding: 2px 8px;
+  font-size: 0.75rem;
+  background: #f1f3f5;
+  padding: 2px 7px;
   border-radius: 10px;
-  color: #6B7280;
+  color: #868e96;
 }
 
 .tab-btn.active .count {
-  background: #EBF5FF;
-  color: #3B82F6;
+  background: #f0f7ff;
+  color: #339af0;
 }
 
 /* Table Card */
 .table-card {
   background: white;
-  border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  border: 1px solid var(--gray200);
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -246,42 +252,43 @@ const getStatusClass = (status) => {
 }
 
 .data-table th {
-  background: #F9FAFB;
-  padding: 14px 20px;
+  background: #f8f9fa;
+  padding: 13px 20px;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #4B5563;
-  border-bottom: 1px solid #E5E7EB;
+  color: #868e96;
+  border-bottom: 1px solid #f1f3f5;
 }
 
 .data-table td {
-  padding: 16px 20px;
-  font-size: 0.9rem;
-  color: #1F2937;
-  border-bottom: 1px solid #F3F4F6;
+  padding: 14px 20px;
+  font-size: 0.85rem;
+  color: #495057;
+  border-bottom: 1px solid #f8f9fa;
 }
 
 .table-row:hover {
-  background: #F9FAFB;
+  background: #f8f9fa;
 }
 
-.col-id { color: #6B7280; font-family: monospace; }
+.col-id { color: #868e96; font-family: monospace; }
 .col-title { font-weight: 500; }
-.title-text:hover { color: #3B82F6; text-decoration: underline; cursor: pointer; }
+.title-text:hover { color: #339af0; text-decoration: underline; cursor: pointer; }
 
 /* Status Badge */
 .status-badge {
   padding: 4px 10px;
   border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid transparent;
 }
 
-.status-draft { background: #E5E7EB; color: #4B5563; }
-.status-pending { background: #FFF7ED; color: #F59E0B; }
-.status-rejected { background: #FEF2F2; color: #EF4444; }
-.status-completed { background: #ECFDF5; color: #10B981; }
+.status-draft { background: #f1f3f5; color: #495057; border-color: #e9ecef; }
+.status-pending { background: #fff4e6; color: #f08c00; border-color: #ffe8cc; }
+.status-rejected { background: #fff5f5; color: #fa5252; border-color: #ffe3e3; }
+.status-completed { background: #f2fcf5; color: #40c057; border-color: #d3f9d8; }
 
 /* Progress Bar */
 .progress-container {
@@ -293,7 +300,7 @@ const getStatusClass = (status) => {
 .progress-bar-bg {
   flex: 1;
   height: 6px;
-  background: #E5E7EB;
+  background: #e9ecef;
   border-radius: 3px;
   overflow: hidden;
   min-width: 80px;
@@ -301,13 +308,13 @@ const getStatusClass = (status) => {
 
 .progress-bar-fill {
   height: 100%;
-  background: #3B82F6;
+  background: #339af0;
   transition: width 0.3s ease;
 }
 
 .progress-text {
-  font-size: 0.8rem;
-  color: #6B7280;
+  font-size: 0.75rem;
+  color: #868e96;
   width: 35px;
   text-align: right;
 }
@@ -331,8 +338,8 @@ const getStatusClass = (status) => {
 }
 
 .empty-content p {
-  color: #9CA3AF;
-  font-size: 1.1rem;
+  color: #adb5bd;
+  font-size: 0.95rem;
 }
 </style>
 
