@@ -1,6 +1,5 @@
 <template>
   <aside class="sidebar">
-    <!-- 관리자 모드 -->
     <template v-if="isAdminMode">
       <div class="sidebar-header">
         <span>관리자</span>
@@ -8,11 +7,11 @@
 
       <div class="menu-section">
         <div
-          v-for="item in adminMenus"
-          :key="item.label"
-          class="sidebar-item"
-          :class="{ active: currentPath === item.route, disabled: !item.route }"
-          @click="handleNavigate(item.route)"
+            v-for="item in adminMenus"
+            :key="item.label"
+            class="sidebar-item"
+            :class="{ active: currentPath === item.route, disabled: !item.route }"
+            @click="handleNavigate(item.route)"
         >
           <component :is="item.icon" />
           {{ item.label }}
@@ -22,7 +21,6 @@
       <div class="divider"></div>
     </template>
 
-    <!-- 인사 모드 -->
     <template v-else-if="isHrMode">
       <div class="sidebar-header">
         <span>인사</span>
@@ -43,13 +41,11 @@
 
       <div class="divider"></div>
     </template>
-    <!-- 근태 모드 -->
+
     <template v-else-if="isAttendanceMode">
       <div class="sidebar-header">
         <span>근태 관리</span>
-        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': isAttendanceManager }">
-          {{ isAttendanceManager ? '관리자' : '사용자' }}
-        </span>
+        <span v-if="['manager', 'admin'].includes(userRank)" class="sidebar-role-badge sidebar-role-badge--manager">관리자</span>
       </div>
 
       <template v-if="isAttendanceManager">
@@ -58,32 +54,21 @@
             v-for="item in myAttendanceMenus"
             :key="item.label"
             class="sidebar-item"
-            :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            :class="{ 'active': currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
             @click="handleNavigate(item.route)"
         >
           <component :is="item.icon" />
           {{ item.label }}
         </div>
 
-        <div class="sidebar-divider" />
+        <div class="sidebar-divider"></div>
+
         <div class="sidebar-section-label">팀 관리</div>
         <div
             v-for="item in teamAttendanceMenus"
             :key="item.label"
             class="sidebar-item"
-            :class="{ active: currentPath.includes(item.route) }"
-            @click="handleNavigate(item.route)"
-        >
-          <component :is="item.icon" />
-          {{ item.label }}
-        </div>
-      </template>
-      <template v-else>
-        <div
-            v-for="item in myAttendanceMenus"
-            :key="item.label"
-            class="sidebar-item"
-            :class="{ active: currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            :class="{ 'active': currentPath.includes(item.route) }"
             @click="handleNavigate(item.route)"
         >
           <component :is="item.icon" />
@@ -91,11 +76,24 @@
         </div>
       </template>
 
-      <div class="divider"></div>
+      <template v-else>
+        <div class="menu-section">
+          <div
+              v-for="item in myAttendanceMenus"
+              :key="item.label"
+              class="sidebar-item"
+              :class="{ 'active': currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+              @click="handleNavigate(item.route)"
+          >
+            <component :is="item.icon" />
+            {{ item.label }}
+          </div>
+        </div>
+      </template>
+
       <div class="divider"></div>
     </template>
 
-    <!-- 급여 모드 -->
     <template v-else-if="isSalaryMode">
       <div class="sidebar-header">
         <span>급여 관리</span>
@@ -114,12 +112,12 @@
       </div>
       <div class="divider"></div>
     </template>
-    <!-- 전자결재 모드 -->
+
     <template v-else-if="isApprovalMode">
       <div class="sidebar-header">
         <span>전자결재</span>
       </div>
-      
+
       <div class="menu-section">
         <div v-for="menu in approvalMenus" :key="menu.label" class="menu-group">
           <div class="sidebar-item menu-head" @click="toggleMenu(menu.label)">
@@ -127,22 +125,22 @@
               <component :is="menu.icon" />
               <span>{{ menu.label }}</span>
             </div>
-            <svg 
-              class="chevron" 
-              :class="{ 'rotate': isOpen(menu.label) }"
-              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            <svg
+                class="chevron"
+                :class="{ 'rotate': isOpen(menu.label) }"
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             >
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </div>
-          
+
           <div v-show="isOpen(menu.label)" class="sub-menu">
-            <div 
-              v-for="sub in menu.children" 
-              :key="sub.label" 
-              class="sidebar-item sub-item"
-              @click="handleNavigate(sub.route)"
-              :class="{ active: currentPath === sub.route }"
+            <div
+                v-for="sub in menu.children"
+                :key="sub.label"
+                class="sidebar-item sub-item"
+                @click="handleNavigate(sub.route)"
+                :class="{ active: currentPath === sub.route }"
             >
               <span class="dot"></span>
               {{ sub.label }}
@@ -150,9 +148,8 @@
           </div>
         </div>
       </div>
-      
+
       <div class="divider"></div>
-    
     </template>
 
     <template v-else-if="isPerformance">
@@ -176,7 +173,8 @@
           {{ item.name }}
         </div>
 
-        <div class="sidebar-divider" />
+        <div class="sidebar-divider"></div>
+
         <div class="sidebar-section-label">팀 관리</div>
         <div
             v-for="item in teamManagementMenuItems"
@@ -243,8 +241,20 @@
       </div>
     </template>
 
+      <template v-else>
+        <div
+            v-for="item in myPerformanceMenuItems"
+            :key="item.id"
+            class="sidebar-item"
+            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+            @click="perfStore.setPage(item.id)"
+        >
+          <component :is="item.icon" />
+          {{ item.name }}
+        </div>
+      </template>
+    </template>
 
-    <!-- 메인 모드 (기존 바로가기) -->
     <template v-else>
       <div class="sidebar-header">
         <span>바로가기</span>
@@ -255,17 +265,15 @@
         </span>
       </div>
       <div
-        v-for="item in shortcuts"
-        :key="item.label"
-        class="sidebar-item"
-        @click="handleNavigate(item.route)"
+          v-for="item in shortcuts"
+          :key="item.label"
+          class="sidebar-item"
+          @click="handleNavigate(item.route)"
       >
         <component :is="item.icon" />
         {{ item.label }}
       </div>
     </template>
-
-
   </aside>
 </template>
 
@@ -426,9 +434,10 @@ const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', f
 const adminMenus = [
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
   { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
-  { label: '급여 관리', icon: CreditCardIcon, route: '' },
+  { label: '급여 관리', icon: CreditCardIcon, route: '/admin/salary' },
   { label: '전자결재 정책선 관리', icon: SlidersIcon, route: '' }
 ]
 const myPerformanceMenuItems = [
@@ -450,7 +459,7 @@ const managerPerformanceMenuItems = [
 ]
 
 const performanceMenuItems = computed(() => (
-  isPerformanceManager.value ? managerPerformanceMenuItems : myPerformanceMenuItems
+    isPerformanceManager.value ? managerPerformanceMenuItems : myPerformanceMenuItems
 ))
 const performanceMenuIds = computed(() => performanceMenuItems.value.map(item => item.id))
 const myPerformanceMenuIds = computed(() => myPerformanceMenuItems.map(item => item.id))
@@ -476,8 +485,12 @@ const hrMenus = [
   { label: '조직도', icon: TreeIcon, route: '/hr/orgchart' },
 ]
 
+// --- 전자결재 모드 데이터 ---
+const userRank = computed(() => {
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId)
+  return ['admin1234'].includes(userId) ? 'manager' : 'user'
+})
 
-// --- 근태 모드 데이터 ---
 // --- 근태 모드 데이터 ---
 const myAttendanceMenus = [
   { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
@@ -487,6 +500,7 @@ const myAttendanceMenus = [
 ]
 
 const teamAttendanceMenus = [
+  { label: '팀 근태 관리', icon: UsersIcon, route: '/attendance/team' },
   { label: '근태 관리', icon: UsersIcon, route: '/attendance/manage' },
   { label: '유연근무관리', icon: SlidersIcon, route: '/attendance/flexible' },
 ]
@@ -495,33 +509,30 @@ const attendanceMenus = computed(() => {
   return isAttendanceManager.value ? [...myAttendanceMenus, ...teamAttendanceMenus] : myAttendanceMenus
 })
 
-
 // --- 급여 모드 데이터 ---
 const salaryMenus = [
   { label: '급여 조회', icon: CreditCardIcon, route: '/salary/my' },
 ]
 
-// --- 전자결재 모드 데이터 ---
-// Mock User Rank
-const userRank = 'manager' 
+const approvalMenus = computed(() => {
+  const children = [
+    { label: '전자 결재 기안', route: '/approval/draft' },
+    { label: '전자 결재 현황', route: '/approval/status' },
+    { label: '전자 결재 문서함', route: '/approval/box' },
+  ]
 
-const approvalChildren = [
-  { label: '전자 결재 기안', route: '/approval/draft' },
-  { label: '전자 결재 현황', route: '/approval/status' },
-  { label: '전자 결재 문서함', route: '/approval/box' },
-]
-
-if (['manager', 'admin'].includes(userRank)) {
-  approvalChildren.push({ label: '전자 결재 검토', route: '/approval/review' })
-}
-
-const approvalMenus = [
-  {
-    label: '전자결재 메뉴', // 메뉴 그룹명
-    icon: ApprovalIcon,
-    children: approvalChildren
+  if (['manager', 'admin'].includes(userRank.value)) {
+    children.push({ label: '전자 결재 검토', route: '/approval/review' })
   }
-]
+
+  return [
+    {
+      label: '전자결재 메뉴', // 메뉴 그룹명
+      icon: ApprovalIcon,
+      children: children
+    }
+  ]
+})
 
 const kmsManualMenus = [
   {
@@ -547,7 +558,7 @@ const kmsArchiveMenus = [
 const kmsDashboardMenu = { label: 'KMS 대시보드', icon: DashboardIcon, route: '/kms' }
 
 // 메뉴 토글 상태 관리
-const openMenus = ref({ '전자결재 메뉴': true }) 
+const openMenus = ref({ '전자결재 메뉴': true })
 
 const toggleMenu = (label) => {
   openMenus.value[label] = !openMenus.value[label]

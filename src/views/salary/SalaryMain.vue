@@ -165,7 +165,7 @@ const isVerified = ref(false)
 const password = ref('')
 
 const verifyPassword = () => {
-  if (password.value === 'test1234!') {
+  if (password.value === 'test1234!' || password.value === 'admin1234!') {
     isVerified.value = true
   } else {
     alert('비밀번호가 올바르지 않습니다.')
@@ -204,8 +204,7 @@ const handleDownload = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(5px);
+  background: #F3F4F6;
   z-index: 1000;
   display: flex;
   align-items: center;

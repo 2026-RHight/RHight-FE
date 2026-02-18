@@ -56,6 +56,18 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
   },
   {
+    path: '/admin/attendance',
+    name: 'admin-attendance',
+    component: () => import('@/views/admin/AdminAttendanceView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
+    path: '/admin/salary',
+    name: 'admin-salary',
+    component: () => import('@/views/admin/AdminSalaryManage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'admin' }
+  },
+  {
     path: '/approval',
     meta: { requiresAuth: true },
     children: [
@@ -148,6 +160,7 @@ const routes = [
       { path: 'request', component: () => import('@/views/attendance/AttendanceMain.vue') }, // Placeholder
       { path: 'history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
       { path: 'schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
+      { path: 'team', component: () => import('@/views/attendance/AttendanceTeamManage.vue'), meta: { requiresAuth: true, roles: ['manager', 'admin'] } },
       { path: 'manage', component: () => import('@/views/attendance/AttendanceManage.vue') },
       { path: 'flexible', component: () => import('@/views/attendance/FlexibleWorkManage.vue') },
     ]
