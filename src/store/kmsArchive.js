@@ -1,10 +1,7 @@
 import { computed, reactive } from 'vue'
 import { archiveDocuments, sortByDateDesc } from '@/mocks/kms'
 import {
-  createHrCurrentUserMock,
-  createHrOrgTreeMock,
-  findNodeById,
-  findPathByNodeId
+  createHrOrgTreeMock
 } from '@/mocks/hr/organization'
 
 const state = reactive({
@@ -12,7 +9,6 @@ const state = reactive({
 })
 
 const orgRoot = createHrOrgTreeMock()
-const hrCurrentUser = createHrCurrentUserMock()
 
 const collectTeamMeta = (node, path = [], acc = []) => {
   if (!node) return acc
@@ -63,17 +59,11 @@ export const resolveCurrentUserOrgContext = (userId) => {
     }
   }
 
-  const fallbackPathIds = findPathByNodeId(orgRoot, hrCurrentUser.teamNodeId) || []
-  const fallbackNames = fallbackPathIds
-    .map((id) => findNodeById(orgRoot, id))
-    .filter(Boolean)
-    .map((node) => node.name)
-
   return {
     userId: effectiveUserId,
-    teamId: hrCurrentUser.teamNodeId,
-    teamName: hrCurrentUser.teamName,
-    scopeNames: new Set(fallbackNames)
+    teamId: null,
+    teamName: '',
+    scopeNames: new Set()
   }
 }
 
@@ -125,9 +115,10 @@ export const useKmsArchiveStore = () => {
     return next
   }
 
-  const updateDoc = (docId, payload) => {
+  const updateDoc = (docId, payload, userContext) => {
     const target = getDocById(docId)
     if (!target) return null
+    if (!userContext || !canReadArchiveDoc(target, userContext)) return null
     target.title = payload.title
     target.category = payload.category
     target.body = payload.body

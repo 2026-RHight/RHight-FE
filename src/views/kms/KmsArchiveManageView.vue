@@ -63,12 +63,14 @@ import { computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { archiveCategoryOptions } from '@/mocks/kms'
 import { AUTH_KEYS } from '@/utils/auth'
-import { useKmsArchiveStore } from '@/store/kmsArchive'
+import { resolveCurrentUserOrgContext, useKmsArchiveStore } from '@/store/kmsArchive'
 
 const route = useRoute()
 const router = useRouter()
 const isEditMode = computed(() => route.params.archiveId !== 'new')
 const archiveStore = useKmsArchiveStore()
+const currentUserId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
+const userContext = computed(() => resolveCurrentUserOrgContext(currentUserId.value))
 
 const baseDoc = computed(() => archiveStore.getDocById(route.params.archiveId))
 const teamOptions = computed(() => [...new Set(archiveStore.teamMetaList.map((row) => row.teamName))])
@@ -110,7 +112,7 @@ const handleSave = () => {
 
   const actionText = isEditMode.value ? '수정' : '등록'
   const savedDoc = isEditMode.value
-    ? archiveStore.updateDoc(route.params.archiveId, payload)
+    ? archiveStore.updateDoc(route.params.archiveId, payload, userContext.value)
     : archiveStore.createDoc(payload)
 
   if (!savedDoc) {
