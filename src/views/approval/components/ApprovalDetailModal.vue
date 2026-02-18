@@ -4,7 +4,7 @@
       <div class="modal-header">
         <div class="header-main">
           <div class="header-tags">
-            <span class="category-chip">{{ item.category }}</span>
+            <span v-if="item.category" class="category-chip">{{ item.category }}</span>
             <span class="status-badge" :class="statusClass">{{ item.status }}</span>
           </div>
           <h3 class="modal-title">{{ item.title }}</h3>
