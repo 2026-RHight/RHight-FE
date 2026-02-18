@@ -426,6 +426,7 @@ const myPerformanceMenuItems = [
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
   { id: 'inquiry', name: '성과 조회', icon: SearchIcon },
   { id: 'monthly', name: '월별 성과', icon: ChartIcon },
+  { id: 'peer-review', name: '동료 평가', icon: UsersIcon },
 ]
 const teamManagementMenuItems = [
   { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon },
