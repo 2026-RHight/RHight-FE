@@ -155,9 +155,6 @@
     <template v-else-if="isPerformance">
       <div class="sidebar-header">
         <span>성과 관리</span>
-        <span class="sidebar-role-badge" :class="{ 'sidebar-role-badge--manager': isPerformanceManager }">
-          {{ isPerformanceManager ? '관리자' : '사용자' }}
-        </span>
       </div>
 
       <template v-if="isPerformanceManager">
@@ -239,20 +236,6 @@
         <component :is="item.icon" />
         {{ item.label }}
       </div>
-    </template>
-
-      <template v-else>
-        <div
-            v-for="item in myPerformanceMenuItems"
-            :key="item.id"
-            class="sidebar-item"
-            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-            @click="perfStore.setPage(item.id)"
-        >
-          <component :is="item.icon" />
-          {{ item.name }}
-        </div>
-      </template>
     </template>
 
     <template v-else>
