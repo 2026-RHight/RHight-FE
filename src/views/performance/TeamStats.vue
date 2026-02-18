@@ -6,6 +6,10 @@
         <p class="stats-desc">팀원별 역량 분포와 주요 성과를 한눈에 파악할 수 있습니다.</p>
       </div>
       <div class="stats-header-right">
+        <select v-model="selectedTeam" class="stats-select">
+          <option value="">전체 팀</option>
+          <option v-for="team in teamOptions" :key="team" :value="team">{{ team }}</option>
+        </select>
         <select class="stats-select">
           <option>2023년 2분기</option>
           <option>2023년 1분기</option>
@@ -16,7 +20,7 @@
 
     <div class="stats-body">
       <div class="c-list">
-        <div v-for="member in members" :key="member.id" class="c-card">
+        <div v-for="member in filteredMembers" :key="member.id" class="c-card">
           <div class="c-profile">
             <div class="c-avatar-wrap">
               <img :src="member.image" :alt="member.name" class="c-avatar" />
@@ -58,12 +62,14 @@
             </div>
           </div>
         </div>
+        <div v-if="filteredMembers.length === 0" class="c-empty">선택한 팀의 성과 데이터가 없습니다.</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
 import { Radar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -74,17 +80,50 @@ import {
   Tooltip,
 } from 'chart.js'
 import { PERFORMANCE_MEMBERS } from '@/mocks/performance'
+import { createHrOrgTreeMock } from '@/mocks/hr/organization'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip)
 
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
 
-const members = PERFORMANCE_MEMBERS.map((member) => ({
-  ...member,
-  image: DEFAULT_AVATAR,
-  systemScore: Math.round(member.avgScore * 20),
-}))
+const selectedTeam = ref('')
+const orgRoot = createHrOrgTreeMock()
+
+function collectTeamNodes(node, acc = []) {
+  if (!node) return acc
+  if (node.type === '팀') acc.push(node)
+  ;(node.children || []).forEach((child) => collectTeamNodes(child, acc))
+  return acc
+}
+
+const teamNodes = collectTeamNodes(orgRoot)
+const teamOptions = computed(() => teamNodes.map((team) => team.name))
+
+const filteredMembers = computed(() => {
+  const targetTeams = selectedTeam.value
+    ? teamNodes.filter((team) => team.name === selectedTeam.value)
+    : teamNodes
+
+  const rawMembers = targetTeams.flatMap((team) =>
+    (team.members || []).map((member) => ({ ...member, teamName: team.name })),
+  )
+
+  return rawMembers.map((member, index) => {
+    const template = PERFORMANCE_MEMBERS[index % PERFORMANCE_MEMBERS.length]
+    return {
+      id: member.employeeId || `${member.teamName}-${member.name}-${index}`,
+      name: member.name,
+      role: member.job,
+      department: member.teamName,
+      avgScore: template?.avgScore ?? 4.5,
+      chartData: template?.chartData ?? [],
+      tasks: template?.tasks ?? [],
+      image: DEFAULT_AVATAR,
+      systemScore: Math.round((template?.avgScore ?? 4.5) * 20),
+    }
+  })
+})
 
 const getChartData = (member) => ({
   labels: member.chartData.map((d) => d.subject),
@@ -168,6 +207,7 @@ const radarOptionsC = {
 .c-task-chip { padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip-done { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 .chip-prog { background: var(--accent); color: var(--primary-dark); border: 1px solid var(--accent2); }
+.c-empty { padding: 24px; text-align: center; color: var(--gray500); background: #fff; border: 1px dashed var(--gray200); border-radius: 12px; }
 
 @media (max-width: 1200px) {
   .c-card { grid-template-columns: 1fr 1fr; }

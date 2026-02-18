@@ -4,6 +4,13 @@
     <div class="inq-card">
       <div class="filter-bar">
         <div class="filter-left">
+          <div v-if="isPerformanceManager" class="filter-select-wrap">
+            <User :size="14" class="filter-icon" />
+            <select v-model="filterEmployee" class="filter-select">
+              <option value="">전체 팀원</option>
+              <option v-for="employee in employeeOptions" :key="employee" :value="employee">{{ employee }}</option>
+            </select>
+          </div>
           <div class="filter-select-wrap">
             <Filter :size="14" class="filter-icon" />
             <select v-model="filterStatus" class="filter-select">
@@ -213,7 +220,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle, User } from 'lucide-vue-next'
+import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 import { PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 
 const selectedItem = ref(null)
@@ -221,13 +229,35 @@ const modalTab = ref('detail')
 const resultProgress = ref(85)
 
 const filterStatus = ref('')
+const filterEmployee = ref('')
 const filterMonth = ref('')
 const searchText = ref('')
 
 const items = PERFORMANCE_INQUIRY_ITEMS
+const userId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
+const userName = computed(() => sessionStorage.getItem(AUTH_KEYS.userName) || '')
+const userRole = computed(() => sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user)
+const isPerformanceManager = computed(() => userRole.value === USER_ROLES.admin || userId.value === 'admin1234')
+
+const USER_TO_EMPLOYEE_ID = {
+  test1234: '2402040001',
+}
+const currentEmployeeId = computed(() => USER_TO_EMPLOYEE_ID[userId.value] || '')
+
+const visibleItems = computed(() => {
+  if (isPerformanceManager.value) return items
+
+  return items.filter((item) => {
+    if (currentEmployeeId.value) return item.employeeId === currentEmployeeId.value
+    return item.employeeName === userName.value
+  })
+})
+
+const employeeOptions = computed(() => [...new Set(visibleItems.value.map((item) => item.employeeName).filter(Boolean))])
 
 const filteredItems = computed(() => {
-  return items.filter((item) => {
+  return visibleItems.value.filter((item) => {
+    if (filterEmployee.value && item.employeeName !== filterEmployee.value) return false
     if (filterStatus.value && item.status !== filterStatus.value) return false
     if (searchText.value && !item.title.includes(searchText.value)) return false
     return true

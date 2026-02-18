@@ -106,13 +106,23 @@ export const PERFORMANCE_DASHBOARD = {
   ],
 }
 
-export const PERFORMANCE_INQUIRY_ITEMS = [
-  { id: 1, type: 'Team', title: 'Q2 마케팅 캠페인 기획 및 실행', date: '2023.06.01 ~ 2023.06.15', status: '완료', progress: 100 },
-  { id: 2, type: 'Individual', title: 'Vue 3 마이그레이션 완료', date: '2023.06.05 ~ 2023.06.20', status: '완료', progress: 100 },
-  { id: 3, type: 'Team', title: '신규 고객사 온보딩 프로세스 개선', date: '2023.06.10 ~ 2023.06.30', status: '진행중', progress: 85 },
-  { id: 4, type: 'Individual', title: '사내 기술 세미나 발표', date: '2023.06.18', status: '완료', progress: 100 },
-  { id: 5, type: 'Team', title: 'Q3 제품 로드맵 수립', date: '2023.06.01 ~ 2023.06.30', status: '진행중', progress: 70 },
+const inquiryItemTemplates = [
+  { type: 'Team', title: 'Q2 마케팅 캠페인 기획 및 실행', date: '2023.06.01 ~ 2023.06.15', status: '완료', progress: 100 },
+  { type: 'Individual', title: 'Vue 3 마이그레이션 완료', date: '2023.06.05 ~ 2023.06.20', status: '완료', progress: 100 },
+  { type: 'Team', title: '신규 고객사 온보딩 프로세스 개선', date: '2023.06.10 ~ 2023.06.30', status: '진행중', progress: 85 },
+  { type: 'Individual', title: '사내 기술 세미나 발표', date: '2023.06.18', status: '완료', progress: 100 },
+  { type: 'Team', title: 'Q3 제품 로드맵 수립', date: '2023.06.01 ~ 2023.06.30', status: '진행중', progress: 70 },
 ]
+
+export const PERFORMANCE_INQUIRY_ITEMS = inquiryItemTemplates.map((item, index) => {
+  const owner = linkedMembers[index % linkedMembers.length]
+  return {
+    id: index + 1,
+    ...item,
+    employeeName: owner.name,
+    employeeId: owner.employeeId || '',
+  }
+})
 
 export const PERFORMANCE_MONTHLY = {
   initialYear: 2023,
