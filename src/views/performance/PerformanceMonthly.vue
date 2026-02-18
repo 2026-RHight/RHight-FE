@@ -16,10 +16,6 @@
           </div>
           <p class="report-period">{{ currentYear }}년 {{ currentMonth }}월 1일 - {{ currentMonth }}월 {{ lastDay }}일</p>
         </div>
-        <div class="report-grade-wrap">
-          <div class="report-grade">S</div>
-          <span class="report-grade-label">Grade</span>
-        </div>
       </div>
 
       <!-- 요약 지표 카드 -->
@@ -211,12 +207,37 @@ function nextMonth() {
   }
 }
 
-const stats = [
-  { ...PERFORMANCE_MONTHLY.stats[0], icon: TrendingUp, bgColor: '#eff6ff', iconColor: '#3b82f6' },
-  { ...PERFORMANCE_MONTHLY.stats[1], icon: Users, bgColor: '#f0fdf4', iconColor: '#22c55e' },
-  { ...PERFORMANCE_MONTHLY.stats[2], icon: Award, bgColor: '#fef3c7', iconColor: '#f59e0b' },
-  { ...PERFORMANCE_MONTHLY.stats[3], icon: Star, bgColor: '#faf5ff', iconColor: '#a855f7' },
-]
+const currentMonthDataIndex = computed(() => {
+  const monthLabel = `${currentMonth.value}월`
+  const idx = PERFORMANCE_MONTHLY.chartLabels.findIndex((label) => label === monthLabel)
+  return idx >= 0 ? idx : PERFORMANCE_MONTHLY.myScores.length - 1
+})
+
+const currentMyScore = computed(() => PERFORMANCE_MONTHLY.myScores[currentMonthDataIndex.value] ?? 0)
+const currentTeamScore = computed(() => PERFORMANCE_MONTHLY.teamScores[currentMonthDataIndex.value] ?? 0)
+
+const monthChangePercent = computed(() => {
+  const current = currentMyScore.value
+  const prevIndex = currentMonthDataIndex.value - 1
+  const prev = prevIndex >= 0 ? (PERFORMANCE_MONTHLY.myScores[prevIndex] ?? 0) : 0
+  if (!prev) return 0
+  return ((current - prev) / prev) * 100
+})
+
+const totalScore = computed(() => currentMyScore.value)
+
+const stats = computed(() => [
+  { label: '개인 업무 달성률', value: `${currentMyScore.value}%`, icon: TrendingUp, bgColor: '#eff6ff', iconColor: '#3b82f6' },
+  { label: '팀 업무 달성률', value: `${currentTeamScore.value}%`, icon: Users, bgColor: '#f0fdf4', iconColor: '#22c55e' },
+  {
+    label: '전월 대비 점수 변화율',
+    value: `${monthChangePercent.value >= 0 ? '+' : ''}${monthChangePercent.value.toFixed(1)}%`,
+    icon: Award,
+    bgColor: '#fef3c7',
+    iconColor: '#f59e0b',
+  },
+  { label: '종합 점수', value: `${totalScore.value}점`, icon: Star, bgColor: '#faf5ff', iconColor: '#a855f7' },
+])
 
 const chartData = {
   labels: PERFORMANCE_MONTHLY.chartLabels,
