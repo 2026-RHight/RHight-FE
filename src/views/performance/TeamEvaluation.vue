@@ -139,38 +139,17 @@
 <script setup>
 import { ref, computed, reactive } from 'vue'
 import { User, Star, Send } from 'lucide-vue-next'
+import { TEAM_EVALUATION_MEMBERS } from '@/mocks/performance'
 
 const selectedMemberId = ref(1)
 const scores = reactive({})
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
 
-const teamMembers = [
-  {
-    id: 1,
-    name: '김서연',
-    role: 'UX Designer',
-    department: '디자인팀',
-    image: DEFAULT_AVATAR,
-    status: '평가 대기',
-  },
-  {
-    id: 2,
-    name: '이승주',
-    role: 'Frontend Dev',
-    department: '개발팀',
-    image: DEFAULT_AVATAR,
-    status: '진행 중',
-  },
-  {
-    id: 3,
-    name: '박준호',
-    role: 'Product Manager',
-    department: '기획팀',
-    image: DEFAULT_AVATAR,
-    status: '완료',
-  },
-]
+const teamMembers = TEAM_EVALUATION_MEMBERS.map((member) => ({
+  ...member,
+  image: DEFAULT_AVATAR,
+}))
 
 const evaluationCriteria = [
   { id: 'performance', label: '업무 성과', description: '목표 달성도 및 업무의 질적/양적 성과' },
@@ -198,7 +177,8 @@ const getScore = (criteriaId) => {
 .eval-wrap {
   display: flex;
   gap: 16px;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 /* ════════════════════════════════

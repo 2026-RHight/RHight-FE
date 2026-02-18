@@ -252,22 +252,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Search, Filter, CheckCircle, FileText, User, ChevronRight, X, AlertCircle } from 'lucide-vue-next'
+import { PERFORMANCE_APPROVAL } from '@/mocks/performance'
 
 const activeTab = ref('plan')
 const selectedItem = ref(null)
 const modalTab = ref('detail')
 const searchText = ref('')
 
-const planItems = [
-  { id: 1, user: '김서연', dept: '기획팀', title: 'Q2 신규 서비스 기획', date: '2023.04.03', status: '대기', type: '팀 성과', progress: 0 },
-  { id: 2, user: '박지성', dept: '개발팀', title: '레거시 시스템 마이그레이션', date: '2023.04.05', status: '대기', type: '팀 성과', progress: 0 },
-  { id: 3, user: '이승주', dept: '디자인팀', title: 'UX 리서치 및 개선안 도출', date: '2023.04.06', status: '대기', type: '개인 성과', progress: 0 },
-]
-
-const resultItems = [
-  { id: 4, user: '손흥민', dept: '영업팀', title: '1분기 매출 목표 달성', date: '2023.04.01', status: '대기', type: '팀 성과', achievement: '120%', progress: 100 },
-  { id: 5, user: '페이커', dept: '개발팀', title: '사내 프레임워크 고도화', date: '2023.03.31', status: '대기', type: '개인 성과', achievement: '100%', progress: 100 },
-]
+const planItems = PERFORMANCE_APPROVAL.planItems
+const resultItems = PERFORMANCE_APPROVAL.resultItems
 
 const currentItems = computed(() => {
   const items = activeTab.value === 'plan' ? planItems : resultItems
@@ -291,7 +284,8 @@ const handleItemClick = (item) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 /* ════════════════════════════════

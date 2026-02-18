@@ -68,69 +68,17 @@ import {
   Filler,
   Tooltip,
 } from 'chart.js'
+import { PERFORMANCE_MEMBERS } from '@/mocks/performance'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip)
 
-const members = [
-  {
-    id: 1,
-    name: '김서연',
-    role: 'UX Designer',
-    department: '디자인팀',
-    avgScore: 4.6,
-    image:
-      'https://images.unsplash.com/photo-1581065178047-8ee15951ede6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMHdvbWFuJTIwcG9ydHJhaXQlMjBhc2lhbnxlbnwxfHx8fDE3NzA1MzkwMzd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    chartData: [
-      { subject: '업무성과', A: 4.5 },
-      { subject: '업무태도', A: 4.8 },
-      { subject: '협업능력', A: 4.2 },
-      { subject: '창의성', A: 4.9 },
-    ],
-    tasks: [
-      { id: 't1', title: '모바일 앱 메인화면 리뉴얼', date: '2023.06.20', status: 'completed', description: '사용성 개선을 위한 UX 개편' },
-      { id: 't2', title: 'Q3 신규 기능 사용자 조사', date: '2023.06.15', status: 'completed', description: '타겟 유저 20명 대상 심층 인터뷰' },
-      { id: 't3', title: '디자인 시스템 업데이트', date: '2023.06.30', status: 'in-progress', description: '컴포넌트 라이브러리 현행화' },
-    ],
-  },
-  {
-    id: 2,
-    name: '이승주',
-    role: 'Frontend Dev',
-    department: '개발팀',
-    avgScore: 4.5,
-    image:
-      'https://images.unsplash.com/photo-1701463387028-3947648f1337?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3VuZyUyMHByb2Zlc3Npb25hbCUyMGJ1c2luZXNzJTIwbWFuJTIwcG9ydHJhaXQlMjBhc2lhbnxlbnwxfHx8fDE3NzA2MTcyODF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    chartData: [
-      { subject: '업무성과', A: 4.8 },
-      { subject: '업무태도', A: 4.5 },
-      { subject: '협업능력', A: 4.7 },
-      { subject: '창의성', A: 3.8 },
-    ],
-    tasks: [
-      { id: 't4', title: '관리자 대시보드 성능 최적화', date: '2023.06.10', status: 'completed', description: 'LCP 2.5초 -> 1.2초 단축' },
-      { id: 't5', title: '공통 컴포넌트 리팩토링', date: '2023.06.25', status: 'in-progress', description: '레거시 코드 제거 및 패턴 적용' },
-    ],
-  },
-  {
-    id: 3,
-    name: '박준호',
-    role: 'Product Manager',
-    department: '기획팀',
-    avgScore: 4.7,
-    image:
-      'https://images.unsplash.com/photo-1738566061505-556830f8b8f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5b3VuZyUyMHByb2Zlc3Npb25hbCUyMGJ1c2luZXNzJTIwbWFuJTIwcG9ydHJhaXQlMjBhc2lhbnxlbnwxfHx8fDE3NzA2MTcyODF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    chartData: [
-      { subject: '업무성과', A: 4.2 },
-      { subject: '업무태도', A: 4.9 },
-      { subject: '협업능력', A: 5.0 },
-      { subject: '창의성', A: 4.5 },
-    ],
-    tasks: [
-      { id: 't6', title: 'Q3 제품 로드맵 수립', date: '2023.06.01', status: 'completed', description: '전사 목표와 연계된 전략 수립' },
-      { id: 't7', title: '경쟁사 분석 리포트', date: '2023.06.18', status: 'completed', description: '주요 3사 기능 및 가격 정책' },
-    ],
-  },
-]
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
+
+const members = PERFORMANCE_MEMBERS.map((member) => ({
+  ...member,
+  image: DEFAULT_AVATAR,
+}))
 
 const getChartData = (member) => ({
   labels: member.chartData.map((d) => d.subject),

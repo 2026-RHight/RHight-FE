@@ -194,7 +194,8 @@ function registerMore() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 .reg-selection-inner {
@@ -299,7 +300,8 @@ function registerMore() {
 .reg-form-wrap {
   display: flex;
   justify-content: center;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
   padding: 4px 0;
 }
 
