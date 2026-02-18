@@ -67,7 +67,7 @@ const calculateDays = computed(() => {
 
 // Methods
 const loadTestData = () => {
-    approvalLine.value = [...mockApprovalLine];
+    approvalLine.value = activeTemplate.value === 'vacation' ? [] : [...mockApprovalLine];
     referrers.value = [...mockReferrers];
     docInfo.title = `${currentTemplateName.value} - ${currentUser.name}`;
     if(['vacation', 'flexible', 'leave'].includes(activeTemplate.value)) {
@@ -235,7 +235,12 @@ const finalizeSubmission = () => {
           </table>
 
           <!-- Approval Line -->
-          <div class="approval-line-container">
+          <div class="approval-line-panel">
+            <div class="approval-line-header">
+              <button type="button" class="btn-xs" @click="openModal('approval')">결재선 수정</button>
+            </div>
+
+            <div class="approval-line-container">
             <!-- Drafter (Fixed) -->
             <div class="approval-box">
               <div class="box-header">기안</div>
@@ -268,13 +273,6 @@ const finalizeSubmission = () => {
               </div>
               <div class="box-date"></div> <!-- Empty for pending approvers -->
             </div>
-
-            <!-- Add Button -->
-            <div class="approval-box add-box" @click="openModal('approval')">
-              <div class="box-header">결재선</div>
-              <div class="box-content add-btn">
-                <span>+</span>
-              </div>
             </div>
           </div>
         </div>
@@ -585,6 +583,20 @@ const finalizeSubmission = () => {
 }
 
 /* Approval Line Boxes */
+.approval-line-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.approval-line-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 2px;
+}
+
+
 .approval-line-container {
   display: flex;
   gap: 4px;
@@ -717,20 +729,6 @@ const finalizeSubmission = () => {
   text-align: center;
   color: #666;
   padding: 2px 0;
-}
-
-.add-box {
-  cursor: pointer;
-}
-.add-box .box-content:hover {
-  background: #f9f9f9;
-}
-.add-btn {
-  font-size: 1.5rem;
-  color: #ccc;
-}
-.add-box:hover .add-btn {
-  color: #0066cc;
 }
 
 /* Referrer Section */

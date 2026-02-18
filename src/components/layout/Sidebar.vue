@@ -128,60 +128,69 @@
         <span>전자결재</span>
       </div>
 
-      <div class="menu-section">
-        <div v-for="menu in approvalMenus" :key="menu.label" class="menu-group">
-          <div class="sidebar-item menu-head" @click="toggleMenu(menu.label)">
-            <div class="menu-label-wrap">
-              <component :is="menu.icon" />
-              <span>{{ menu.label }}</span>
-            </div>
-            <svg
-                class="chevron"
-                :class="{ 'rotate': isOpen(menu.label) }"
-                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-
-          <div v-show="isOpen(menu.label)" class="sub-menu">
-            <div
-                v-for="sub in menu.children"
-                :key="sub.label"
-                class="sidebar-item sub-item"
-                @click="handleNavigate(sub.route)"
-                :class="{ active: currentPath === sub.route }"
-            >
-              <span class="dot"></span>
-              {{ sub.label }}
-            </div>
-          </div>
-        </div>
+      <div
+        class="sidebar-item"
+        :class="{ 'sidebar-item--active': isMenuActive(approvalDashboardMenu) }"
+        @click="handleNavigate(approvalDashboardMenu.route)"
+      >
+        <component :is="approvalDashboardMenu.icon" />
+        {{ approvalDashboardMenu.label }}
       </div>
 
-      <div class="divider"></div>
+      <div class="sidebar-divider"></div>
+
+      <template v-for="item in approvalMenus" :key="item.label">
+        <div
+          v-if="!item.isSub"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': isMenuActive(item) }"
+          @click="handleNavigate(item.route)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </div>
+
+        <div
+          v-else
+          class="sidebar-item sub-item"
+          :class="{ 'sidebar-item--active': isMenuActive(item) }"
+          @click="handleNavigate(item.route)"
+        >
+          <span class="dot"></span>
+          {{ item.label }}
+        </div>
+      </template>
     </template>
 
     <template v-else-if="isPerformance">
       <div class="sidebar-header">
-        <span>성과 관리</span>
+        <span>성과</span>
+      </div>
+
+      <div
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': perfStore.activePage === dashboardPerformanceMenuItem.id }"
+          @click="perfStore.setPage(dashboardPerformanceMenuItem.id)"
+      >
+        <component :is="dashboardPerformanceMenuItem.icon" />
+        {{ dashboardPerformanceMenuItem.name }}
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">성과 관리</div>
+      <div
+          v-for="item in performanceManageMenuItems"
+          :key="item.id"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+          @click="perfStore.setPage(item.id)"
+      >
+        <component :is="item.icon" />
+        {{ item.name }}
       </div>
 
       <template v-if="isPerformanceManager">
-        <div class="sidebar-section-label">내 성과 관리</div>
-        <div
-            v-for="item in myPerformanceMenuItems"
-            :key="item.id"
-            class="sidebar-item"
-            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-            @click="perfStore.setPage(item.id)"
-        >
-          <component :is="item.icon" />
-          {{ item.name }}
-        </div>
-
         <div class="sidebar-divider"></div>
-
         <div class="sidebar-section-label">팀 관리</div>
         <div
             v-for="item in teamManagementMenuItems"
@@ -194,17 +203,6 @@
           {{ item.name }}
         </div>
       </template>
-      <div
-          v-else
-          v-for="item in myPerformanceMenuItems"
-          :key="item.id"
-          class="sidebar-item"
-          :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-          @click="perfStore.setPage(item.id)"
-      >
-        <component :is="item.icon" />
-          {{ item.name }}
-      </div>
     </template>
 
     <template v-else-if="isKmsMode">
@@ -271,7 +269,7 @@
 </template>
 
 <script setup>
-import { h, ref, computed, watch } from 'vue'
+import { h, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePerformanceStore } from '@/store/performance'
 import { AUTH_KEYS } from '@/utils/auth'
@@ -457,21 +455,20 @@ const myPerformanceMenuItems = [
   { id: 'registration', name: '성과 등록', icon: PlusIcon },
   { id: 'inquiry', name: '성과 조회', icon: SearchIcon },
   { id: 'monthly', name: '월별 성과', icon: ChartIcon },
+  { id: 'peer-review', name: '동료 평가', icon: UsersIcon },
 ]
-
 const teamManagementMenuItems = [
   { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon },
   { id: 'team-evaluation', name: '팀원 평가', icon: UsersIcon },
   { id: 'team-stats', name: '부서 성과 통계', icon: ChartIcon },
 ]
 
-const managerPerformanceMenuItems = [
-  ...teamManagementMenuItems,
-  ...myPerformanceMenuItems,
-]
-
+const dashboardPerformanceMenuItem = myPerformanceMenuItems[0]
+const performanceManageMenuItems = myPerformanceMenuItems.filter(item => item.id !== 'dashboard')
 const performanceMenuItems = computed(() => (
-    isPerformanceManager.value ? managerPerformanceMenuItems : myPerformanceMenuItems
+  isPerformanceManager.value
+    ? [...myPerformanceMenuItems, ...teamManagementMenuItems]
+    : myPerformanceMenuItems
 ))
 const performanceMenuIds = computed(() => performanceMenuItems.value.map(item => item.id))
 const myPerformanceMenuIds = computed(() => myPerformanceMenuItems.map(item => item.id))
@@ -529,25 +526,24 @@ const salaryMenus = [
 ]
 
 const approvalMenus = computed(() => {
-  const children = [
-    { label: '전자 결재 기안', route: '/approval/draft' },
-    { label: '전자 결재 현황', route: '/approval/status' },
-    { label: '전자 결재 문서함', route: '/approval/box' },
+  const topMenus = [
+    { label: '전자 결재 기안', icon: PlusIcon, route: '/approval/draft' },
+    { label: '전자 결재 현황', icon: SearchIcon, route: '/approval/status' },
+    { label: '전자 결재 검토', icon: CheckIcon, route: '/approval/review' }
   ]
 
-  if (['manager', 'admin'].includes(userRank.value)) {
-    children.push({ label: '전자 결재 검토', route: '/approval/review' })
-  }
-
-  return [
-    {
-      label: '전자결재 메뉴', // 메뉴 그룹명
-      icon: ApprovalIcon,
-      children: children
-    }
+  const boxMenu = { label: '전자 결재 문서함', icon: FolderIcon, route: '/approval/box' }
+  const boxSubMenus = [
+    { label: '전체 문서함', route: '/approval/box/all', routePrefix: '/approval/box/all', isSub: true },
+    { label: '처리중인 문서함', route: '/approval/box/ing', routePrefix: '/approval/box/ing', isSub: true },
+    { label: '보류/반려 문서함', route: '/approval/box/issue', routePrefix: '/approval/box/issue', isSub: true },
+    { label: '완료 문서함', route: '/approval/box/completed', routePrefix: '/approval/box/completed', isSub: true },
+    { label: '임시 보관함', route: '/approval/box/temp', routePrefix: '/approval/box/temp', isSub: true },
   ]
+
+  return [...topMenus, boxMenu, ...boxSubMenus]
 })
-
+const approvalDashboardMenu = { label: '전자결재 대시보드', icon: DashboardIcon, route: '/approval' }
 const kmsManualMenus = [
   {
     label: '메뉴얼 대시보드',
@@ -570,15 +566,6 @@ const kmsArchiveMenus = [
 ]
 
 const kmsDashboardMenu = { label: 'KMS 대시보드', icon: DashboardIcon, route: '/kms' }
-
-// 메뉴 토글 상태 관리
-const openMenus = ref({ '전자결재 메뉴': true })
-
-const toggleMenu = (label) => {
-  openMenus.value[label] = !openMenus.value[label]
-}
-
-const isOpen = (label) => !!openMenus.value[label]
 
 const isMenuActive = (item) => {
   if (currentPath.value === item.route) return true
@@ -730,5 +717,21 @@ const handleNavigate = (route) => {
 }
 .sidebar-item--toggle:hover {
   color: var(--primary);
+}
+
+/* Approval sub-menu indent tuning */
+.sub-item {
+  margin-left: 16px;
+  width: calc(100% - 16px);
+  padding-left: 28px;
+  border-radius: 8px;
+}
+
+.sub-item .dot {
+  left: 12px;
+}
+
+.sub-item.sidebar-item--active .dot {
+  background-color: var(--primary);
 }
 </style>

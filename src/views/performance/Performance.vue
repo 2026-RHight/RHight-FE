@@ -33,4 +33,10 @@ const perfStore = usePerformanceStore()
   display: flex;
   flex-direction: column;
 }
+
+.performance-content > * {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
 </style>

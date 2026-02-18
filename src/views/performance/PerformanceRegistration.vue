@@ -6,23 +6,23 @@
       <p class="reg-subtitle">팀 성과 또는 개인 성과를 선택하여 등록할 수 있습니다.</p>
 
       <div class="type-cards">
-        <button class="type-card" @click="step = 'team-form'">
-          <div class="type-icon blue">
-            <Users :size="28" />
-          </div>
-          <h3 class="type-name">팀 성과 등록</h3>
-          <p class="type-desc">팀 목표 달성을 위한 업무 내역을<br />등록하고 관리합니다.</p>
-          <span class="type-arrow">
-            <ArrowRight :size="16" />
-          </span>
-        </button>
-
         <button class="type-card" @click="step = 'individual-form'">
           <div class="type-icon green">
             <User :size="28" />
           </div>
           <h3 class="type-name">개인 성과 등록</h3>
           <p class="type-desc">개인 역량 발전 및 성과 창출을 위한<br />활동을 기록합니다.</p>
+          <span class="type-arrow">
+            <ArrowRight :size="16" />
+          </span>
+        </button>
+
+        <button class="type-card" @click="step = 'team-form'">
+          <div class="type-icon blue">
+            <Users :size="28" />
+          </div>
+          <h3 class="type-name">팀 성과 등록</h3>
+          <p class="type-desc">팀 목표 달성을 위한 업무 내역을<br />등록하고 관리합니다.</p>
           <span class="type-arrow">
             <ArrowRight :size="16" />
           </span>
@@ -194,7 +194,8 @@ function registerMore() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 .reg-selection-inner {
@@ -299,7 +300,8 @@ function registerMore() {
 .reg-form-wrap {
   display: flex;
   justify-content: center;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
   padding: 4px 0;
 }
 

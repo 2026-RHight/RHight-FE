@@ -64,8 +64,18 @@ input{font-family:var(--font);outline:none}
 
 /* ── Layout ── */
 #app{display:flex;flex-direction:column;min-height:100vh}
-.app-body{display:flex;flex:1}
+.app-body{display:flex;flex:1;min-height:0}
 .main-content{flex:1;padding:20px 24px;min-width:0;overflow-x:hidden}
+.main-content--performance{
+  height:calc(100vh - var(--header-h));
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.main-content--performance > *{
+  min-height:0;
+  flex:1;
+}
 
 /* ── Glass Card ── */
 .card{

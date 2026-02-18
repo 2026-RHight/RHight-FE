@@ -214,6 +214,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle } from 'lucide-vue-next'
+import { PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 
 const selectedItem = ref(null)
 const modalTab = ref('detail')
@@ -223,13 +224,7 @@ const filterStatus = ref('')
 const filterMonth = ref('')
 const searchText = ref('')
 
-const items = [
-  { id: 1, type: 'Team', title: 'Q1 신규 프로젝트 기획', date: '2023.01.01 ~ 2023.03.31', status: '진행중', progress: 75 },
-  { id: 2, type: 'Individual', title: 'React 역량 강화를 위한 스터디', date: '2023.02.01 ~ 2023.02.28', status: '완료', progress: 100 },
-  { id: 3, type: 'Team', title: '레거시 코드 리팩토링', date: '2023.03.01 ~ 2023.04.30', status: '진행중', progress: 30 },
-  { id: 4, type: 'Individual', title: '사내 기술 블로그 포스팅 3건', date: '2023.01.01 ~ 2023.06.30', status: '대기', progress: 0 },
-  { id: 5, type: 'Team', title: '디자인 시스템 구축', date: '2023.02.15 ~ 2023.05.30', status: '진행중', progress: 50 },
-]
+const items = PERFORMANCE_INQUIRY_ITEMS
 
 const filteredItems = computed(() => {
   return items.filter((item) => {
@@ -258,7 +253,8 @@ function openDetail(item) {
 .inq-wrap {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - var(--header-h) - 80px);
+  min-height: 0;
+  height: 100%;
 }
 
 .inq-card {
