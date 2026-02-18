@@ -14,7 +14,7 @@
           :class="{ active: selectedColleague?.name === c.name }"
           @click="selectColleague(c)"
         >
-          <div class="peer-avatar" :style="{ background: c.color }">{{ c.name[0] }}</div>
+          <img :src="DEFAULT_AVATAR" :alt="`${c.name} 프로필`" class="peer-avatar" />
           <div class="peer-item-info">
             <span class="peer-item-name">{{ c.name }}</span>
             <span class="peer-item-team">{{ c.team }}</span>
@@ -49,9 +49,7 @@
         <!-- 헤더 -->
         <div class="peer-form-header">
           <div class="peer-form-profile">
-            <div class="peer-form-avatar" :style="{ background: selectedColleague.color }">
-              {{ selectedColleague.name[0] }}
-            </div>
+            <img :src="DEFAULT_AVATAR" :alt="`${selectedColleague.name} 프로필`" class="peer-form-avatar" />
             <div>
               <h2 class="peer-form-name">{{ selectedColleague.name }}<span>님에 대한 평가</span></h2>
               <p class="peer-form-meta">{{ selectedColleague.team }} · 평가 기간: 2023년 상반기</p>
@@ -140,6 +138,9 @@
 import { ref, reactive, computed } from 'vue'
 import { Users, Shield, MessageSquare, Send, CheckCircle2 } from 'lucide-vue-next'
 import { PEER_REVIEW_COLLEAGUES } from '@/mocks/performance'
+
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
 
 const colleagues = ref(PEER_REVIEW_COLLEAGUES.map((item) => ({ ...item })))
 
@@ -266,12 +267,8 @@ function closeAndNext() {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 700;
+  object-fit: cover;
+  border: 1px solid var(--gray200);
   flex-shrink: 0;
 }
 
@@ -408,12 +405,8 @@ function closeAndNext() {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 1.1rem;
-  font-weight: 800;
+  object-fit: cover;
+  border: 1px solid var(--gray200);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
