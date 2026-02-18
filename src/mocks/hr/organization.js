@@ -29,7 +29,8 @@ const makeMember = (payload) => ({
   approvalAuthority: Boolean(payload.approvalAuthority),
   personalInfo: payload.personalInfo || undefined,
   hrInfo: payload.hrInfo || undefined,
-  skills: payload.skills || undefined
+  skills: payload.skills || undefined,
+  careers: payload.careers || undefined
 })
 
 const mobile1Members = [
@@ -58,7 +59,14 @@ const mobile1Members = [
     },
     skills: [
       { type: '자격증', name: '정보처리기사', issuer: '한국산업인력공단', date: '2023.06' },
-      { type: '어학', name: 'TOEIC 920', issuer: 'ETS', date: '2024.01' }
+      { type: '어학', name: 'TOEIC 920', issuer: 'ETS', date: '2024.01' },
+      { type: '클라우드', name: 'AWS SAA', issuer: 'Amazon', date: '2024.04' },
+      { type: '자격증', name: 'SQLD', issuer: '한국데이터산업진흥원', date: '2023.09' },
+      { type: '어학', name: 'OPIc IH', issuer: 'ACTFL', date: '2024.03' }
+    ],
+    careers: [
+      { company: 'RHight', role: '백엔드 개발자 · 모바일1팀', period: '2024.02 ~ 재직중' },
+      { company: '네이버', role: '서버 개발자 · 플랫폼개발팀', period: '2021.03 ~ 2024.01' }
     ]
   }),
   makeMember({
@@ -82,7 +90,10 @@ const mobile1Members = [
       workType: '정규직',
       workRegion: '서울 강남'
     },
-    skills: [{ type: '자격증', name: 'AWS SAA', issuer: 'Amazon', date: '2024.02' }]
+    skills: [{ type: '자격증', name: 'AWS SAA', issuer: 'Amazon', date: '2024.02' }],
+    careers: [
+      { company: 'RHight', role: '백엔드 개발자 · 모바일1팀', period: '2024.04 ~ 재직중' }
+    ]
   }),
   makeMember({
     employeeId: '2405010003',
@@ -108,6 +119,9 @@ const mobile1Members = [
     skills: [
       { type: '자격증', name: 'SQLD', issuer: '한국데이터산업진흥원', date: '2023.09' },
       { type: '어학', name: 'OPIc IH', issuer: 'ACTFL', date: '2024.03' }
+    ],
+    careers: [
+      { company: 'RHight', role: '프론트엔드 개발자 · 모바일1팀', period: '2024.05 ~ 재직중' }
     ]
   }),
   makeMember({
@@ -131,7 +145,10 @@ const mobile1Members = [
       workType: '정규직',
       workRegion: '서울 강남'
     },
-    skills: [{ type: '자격증', name: 'ISTQB FL', issuer: 'ISTQB', date: '2024.06' }]
+    skills: [{ type: '자격증', name: 'ISTQB FL', issuer: 'ISTQB', date: '2024.06' }],
+    careers: [
+      { company: 'RHight', role: 'QA 엔지니어 · 모바일1팀', period: '2024.10 ~ 재직중' }
+    ]
   })
 ]
 

@@ -6,9 +6,10 @@
       <div class="title-wrap">
         <h1>내 조직 조회</h1>
       </div>
-      <button class="btn-search-employee" type="button" @click="goOrgChart">
-        사원 찾기
-      </button>
+      <div class="head-actions">
+        <button class="btn-head btn-head-muted" type="button">근태</button>
+        <button class="btn-head btn-head-muted" type="button">목표</button>
+      </div>
     </section>
 
     <section class="info-bar">
@@ -84,11 +85,47 @@
             </div>
             <p v-else class="empty-text">등록된 역량 정보가 없습니다.</p>
           </section>
+
+          <section class="detail-card">
+            <h3>경력사항</h3>
+            <div v-if="selectedMember.careers?.length" class="career-list">
+              <div
+                v-for="(career, idx) in selectedMember.careers"
+                :key="`${selectedMember.employeeId}-career-${idx}`"
+                class="career-item"
+              >
+                <strong>{{ career.company }}</strong>
+                <span>{{ career.role }}</span>
+                <span class="font-num">{{ career.period }}</span>
+              </div>
+            </div>
+            <p v-else class="empty-text">등록된 경력사항이 없습니다.</p>
+          </section>
+
+          <section class="detail-card history-card">
+            <h3>인사 히스토리</h3>
+            <div v-if="selectedMemberHistories.length" class="history-list">
+              <div
+                v-for="history in selectedMemberHistories"
+                :key="history.hr_event_id"
+                class="history-item"
+              >
+                <div class="history-top">
+                  <span class="history-type">{{ history.event_type }}</span>
+                  <strong>{{ history.event_title }}</strong>
+                </div>
+                <div class="history-meta">
+                  <span>적용일: {{ history.effective_from }}</span>
+                  <span>상태: {{ historyStatusText(history.event_status) }}</span>
+                </div>
+                <p class="history-change">{{ history.before_value }} → {{ history.after_value }}</p>
+              </div>
+            </div>
+            <p v-else class="empty-text">등록된 인사 히스토리가 없습니다.</p>
+          </section>
         </div>
 
         <div class="detail-actions">
-          <button type="button" class="btn-primary" @click="goMemberAttendance">근태</button>
-          <button type="button" class="btn-primary" @click="goMemberGoal">목표</button>
           <button type="button" class="btn-ghost" @click="showDetailModal = false">닫기</button>
         </div>
       </div>
@@ -105,17 +142,29 @@ import {
   createHrTeamMembersMock,
   sortMembersByRule
 } from '@/mocks/hr/organization'
+import { createHrEventsMock } from '@/mocks/hr/hrEvents'
 
 const router = useRouter()
 
 const currentUser = ref(createHrCurrentUserMock())
 const teamMembers = ref(createHrTeamMembersMock())
+const hrEvents = ref(createHrEventsMock())
 
 const showDetailModal = ref(false)
 const selectedMember = ref(null)
 
 const canViewMemberDetail = computed(() => currentUser.value.role === 'TEAM_LEADER')
 const sortedTeamMembers = computed(() => sortMembersByRule(teamMembers.value))
+const selectedMemberHistories = computed(() => {
+  if (!selectedMember.value?.employeeId) return []
+  return hrEvents.value
+    .filter((item) => item.employee_id === selectedMember.value.employeeId)
+    .sort(
+      (a, b) =>
+        Number(String(b.effective_from).replaceAll('.', '')) -
+        Number(String(a.effective_from).replaceAll('.', ''))
+    )
+})
 
 const openMemberDetail = (member) => {
   if (!canViewMemberDetail.value) return
@@ -123,22 +172,16 @@ const openMemberDetail = (member) => {
   showDetailModal.value = true
 }
 
-const goOrgChart = () => {
-  router.push('/hr/orgchart')
-}
-
-const goMemberAttendance = () => {
-  if (!selectedMember.value) return
-}
-
-const goMemberGoal = () => {
-  if (!selectedMember.value) return
-}
-
 const statusClass = (status) => {
   if (status === '정상') return 'ok'
   if (status === '재택') return 'remote'
   return 'leave'
+}
+
+const historyStatusText = (status) => {
+  if (status === 'APPROVED') return '완료'
+  if (status === 'REJECTED') return '반려'
+  return '진행중'
 }
 </script>
 
@@ -183,7 +226,13 @@ const statusClass = (status) => {
   align-items: center;
 }
 
-.btn-search-employee {
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-head {
   border: 1px solid var(--primary);
   background: var(--accent);
   color: var(--primary);
@@ -195,9 +244,20 @@ const statusClass = (status) => {
   cursor: pointer;
 }
 
-.btn-search-employee:hover {
+.btn-head:hover {
   background: var(--primary);
   color: #fff;
+}
+
+.btn-head-muted {
+  border-color: var(--gray200);
+  background: #fff;
+  color: var(--gray600);
+}
+
+.btn-head-muted:hover {
+  background: var(--gray50);
+  color: var(--gray700);
 }
 
 .info-bar {
@@ -323,8 +383,10 @@ const statusClass = (status) => {
 }
 
 .member-detail {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
+  height: min(78vh, 820px);
 }
 
 .detail-head {
@@ -349,6 +411,11 @@ const statusClass = (status) => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  align-content: start;
 }
 
 .detail-card {
@@ -382,6 +449,9 @@ const statusClass = (status) => {
 .skill-list {
   display: grid;
   gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .skill-item {
@@ -402,6 +472,84 @@ const statusClass = (status) => {
   font-size: .8rem;
 }
 
+.career-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.career-item {
+  border: 1px solid var(--gray100);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  gap: 3px;
+}
+
+.career-item strong {
+  color: var(--gray800);
+  font-size: .86rem;
+}
+
+.career-item span {
+  color: var(--gray500);
+  font-size: .8rem;
+}
+
+.history-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.history-item {
+  border: 1px solid var(--gray100);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.history-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-top strong {
+  color: var(--gray800);
+  font-size: .84rem;
+}
+
+.history-type {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+}
+
+.history-meta {
+  margin-top: 5px;
+  display: flex;
+  gap: 10px;
+  color: var(--gray500);
+  font-size: .76rem;
+}
+
+.history-change {
+  margin: 6px 0 0;
+  color: var(--gray700);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
 .empty-text {
   margin: 0;
   color: var(--gray400);
@@ -414,7 +562,6 @@ const statusClass = (status) => {
   gap: 8px;
 }
 
-.btn-primary,
 .btn-ghost {
   height: 34px;
   border-radius: 10px;
@@ -422,16 +569,6 @@ const statusClass = (status) => {
   font-size: .84rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.btn-primary {
-  border: none;
-  background: var(--primary);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
 }
 
 .btn-ghost {
