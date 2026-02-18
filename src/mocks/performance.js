@@ -216,6 +216,7 @@ export const TEAM_EVALUATION_MEMBERS = linkedMembers.map((member, index) => ({
   role: member.job,
   department: member.position,
   status: evaluationStatuses[index % evaluationStatuses.length],
+  systemScore: Math.round((PERFORMANCE_MEMBERS[index]?.avgScore || 0) * 20),
 }))
 
 const peerReviewColors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4']

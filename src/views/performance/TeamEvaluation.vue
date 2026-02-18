@@ -64,6 +64,9 @@
             </div>
           </div>
           <div class="eval-form-actions">
+            <div class="system-score">
+              시스템 평가점수 <strong>{{ selectedMember.systemScore }}점</strong>
+            </div>
             <button class="btn-save">임시 저장</button>
             <button class="btn-submit">
               <Send :size="14" /> 평가 제출
@@ -452,7 +455,27 @@ const getScore = (criteriaId) => {
 
 .eval-form-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.system-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: #f8fafc;
+  border: 1px solid var(--gray200);
+  color: var(--gray600);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.system-score strong {
+  color: var(--primary-dark);
+  font-family: var(--font-num);
 }
 
 .btn-save {
