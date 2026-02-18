@@ -48,13 +48,23 @@
         <span v-if="['manager', 'admin'].includes(userRank)" class="sidebar-role-badge sidebar-role-badge--manager">관리자</span>
       </div>
 
+      <div
+          class="sidebar-item"
+          :class="{ 'active': currentPath.includes(attendanceDashboardMenu.route) }"
+          @click="handleNavigate(attendanceDashboardMenu.route)"
+      >
+        <component :is="attendanceDashboardMenu.icon" />
+        {{ attendanceDashboardMenu.label }}
+      </div>
+      <div class="divider"></div>
+
       <template v-if="isAttendanceManager">
         <div class="sidebar-section-label">내 근태 관리</div>
         <div
             v-for="item in myAttendanceMenus"
             :key="item.label"
             class="sidebar-item"
-            :class="{ 'active': currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+            :class="[{ 'active': currentPath.includes(item.route) }, item.className]"
             @click="handleNavigate(item.route)"
         >
           <component :is="item.icon" />
@@ -82,7 +92,7 @@
               v-for="item in myAttendanceMenus"
               :key="item.label"
               class="sidebar-item"
-              :class="{ 'active': currentPath.includes(item.route) || (item.route === '/attendance' && currentPath === '/attendance') }"
+              :class="[{ 'active': currentPath.includes(item.route) }, item.className]"
               @click="handleNavigate(item.route)"
           >
             <component :is="item.icon" />
@@ -365,9 +375,28 @@ const ListIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill
   h('line', { x1:'3', y1:'12', x2:'3.01', y2:'12' }),
   h('line', { x1:'3', y1:'18', x2:'3.01', y2:'18' })
 ])
+const CommuteIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('line', { x1:'8', y1:'6', x2:'21', y2:'6' }),
+  h('line', { x1:'8', y1:'12', x2:'21', y2:'12' }),
+  h('line', { x1:'8', y1:'18', x2:'21', y2:'18' }),
+  h('line', { x1:'3', y1:'6', x2:'3.01', y2:'6' }),
+  h('line', { x1:'3', y1:'12', x2:'3.01', y2:'12' }),
+  h('line', { x1:'3', y1:'18', x2:'3.01', y2:'18' })
+])
 const CheckIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
   h('polyline', { points:'9 11 12 14 22 4' }),
   h('path', { d:'M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' }),
+])
+const SunIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
+  h('circle', { cx:'12', cy:'12', r:'5' }),
+  h('line', { x1:'12', y1:'1', x2:'12', y2:'3' }),
+  h('line', { x1:'12', y1:'21', x2:'12', y2:'23' }),
+  h('line', { x1:'4.22', y1:'4.22', x2:'5.64', y2:'5.64' }),
+  h('line', { x1:'18.36', y1:'18.36', x2:'19.78', y2:'19.78' }),
+  h('line', { x1:'1', y1:'12', x2:'3', y2:'12' }),
+  h('line', { x1:'21', y1:'12', x2:'23', y2:'12' }),
+  h('line', { x1:'4.22', y1:'19.78', x2:'5.64', y2:'18.36' }),
+  h('line', { x1:'18.36', y1:'5.64', x2:'19.78', y2:'4.22' })
 ])
 const FileTextIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', 'stroke-width':'2' }, [
   h('path', { d:'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z' }),
@@ -475,16 +504,18 @@ const userRank = computed(() => {
 })
 
 // --- 근태 모드 데이터 ---
+const attendanceDashboardMenu = { label: '근태 대쉬보드', icon: DashboardIcon, route: '/attendance/my' }
+
 const myAttendanceMenus = [
-  { label: '나의 근태', icon: ClockIcon, route: '/attendance/my' },
-  { label: '출퇴근 기록', icon: ListIcon, route: '/attendance/record' },
+  { label: '출퇴근 기록', icon: CommuteIcon, route: '/attendance/record', className: 'sidebar-item--tight' },
   { label: '신청 내역 조회', icon: CheckIcon, route: '/attendance/history' },
   { label: '근무 일정', icon: CalendarIcon, route: '/attendance/schedule' },
+  { label: '연차/휴가 현황', icon: SunIcon, route: '/attendance/vacation' },
 ]
 
 const teamAttendanceMenus = [
-  { label: '팀 근태 관리', icon: UsersIcon, route: '/attendance/team' },
-  { label: '근태 관리', icon: UsersIcon, route: '/attendance/manage' },
+  { label: '팀 일일 근태 현황', icon: UsersIcon, route: '/attendance/team' },
+  { label: '팀 근태 관리', icon: UsersIcon, route: '/attendance/manage' },
   { label: '유연근무관리', icon: SlidersIcon, route: '/attendance/flexible' },
 ]
 

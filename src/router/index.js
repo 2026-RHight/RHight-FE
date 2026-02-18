@@ -155,14 +155,15 @@ const routes = [
     component: () => import('@/views/attendance/AttendanceLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      { path: 'my', component: () => import('@/views/attendance/AttendanceMain.vue') },
-      { path: 'record', component: () => import('@/views/attendance/AttendanceRecord.vue') },
-      { path: 'request', component: () => import('@/views/attendance/AttendanceMain.vue') }, // Placeholder
-      { path: 'history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
-      { path: 'schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
-      { path: 'team', component: () => import('@/views/attendance/AttendanceTeamManage.vue'), meta: { requiresAuth: true, roles: ['manager', 'admin'] } },
-      { path: 'manage', component: () => import('@/views/attendance/AttendanceManage.vue') },
-      { path: 'flexible', component: () => import('@/views/attendance/FlexibleWorkManage.vue') },
+      { path: 'my', name: 'attendance-main', component: () => import('@/views/attendance/AttendanceMain.vue') },
+      { path: 'record', name: 'attendance-record', component: () => import('@/views/attendance/AttendanceRecord.vue') },
+      { path: 'request', name: 'attendance-request', component: () => import('@/views/attendance/AttendanceMain.vue') }, // Placeholder
+      { path: 'history', name: 'attendance-history', component: () => import('@/views/attendance/AttendanceHistory.vue') },
+      { path: 'schedule', name: 'attendance-schedule', component: () => import('@/views/attendance/AttendanceSchedule.vue') },
+      { path: 'vacation', name: 'attendance-vacation', component: () => import('@/views/attendance/AttendanceVacation.vue') },
+      { path: 'team', name: 'attendance-team', component: () => import('@/views/attendance/AttendanceTeamManage.vue') },
+      { path: 'manage', name: 'attendance-manage', component: () => import('@/views/attendance/AttendanceManage.vue') },
+      { path: 'flexible', name: 'attendance-flexible', component: () => import('@/views/attendance/FlexibleWorkManage.vue') },
     ]
   },
   {
