@@ -154,24 +154,33 @@
 
     <template v-else-if="isPerformance">
       <div class="sidebar-header">
-        <span>성과 관리</span>
+        <span>성과</span>
+      </div>
+
+      <div
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': perfStore.activePage === dashboardPerformanceMenuItem.id }"
+          @click="perfStore.setPage(dashboardPerformanceMenuItem.id)"
+      >
+        <component :is="dashboardPerformanceMenuItem.icon" />
+        {{ dashboardPerformanceMenuItem.name }}
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">성과 관리</div>
+      <div
+          v-for="item in performanceManageMenuItems"
+          :key="item.id"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
+          @click="perfStore.setPage(item.id)"
+      >
+        <component :is="item.icon" />
+        {{ item.name }}
       </div>
 
       <template v-if="isPerformanceManager">
-        <div class="sidebar-section-label">내 성과 관리</div>
-        <div
-            v-for="item in myPerformanceMenuItems"
-            :key="item.id"
-            class="sidebar-item"
-            :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-            @click="perfStore.setPage(item.id)"
-        >
-          <component :is="item.icon" />
-          {{ item.name }}
-        </div>
-
         <div class="sidebar-divider"></div>
-
         <div class="sidebar-section-label">팀 관리</div>
         <div
             v-for="item in teamManagementMenuItems"
@@ -184,17 +193,6 @@
           {{ item.name }}
         </div>
       </template>
-      <div
-          v-else
-          v-for="item in myPerformanceMenuItems"
-          :key="item.id"
-          class="sidebar-item"
-          :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-          @click="perfStore.setPage(item.id)"
-      >
-        <component :is="item.icon" />
-          {{ item.name }}
-      </div>
     </template>
 
     <template v-else-if="isKmsMode">
@@ -429,20 +427,18 @@ const myPerformanceMenuItems = [
   { id: 'inquiry', name: '성과 조회', icon: SearchIcon },
   { id: 'monthly', name: '월별 성과', icon: ChartIcon },
 ]
-
 const teamManagementMenuItems = [
   { id: 'approval-list', name: '승인 대기 목록', icon: CheckIcon },
   { id: 'team-evaluation', name: '팀원 평가', icon: UsersIcon },
   { id: 'team-stats', name: '부서 성과 통계', icon: ChartIcon },
 ]
 
-const managerPerformanceMenuItems = [
-  ...teamManagementMenuItems,
-  ...myPerformanceMenuItems,
-]
-
+const dashboardPerformanceMenuItem = myPerformanceMenuItems[0]
+const performanceManageMenuItems = myPerformanceMenuItems.filter(item => item.id !== 'dashboard')
 const performanceMenuItems = computed(() => (
-    isPerformanceManager.value ? managerPerformanceMenuItems : myPerformanceMenuItems
+  isPerformanceManager.value
+    ? [...myPerformanceMenuItems, ...teamManagementMenuItems]
+    : myPerformanceMenuItems
 ))
 const performanceMenuIds = computed(() => performanceMenuItems.value.map(item => item.id))
 const myPerformanceMenuIds = computed(() => myPerformanceMenuItems.map(item => item.id))
