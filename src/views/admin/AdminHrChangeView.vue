@@ -166,7 +166,7 @@ const employeesById = reactive({
   },
   E002: {
     employeeId: 'E002',
-    name: '김세현',
+    name: '김봉식',
     team: '모바일1팀',
     job: '백엔드 개발',
     position: '팀장',
@@ -203,7 +203,7 @@ const historyRecords = ref([
   {
     id: 'HR-002',
     changeType: '발령',
-    employeeName: '김세현',
+    employeeName: '김봉식',
     beforeValue: '개발2팀',
     afterValue: '모바일1팀',
     effectiveDate: '2026.02.14',
@@ -424,7 +424,7 @@ const handlePickedMember = (member) => {
 </script>
 
 <style scoped>
-.admin-page { max-width: 1200px; }
+.admin-page { width: 100%; max-width: none; min-width: 0; }
 
 .layout { margin-top: 12px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 12px; }
 .card {

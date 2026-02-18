@@ -186,7 +186,7 @@ const historyStatusText = (status) => {
 </script>
 
 <style scoped>
-.org-page { max-width: 1200px; }
+.org-page { width: 100%; max-width: none; min-width: 0; }
 
 .breadcrumb { font-size: .78rem; color: var(--gray400); margin-bottom: 4px; }
 
