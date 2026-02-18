@@ -1,63 +1,56 @@
 <template>
   <div class="paper">
-    <!-- Document Header -->
     <div class="doc-header">
       <h1>{{ formalTitle }}</h1>
     </div>
 
-    <!-- Info Section (Drafter & Approval Line) -->
     <div class="info-section">
-      <!-- Drafter Info -->
       <table class="info-table drafter-table">
         <tbody>
           <tr>
             <td class="label">기안자</td>
-            <td>{{ item.drafter }}</td>
+            <td>{{ item.drafter || '-' }}</td>
           </tr>
           <tr>
             <td class="label">소속</td>
-            <td>{{ item.department }}</td>
+            <td>{{ item.department || '-' }}</td>
           </tr>
           <tr>
             <td class="label">기안일</td>
-            <td>{{ item.date?.split(' ')[0] }}</td>
+            <td>{{ (item.date || item.draftDate || '').split(' ')[0] || '-' }}</td>
           </tr>
           <tr>
             <td class="label">문서번호</td>
-            <td class="text-gray">{{ item.id }}</td>
+            <td class="text-gray">{{ item.id || '-' }}</td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Approval Line -->
       <div class="approval-line-container">
-        <div 
-          v-for="(step, index) in item.approvalLine" 
-          :key="index" 
+        <div
+          v-for="(step, index) in (item.approvalLine || [])"
+          :key="index"
           class="approval-box"
         >
           <div class="box-header">{{ index === 0 ? '기안' : `결재자 ${index}` }}</div>
           <div class="box-content">
             <div class="signature">
-              <!-- Stamp for completed steps -->
-              <div v-if="step.status === '승인' || step.status === '기안'" class="real-stamp">
-                <div class="stamp-inner" :class="{ 'vertical': step.name.length === 3, 'grid-2x2': step.name.length === 4 }">
-                  <span class="char" v-for="(c, idx) in step.name" :key="idx">{{ c }}</span>
+              <div v-if="step.status === '승인' || step.status === '기안' || step.status === '확인'" class="real-stamp">
+                <div class="stamp-inner" :class="{ 'vertical': (step.name || '').length === 3, 'grid-2x2': (step.name || '').length === 4 }">
+                  <span class="char" v-for="(c, idx) in (step.name || '')" :key="idx">{{ c }}</span>
                 </div>
               </div>
-              <!-- Text for all steps -->
               <div class="signature-text">
                 <span class="name">{{ step.name }}</span>
                 <span class="position">{{ step.position }}</span>
               </div>
             </div>
           </div>
-          <div class="box-date">{{ step.date !== '-' ? formatShortDate(step.date) : '' }}</div>
+          <div class="box-date">{{ step.date && step.date !== '-' ? formatShortDate(step.date) : '' }}</div>
         </div>
       </div>
     </div>
 
-    <!-- Referrer Section -->
     <div v-if="item.referrers && item.referrers.length > 0" class="referrer-section">
       <span class="section-label">참조:</span>
       <div class="referrer-list">
@@ -67,16 +60,15 @@
       </div>
     </div>
 
-    <!-- Document Body Form -->
     <table class="form-table">
       <tbody>
         <tr>
           <td class="label">제목</td>
-          <td class="value-cell">{{ item.title }}</td>
+          <td class="value-cell">{{ item.title || '-' }}</td>
         </tr>
         <tr>
           <td class="label">카테고리</td>
-          <td class="value-cell">{{ item.category }}</td>
+          <td class="value-cell">{{ item.category || item.templateName || '-' }}</td>
         </tr>
         <tr v-if="item.startDate || item.endDate">
           <td class="label">기간</td>
@@ -87,13 +79,12 @@
         <tr>
           <td class="label">내용</td>
           <td class="content-cell">
-            <div class="content-text">{{ item.content }}</div>
+            <div class="content-text">{{ item.content || '상세 본문 데이터가 없습니다.' }}</div>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Attachments -->
     <div v-if="item.attachments && item.attachments.length > 0" class="attachments-area">
       <span class="label">첨부파일</span>
       <div class="file-list">
@@ -101,9 +92,8 @@
       </div>
     </div>
 
-    <!-- Rejected Reason (if any) -->
-    <div v-if="item.status === '반려' && item.rejectReason" class="reject-display">
-      <div class="reject-title">❌ 반려 사유</div>
+    <div v-if="isRejectedStatus && item.rejectReason" class="reject-display">
+      <div class="reject-title">반려 사유</div>
       <div class="reject-text">{{ item.rejectReason }}</div>
     </div>
   </div>
@@ -119,14 +109,18 @@ const props = defineProps({
   }
 });
 
+const isRejectedStatus = computed(() => {
+  return props.item.status === '반려' || props.item.status === '諛섎젮';
+});
+
 const formalTitle = computed(() => {
-  const category = props.item.category || '기안서';
+  const category = props.item.category || props.item.templateName || '기안서';
   let title = category;
-  if (category === '휴가신청서') title = '휴 가 신 청 서';
-  else if (category === '기안서') title = '기 안 서';
-  else if (category === '품의서') title = '품 의 서';
-  else if (category === '보고서') title = '보 고 서';
-  
+  if (category === '휴가 신청서') title = '연가 신청서';
+  else if (category === '기안서') title = '기안서';
+  else if (category === '품의서') title = '품의서';
+  else if (category === '보고서') title = '보고서';
+
   return title.split('').join('  ');
 });
 
@@ -148,7 +142,6 @@ const formatShortDate = (dateStr) => {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
 }
 
-/* Document Header */
 .doc-header {
   text-align: center;
   margin-bottom: 40px;
@@ -166,7 +159,6 @@ const formatShortDate = (dateStr) => {
   margin: 0;
 }
 
-/* Info Section (Drafter & Approval Line) */
 .info-section {
   display: flex;
   justify-content: space-between;
@@ -196,7 +188,6 @@ const formatShortDate = (dateStr) => {
   color: #666;
 }
 
-/* Approval Line Boxes */
 .approval-line-container {
   display: flex;
   gap: 4px;
@@ -256,7 +247,6 @@ const formatShortDate = (dateStr) => {
   color: #666;
 }
 
-/* Stamp Style */
 .real-stamp {
   position: absolute;
   top: 50%;
@@ -310,29 +300,28 @@ const formatShortDate = (dateStr) => {
   padding: 1px 0;
 }
 
-/* Referrer Section */
 .referrer-section {
-    margin-bottom: 20px;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
 }
+
 .section-label { font-weight: 600; color: #555; }
 .referrer-list { display: flex; gap: 6px; flex-wrap: wrap; }
 .referrer-tag {
-    background: white;
-    border: 1px solid #e1e4e8;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    color: #444;
+  background: white;
+  border: 1px solid #e1e4e8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #444;
 }
 
-/* Form Table */
 .form-table {
   width: 100%;
   border-collapse: collapse;
@@ -367,7 +356,6 @@ const formatShortDate = (dateStr) => {
   color: #333;
 }
 
-/* Attachments */
 .attachments-area {
   border: 1px solid #ccc;
   background: #f9f9f9;
@@ -396,7 +384,6 @@ const formatShortDate = (dateStr) => {
   border-radius: 4px;
 }
 
-/* Reject Section */
 .reject-display {
   margin-top: 20px;
   padding: 15px;

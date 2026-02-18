@@ -1,42 +1,77 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { mockApprovalStatusList } from '@/utils/approvalData';
+import ApprovalDetailModal from './components/ApprovalDetailModal.vue';
 
-// State
+const router = useRouter();
 const searchQuery = ref('');
 const activeTab = ref('all'); // 'all', 'drafting', 'pending', 'rejected'
+const isModalOpen = ref(false);
+const selectedItem = ref({});
 
-// Tabs Configuration
-const tabs = [
+const isDrafting = (status) => status === '기안중' || status === '湲곗븞以?';
+const isPending = (status) => status === '진행중' || status === '吏꾪뻾以?';
+const isRejected = (status) => status === '반려' || status === '諛섎젮';
+const isCompleted = (status) => status === '완료' || status === '?꾨즺';
+
+const tabs = computed(() => [
   { id: 'all', label: '전체', count: mockApprovalStatusList.length },
-  { id: 'drafting', label: '기안중', count: mockApprovalStatusList.filter(i => i.status === '기안중').length },
-  { id: 'pending', label: '진행중', count: mockApprovalStatusList.filter(i => i.status === '진행중').length },
-  { id: 'rejected', label: '반려', count: mockApprovalStatusList.filter(i => i.status === '반려').length }
-];
+  { id: 'drafting', label: '기안중', count: mockApprovalStatusList.filter(i => isDrafting(i.status)).length },
+  { id: 'pending', label: '진행중', count: mockApprovalStatusList.filter(i => isPending(i.status)).length },
+  { id: 'rejected', label: '반려', count: mockApprovalStatusList.filter(i => isRejected(i.status)).length }
+]);
 
-// Computed
 const filteredList = computed(() => {
   return mockApprovalStatusList.filter(item => {
-    const matchesTab = activeTab.value === 'all' || 
-                      (activeTab.value === 'drafting' && item.status === '기안중') ||
-                      (activeTab.value === 'pending' && item.status === '진행중') ||
-                      (activeTab.value === 'rejected' && item.status === '반려');
-    
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                         item.id.toLowerCase().includes(searchQuery.value.toLowerCase());
-    
+    const matchesTab = activeTab.value === 'all' ||
+      (activeTab.value === 'drafting' && isDrafting(item.status)) ||
+      (activeTab.value === 'pending' && isPending(item.status)) ||
+      (activeTab.value === 'rejected' && isRejected(item.status));
+
+    const q = searchQuery.value.toLowerCase();
+    const matchesSearch = item.title.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
+
     return matchesTab && matchesSearch;
   });
 });
 
 const getStatusClass = (status) => {
-  switch (status) {
-    case '기안중': return 'status-draft';
-    case '진행중': return 'status-pending';
-    case '반려': return 'status-rejected';
-    case '완료': return 'status-completed';
-    default: return '';
+  if (isDrafting(status)) return 'status-draft';
+  if (isPending(status)) return 'status-pending';
+  if (isRejected(status)) return 'status-rejected';
+  if (isCompleted(status)) return 'status-completed';
+  return '';
+};
+
+const openModal = (item) => {
+  selectedItem.value = {
+    ...item,
+    category: item.templateName || '-',
+    date: item.draftDate || '-',
+    content: item.content || '상세 본문 데이터가 없습니다.',
+    attachments: Array.isArray(item.attachments) ? item.attachments : [],
+    referrers: Array.isArray(item.referrers) ? item.referrers : [],
+    department: item.department || '-',
+    isDrafter: true,
+    statusClass: getStatusClass(item.status)
+  };
+  isModalOpen.value = true;
+};
+
+const closeModal = () => {
+  isModalOpen.value = false;
+};
+
+const handleModalAction = (action) => {
+  if (action.type === 'redraft') {
+    router.push({ name: 'approval-draft', query: { from: action.id } });
   }
+  isModalOpen.value = false;
+};
+
+const handleRedraft = (item) => {
+  router.push({ name: 'approval-draft', query: { from: item.id } });
 };
 </script>
 
@@ -47,14 +82,14 @@ const getStatusClass = (status) => {
         <h1 class="page-title">전자 결재 현황</h1>
         <p class="page-subtitle">본인이 기안한 문서의 실시간 결재 진행 상태를 확인합니다.</p>
       </div>
-      
+
       <div class="search-box">
         <div class="search-input-wrapper">
           <span class="search-icon">🔍</span>
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="문서 번호 또는 제목으로 검색" 
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="문서 번호 또는 제목으로 검색"
             class="search-input"
           />
         </div>
@@ -62,11 +97,10 @@ const getStatusClass = (status) => {
     </header>
 
     <main class="page-content">
-      <!-- Filter Tabs -->
       <div class="tabs-row">
         <div class="tabs">
-          <button 
-            v-for="tab in tabs" 
+          <button
+            v-for="tab in tabs"
             :key="tab.id"
             class="tab-btn"
             :class="{ active: activeTab === tab.id }"
@@ -78,7 +112,6 @@ const getStatusClass = (status) => {
         </div>
       </div>
 
-      <!-- Data Table -->
       <div class="table-card">
         <table class="data-table">
           <thead>
@@ -90,10 +123,16 @@ const getStatusClass = (status) => {
               <th>결재상태</th>
               <th>현재 결재자</th>
               <th>진행률</th>
+              <th>재상신</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredList" :key="item.id" class="table-row">
+            <tr
+              v-for="item in filteredList"
+              :key="item.id"
+              class="table-row clickable-row"
+              @click="openModal(item)"
+            >
               <td class="col-id">{{ item.id }}</td>
               <td class="col-tpl">{{ item.templateName }}</td>
               <td class="col-title">
@@ -114,9 +153,20 @@ const getStatusClass = (status) => {
                   <span class="progress-text">{{ item.progress }}%</span>
                 </div>
               </td>
+              <td @click.stop>
+                <button
+                  v-if="getStatusClass(item.status) === 'status-rejected'"
+                  type="button"
+                  class="redraft-btn"
+                  @click="handleRedraft(item)"
+                >
+                  재상신
+                </button>
+              </td>
             </tr>
+
             <tr v-if="filteredList.length === 0">
-              <td colspan="7" class="empty-state">
+              <td colspan="8" class="empty-state">
                 <div class="empty-content">
                   <span class="empty-icon">📂</span>
                   <p>조회된 결재 문서가 없습니다.</p>
@@ -127,6 +177,13 @@ const getStatusClass = (status) => {
         </table>
       </div>
     </main>
+
+    <ApprovalDetailModal
+      :is-open="isModalOpen"
+      :item="selectedItem"
+      @close="closeModal"
+      @action="handleModalAction"
+    />
   </div>
 </template>
 
@@ -162,7 +219,6 @@ const getStatusClass = (status) => {
   font-size: 0.92rem;
 }
 
-/* Search Box */
 .search-input-wrapper {
   position: relative;
   width: 300px;
@@ -193,7 +249,6 @@ const getStatusClass = (status) => {
   box-shadow: 0 0 0 3px rgba(51, 154, 240, 0.12);
 }
 
-/* Tabs */
 .tabs-row {
   border-bottom: 1px solid var(--gray200);
   margin-bottom: 20px;
@@ -201,7 +256,8 @@ const getStatusClass = (status) => {
 }
 
 .tabs {
-  display: flex; gap: 20px;
+  display: flex;
+  gap: 20px;
 }
 
 .tab-btn {
@@ -237,7 +293,6 @@ const getStatusClass = (status) => {
   color: #339af0;
 }
 
-/* Table Card */
 .table-card {
   background: white;
   border-radius: 14px;
@@ -272,11 +327,14 @@ const getStatusClass = (status) => {
   background: #f8f9fa;
 }
 
+.clickable-row {
+  cursor: pointer;
+}
+
 .col-id { color: #868e96; font-family: monospace; }
 .col-title { font-weight: 500; }
 .title-text:hover { color: #339af0; text-decoration: underline; cursor: pointer; }
 
-/* Status Badge */
 .status-badge {
   padding: 4px 10px;
   border-radius: 12px;
@@ -290,7 +348,6 @@ const getStatusClass = (status) => {
 .status-rejected { background: #fff5f5; color: #fa5252; border-color: #ffe3e3; }
 .status-completed { background: #f2fcf5; color: #40c057; border-color: #d3f9d8; }
 
-/* Progress Bar */
 .progress-container {
   display: flex;
   align-items: center;
@@ -319,7 +376,21 @@ const getStatusClass = (status) => {
   text-align: right;
 }
 
-/* Empty State */
+.redraft-btn {
+  border: 1px solid #d0e7ff;
+  background: #f0f7ff;
+  color: #1971c2;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.redraft-btn:hover {
+  background: #e7f5ff;
+}
+
 .empty-state {
   padding: 80px 0;
   text-align: center;
@@ -342,4 +413,3 @@ const getStatusClass = (status) => {
   font-size: 0.95rem;
 }
 </style>
-
