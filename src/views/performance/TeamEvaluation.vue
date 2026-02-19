@@ -90,6 +90,7 @@
                       ({{ getScore(criteria.id) }}점)
                     </span>
                   </h3>
+                  <p class="criteria-peer-avg">동료평균 {{ getCriteriaPeerAverageText(criteria.id) }}점</p>
                   <p class="criteria-desc">{{ criteria.description }}</p>
                 </div>
                 <div class="star-buttons">
@@ -163,6 +164,9 @@ const evaluationCriteria = [
 
 const selectedMember = computed(() => teamMembers.find((m) => m.id === selectedMemberId.value))
 const completedCount = computed(() => teamMembers.filter((m) => m.status === '완료').length)
+const peerReviewAverageText = computed(() => Number(selectedMember.value?.peerReviewScore || 0).toFixed(1))
+const getCriteriaPeerAverageText = (criteriaId) =>
+  Number(selectedMember.value?.peerCriteriaAverages?.[criteriaId] || 0).toFixed(1)
 
 const handleScoreChange = (criteriaId, score) => {
   scores[`${selectedMemberId.value}-${criteriaId}`] = score
@@ -528,6 +532,24 @@ const getScore = (criteriaId) => {
   gap: 20px;
 }
 
+.peer-score-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent2);
+  background: var(--accent);
+  font-size: 0.7rem;
+  color: var(--gray600);
+}
+
+.peer-score-summary strong {
+  color: var(--primary-dark);
+  font-family: var(--font-num);
+}
+
 /* 평가 항목 카드 */
 .criteria-card {
   background: #fff;
@@ -564,6 +586,12 @@ const getScore = (criteriaId) => {
 .criteria-desc {
   font-size: 0.78rem;
   color: var(--gray400);
+  margin-top: 3px;
+}
+
+.criteria-peer-avg {
+  font-size: 0.72rem;
+  color: var(--primary);
   margin-top: 3px;
 }
 
