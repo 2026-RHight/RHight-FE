@@ -99,7 +99,7 @@
       <section class="detail-modal" v-if="selectedEmployee">
         <div class="card-head detail-head">
           <h3>{{ selectedEmployee.name }} 상세 정보</h3>
-          <span class="count">민감정보 제외</span>
+          <span class="count">{{ isAdminViewer ? '민감정보 포함' : '민감정보 제외' }}</span>
         </div>
 
         <div class="detail-sections">
@@ -120,6 +120,37 @@
             <div class="detail-row"><span>입사일</span><strong>{{ selectedEmployee.hireDate }}</strong></div>
             <div class="detail-row"><span>근무 형태</span><strong>{{ selectedEmployee.workType }}</strong></div>
             <div class="detail-row"><span>근무 지역</span><strong>{{ selectedEmployee.workRegion }}</strong></div>
+          </article>
+
+          <article class="sub-card" v-if="isAdminViewer && selectedEmployeeSensitiveInfo">
+            <h4>민감 정보</h4>
+            <div class="detail-row detail-row-sensitive">
+              <span>주민번호</span>
+              <div class="sensitive-value">
+                <strong class="font-num">{{ sensitiveVisible.ssn ? selectedEmployeeSensitiveInfo.ssn : maskSsn(selectedEmployeeSensitiveInfo.ssn) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('ssn')">
+                  {{ sensitiveVisible.ssn ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
+            <div class="detail-row detail-row-sensitive">
+              <span>계좌번호</span>
+              <div class="sensitive-value">
+                <strong class="font-num">{{ sensitiveVisible.bankAccount ? selectedEmployeeSensitiveInfo.bankAccount : maskBankAccount(selectedEmployeeSensitiveInfo.bankAccount) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('bankAccount')">
+                  {{ sensitiveVisible.bankAccount ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
+            <div class="detail-row detail-row-sensitive">
+              <span>주소</span>
+              <div class="sensitive-value">
+                <strong>{{ sensitiveVisible.address ? selectedEmployeeSensitiveInfo.address : maskAddress(selectedEmployeeSensitiveInfo.address) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('address')">
+                  {{ sensitiveVisible.address ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
           </article>
 
           <article class="sub-card">
@@ -187,6 +218,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { createHrOrgTreeMock } from '@/mocks/hr/organization'
 import { createHrEventsMock } from '@/mocks/hr/hrEvents'
+import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 
 const PAGE_SIZE = 10
 const orgRoot = ref(createHrOrgTreeMock())
@@ -245,6 +277,11 @@ const filters = reactive({
 const currentPage = ref(1)
 const selectedEmployeeId = ref('')
 const showDetailModal = ref(false)
+const sensitiveVisible = reactive({
+  ssn: false,
+  bankAccount: false,
+  address: false
+})
 
 const filteredEmployees = computed(() => {
   const keyword = filters.keyword.trim().toLowerCase()
@@ -269,6 +306,33 @@ const pagedEmployees = computed(() => {
 const selectedEmployee = computed(() => {
   if (!selectedEmployeeId.value) return null
   return allEmployees.value.find((item) => item.employeeId === selectedEmployeeId.value) || null
+})
+const isAdminViewer = computed(() => {
+  const role = sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId) || ''
+  return role === USER_ROLES.admin || userId === 'admin1234'
+})
+const selectedEmployeeSensitiveInfo = computed(() => {
+  const emp = selectedEmployee.value
+  if (!emp) return null
+
+  const personal = emp.personalInfo || {}
+  const idTail = String(emp.employeeId || '').slice(-4) || '0000'
+  const idDigits = idTail.replace(/\D/g, '').padStart(4, '0')
+  const backSuffix = `${idDigits}${String((Number(idDigits) % 9) + 1)}${String((Number(idDigits) % 7) + 2)}`
+  const fallback = {
+    ssn: `950328-1${backSuffix}`,
+    bankAccount: `신한 110-${idDigits}-${
+      String((Number(idDigits) * 13) % 1000000).padStart(6, '0')
+    }`,
+    address: `서울시 강남구 테헤란로 ${Number(idTail) % 500 || 127}`
+  }
+
+  return {
+    ssn: personal.ssn || fallback.ssn,
+    bankAccount: personal.bankAccount || fallback.bankAccount,
+    address: personal.address || fallback.address
+  }
 })
 const selectedEmployeeHistories = computed(() => {
   if (!selectedEmployee.value?.employeeId) return []
@@ -319,6 +383,9 @@ watch(filteredEmployees, (nextList) => {
 
 const openDetail = (employeeId) => {
   selectedEmployeeId.value = employeeId
+  sensitiveVisible.ssn = false
+  sensitiveVisible.bankAccount = false
+  sensitiveVisible.address = false
   showDetailModal.value = true
 }
 
@@ -362,6 +429,35 @@ const openSkillEvidence = (skill) => {
 
 const openCareerEvidence = (career) => {
   openDataUrl(career?.fileUrl || buildCareerEvidenceFallback(career))
+}
+
+const toggleSensitive = (field) => {
+  if (!(field in sensitiveVisible)) return
+  sensitiveVisible[field] = !sensitiveVisible[field]
+}
+
+const maskSsn = (value) => {
+  const text = String(value || '')
+  const [frontRaw, backRaw = ''] = text.split('-')
+  const front = (frontRaw || '').replace(/\D/g, '').slice(0, 6).padEnd(6, '*')
+  const backFirst = (backRaw || '').replace(/\D/g, '').charAt(0) || '*'
+  return `${front}-${backFirst}${'*'.repeat(6)}`
+}
+
+const maskBankAccount = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return '***'
+  const parts = text.split(' ')
+  if (parts.length <= 1) return '****-****-****'
+  return `${parts[0]} ****-****-****`
+}
+
+const maskAddress = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return '주소 비공개'
+  const chunks = text.split(' ')
+  if (chunks.length <= 2) return `${chunks[0]} ${chunks[1] || ''} ***`.trim()
+  return `${chunks[0]} ${chunks[1]} ***`
 }
 </script>
 
@@ -524,6 +620,29 @@ const openCareerEvidence = (career) => {
 }
 .detail-row span { color: var(--gray500); }
 .detail-row strong { color: var(--gray800); word-break: break-word; }
+.detail-row-sensitive {
+  grid-template-columns: 104px minmax(0, 1fr);
+}
+.sensitive-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.reveal-btn {
+  height: 26px;
+  min-width: 52px;
+  border: 1px solid var(--gray200);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--gray600);
+  font-size: .74rem;
+  font-weight: 700;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.reveal-btn:hover { background: var(--gray50); }
 
 .scroll-list {
   max-height: 180px;
