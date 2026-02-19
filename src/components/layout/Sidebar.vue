@@ -160,7 +160,7 @@
       <div
           class="sidebar-item"
           :class="{ 'sidebar-item--active': perfStore.activePage === dashboardPerformanceMenuItem.id }"
-          @click="perfStore.setPage(dashboardPerformanceMenuItem.id)"
+          @click="goPerformancePage(dashboardPerformanceMenuItem.id)"
       >
         <component :is="dashboardPerformanceMenuItem.icon" />
         {{ dashboardPerformanceMenuItem.name }}
@@ -173,7 +173,7 @@
           :key="item.id"
           class="sidebar-item"
           :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-          @click="perfStore.setPage(item.id)"
+          @click="goPerformancePage(item.id)"
       >
         <component :is="item.icon" />
         {{ item.name }}
@@ -187,7 +187,7 @@
             :key="item.id"
             class="sidebar-item"
             :class="{ 'sidebar-item--active': perfStore.activePage === item.id }"
-            @click="perfStore.setPage(item.id)"
+            @click="goPerformancePage(item.id)"
         >
           <component :is="item.icon" />
           {{ item.name }}
@@ -444,11 +444,25 @@ const performanceMenuItems = computed(() => (
 const performanceMenuIds = computed(() => performanceMenuItems.value.map(item => item.id))
 const myPerformanceMenuIds = computed(() => myPerformanceMenuItems.map(item => item.id))
 
-watch([isPerformance, isPerformanceManager, performanceMenuIds], ([performance, manager]) => {
+const getDefaultPerformancePage = () => myPerformanceMenuIds.value[0]
+const getRawPerformancePage = () => String(route.params.page || '')
+const resolvePerformancePage = (rawPage) => {
+  const page = String(rawPage || '')
+  if (performanceMenuIds.value.includes(page)) return page
+  return getDefaultPerformancePage()
+}
+const goPerformancePage = (pageId) => {
+  const nextPage = resolvePerformancePage(pageId)
+  perfStore.setPage(nextPage)
+  router.push(`/performance/${nextPage}`)
+}
+
+watch([isPerformance, isPerformanceManager, performanceMenuIds, () => route.params.page], ([performance]) => {
   if (!performance) return
-  if (!performanceMenuIds.value.includes(perfStore.activePage)) {
-    const nextPage = manager ? myPerformanceMenuIds.value[0] : myPerformanceMenuIds.value[0]
-    perfStore.setPage(nextPage)
+  const nextPage = resolvePerformancePage(getRawPerformancePage())
+  if (perfStore.activePage !== nextPage) perfStore.setPage(nextPage)
+  if (getRawPerformancePage() !== nextPage) {
+    router.replace(`/performance/${nextPage}`)
   }
 }, { immediate: true })
 

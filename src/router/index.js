@@ -129,6 +129,11 @@ const routes = [
   },
   {
     path: '/performance',
+    redirect: '/performance/dashboard',
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/performance/:page',
     name: 'performance',
     meta: { requiresAuth: true },
     component: () => import('@/views/performance/Performance.vue')
