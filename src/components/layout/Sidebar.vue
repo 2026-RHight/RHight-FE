@@ -477,7 +477,7 @@ const SlidersIcon = () => h('svg', { width:16, height:16, viewBox:'0 0 24 24', f
 const adminMenus = [
   { label: '인사 정보 조회', icon: DashboardIcon, route: '/admin/main' },
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
-  { label: '인사변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { label: '인사 정보 변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
   { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },

@@ -8,7 +8,7 @@
       </div>
       <div v-if="canViewMemberDetail" class="head-actions">
         <button class="btn-head btn-head-muted" type="button" @click="goToTeamAttendance">근태</button>
-        <button class="btn-head btn-head-muted" type="button">목표</button>
+        <button class="btn-head btn-head-muted" type="button" @click="goToPerformanceInquiry">목표</button>
       </div>
     </section>
 
@@ -50,7 +50,6 @@
         <div class="detail-head">
           <div>
             <h2>{{ selectedMember.name }} 인사 정보</h2>
-            <p>팀장 권한 상세 조회</p>
           </div>
         </div>
 
@@ -80,6 +79,9 @@
               <div v-for="(skill, idx) in selectedMember.skills" :key="`${selectedMember.employeeId}-${idx}`" class="skill-item">
                 <strong>{{ skill.name }}</strong>
                 <span>{{ skill.type }} · {{ skill.issuer }} · {{ skill.date }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openSkillEvidence(skill)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 역량 정보가 없습니다.</p>
@@ -96,6 +98,9 @@
                 <strong>{{ career.company }}</strong>
                 <span>{{ career.role }}</span>
                 <span class="font-num">{{ career.period }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openCareerEvidence(career)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 경력사항이 없습니다.</p>
@@ -137,6 +142,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { AUTH_KEYS } from '@/utils/auth'
+import { usePerformanceStore } from '@/store/performance'
 import {
   createHrCurrentUserMock,
   createHrTeamMembersMock,
@@ -145,6 +151,7 @@ import {
 import { createHrEventsMock } from '@/mocks/hr/hrEvents'
 
 const router = useRouter()
+const performanceStore = usePerformanceStore()
 
 const currentUser = ref(createHrCurrentUserMock())
 const teamMembers = ref(createHrTeamMembersMock())
@@ -176,6 +183,11 @@ const goToTeamAttendance = () => {
   router.push('/attendance/team')
 }
 
+const goToPerformanceInquiry = () => {
+  performanceStore.setPage('inquiry')
+  router.push('/performance')
+}
+
 const statusClass = (status) => {
   if (status === '정상') return 'ok'
   if (status === '재택') return 'remote'
@@ -186,6 +198,29 @@ const historyStatusText = (status) => {
   if (status === 'APPROVED') return '완료'
   if (status === 'REJECTED') return '반려'
   return '진행중'
+}
+
+const openDataUrl = (url) => {
+  if (!url) return
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+const buildSkillEvidenceFallback = (skill) => {
+  const text = `${skill?.name || '역량'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const buildCareerEvidenceFallback = (career) => {
+  const text = `${career?.company || '경력'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const openSkillEvidence = (skill) => {
+  openDataUrl(skill?.fileUrl || buildSkillEvidenceFallback(skill))
+}
+
+const openCareerEvidence = (career) => {
+  openDataUrl(career?.fileUrl || buildCareerEvidenceFallback(career))
 }
 </script>
 
@@ -500,6 +535,24 @@ const historyStatusText = (status) => {
 .career-item span {
   color: var(--gray500);
   font-size: .8rem;
+}
+
+.item-actions {
+  margin-top: 4px;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
 }
 
 .history-list {

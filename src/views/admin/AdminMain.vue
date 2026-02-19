@@ -43,7 +43,7 @@
 
     <section class="card">
       <div class="card-head">
-        <h3>전 직원 인사정보</h3>
+        <h3>사원 목록</h3>
         <span class="count">총 {{ filteredEmployees.length }}명</span>
       </div>
 
@@ -99,7 +99,7 @@
       <section class="detail-modal" v-if="selectedEmployee">
         <div class="card-head detail-head">
           <h3>{{ selectedEmployee.name }} 상세 정보</h3>
-          <span class="count">민감정보 제외</span>
+          <span class="count">{{ isAdminViewer ? '민감정보 포함' : '민감정보 제외' }}</span>
         </div>
 
         <div class="detail-sections">
@@ -122,12 +122,46 @@
             <div class="detail-row"><span>근무 지역</span><strong>{{ selectedEmployee.workRegion }}</strong></div>
           </article>
 
+          <article class="sub-card" v-if="isAdminViewer && selectedEmployeeSensitiveInfo">
+            <h4>민감 정보</h4>
+            <div class="detail-row detail-row-sensitive">
+              <span>주민번호</span>
+              <div class="sensitive-value">
+                <strong class="font-num">{{ sensitiveVisible.ssn ? selectedEmployeeSensitiveInfo.ssn : maskSsn(selectedEmployeeSensitiveInfo.ssn) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('ssn')">
+                  {{ sensitiveVisible.ssn ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
+            <div class="detail-row detail-row-sensitive">
+              <span>계좌번호</span>
+              <div class="sensitive-value">
+                <strong class="font-num">{{ sensitiveVisible.bankAccount ? selectedEmployeeSensitiveInfo.bankAccount : maskBankAccount(selectedEmployeeSensitiveInfo.bankAccount) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('bankAccount')">
+                  {{ sensitiveVisible.bankAccount ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
+            <div class="detail-row detail-row-sensitive">
+              <span>주소</span>
+              <div class="sensitive-value">
+                <strong>{{ sensitiveVisible.address ? selectedEmployeeSensitiveInfo.address : maskAddress(selectedEmployeeSensitiveInfo.address) }}</strong>
+                <button type="button" class="reveal-btn" @click="toggleSensitive('address')">
+                  {{ sensitiveVisible.address ? '숨기기' : '보기' }}
+                </button>
+              </div>
+            </div>
+          </article>
+
           <article class="sub-card">
             <h4>역량 정보</h4>
             <div class="scroll-list" v-if="selectedEmployee.skills?.length">
               <div class="chip-item" v-for="(skill, idx) in selectedEmployee.skills" :key="`${selectedEmployee.employeeId}-skill-${idx}`">
                 <strong>{{ skill.name }}</strong>
                 <span>{{ skill.type }} · {{ skill.issuer }} · {{ skill.date }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openSkillEvidence(skill)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 역량 정보가 없습니다.</p>
@@ -140,10 +174,39 @@
                 <strong>{{ career.company }}</strong>
                 <span>{{ career.role }}</span>
                 <span class="font-num">{{ career.period }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openCareerEvidence(career)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 경력 정보가 없습니다.</p>
           </article>
+
+          <article class="sub-card sub-card-wide">
+            <h4>인사 히스토리</h4>
+            <div class="history-list" v-if="selectedEmployeeHistories.length">
+              <div
+                class="history-item"
+                v-for="history in selectedEmployeeHistories"
+                :key="history.hr_event_id"
+              >
+                <div class="history-top">
+                  <span class="history-type">{{ history.event_type }}</span>
+                  <strong>{{ history.event_title }}</strong>
+                </div>
+                <div class="history-meta">
+                  <span>적용일: {{ history.effective_from }}</span>
+                  <span>상태: {{ historyStatusText(history.event_status) }}</span>
+                </div>
+                <p class="history-change">{{ history.before_value }} → {{ history.after_value }}</p>
+              </div>
+            </div>
+            <p v-else class="empty-text">등록된 인사 히스토리가 없습니다.</p>
+          </article>
+        </div>
+
+        <div class="detail-actions">
+          <button type="button" class="btn-ghost" @click="showDetailModal = false">닫기</button>
         </div>
       </section>
     </BaseModal>
@@ -155,6 +218,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import { createHrOrgTreeMock } from '@/mocks/hr/organization'
 import { createHrEventsMock } from '@/mocks/hr/hrEvents'
+import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 
 const PAGE_SIZE = 10
 const orgRoot = ref(createHrOrgTreeMock())
@@ -184,6 +248,7 @@ const collectMembers = (node, trail = []) => {
     const rawEmploymentStatus = member.hrInfo?.employmentStatus || member.status || '재직'
     return {
       ...member,
+      organization: organizationText,
       organizationText,
       workType,
       workRegion,
@@ -198,7 +263,7 @@ const collectMembers = (node, trail = []) => {
 
 const allEmployees = ref(collectMembers(orgRoot.value))
 
-const teamOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.position))])
+const teamOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.organization))])
 const dutyOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.duty))])
 const employmentStatusOptions = ['재직', '휴직', '퇴사']
 
@@ -212,6 +277,11 @@ const filters = reactive({
 const currentPage = ref(1)
 const selectedEmployeeId = ref('')
 const showDetailModal = ref(false)
+const sensitiveVisible = reactive({
+  ssn: false,
+  bankAccount: false,
+  address: false
+})
 
 const filteredEmployees = computed(() => {
   const keyword = filters.keyword.trim().toLowerCase()
@@ -236,6 +306,43 @@ const pagedEmployees = computed(() => {
 const selectedEmployee = computed(() => {
   if (!selectedEmployeeId.value) return null
   return allEmployees.value.find((item) => item.employeeId === selectedEmployeeId.value) || null
+})
+const isAdminViewer = computed(() => {
+  const role = sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user
+  const userId = sessionStorage.getItem(AUTH_KEYS.userId) || ''
+  return role === USER_ROLES.admin || userId === 'admin1234'
+})
+const selectedEmployeeSensitiveInfo = computed(() => {
+  const emp = selectedEmployee.value
+  if (!emp) return null
+
+  const personal = emp.personalInfo || {}
+  const idTail = String(emp.employeeId || '').slice(-4) || '0000'
+  const idDigits = idTail.replace(/\D/g, '').padStart(4, '0')
+  const backSuffix = `${idDigits}${String((Number(idDigits) % 9) + 1)}${String((Number(idDigits) % 7) + 2)}`
+  const fallback = {
+    ssn: `950328-1${backSuffix}`,
+    bankAccount: `신한 110-${idDigits}-${
+      String((Number(idDigits) * 13) % 1000000).padStart(6, '0')
+    }`,
+    address: `서울시 강남구 테헤란로 ${Number(idTail) % 500 || 127}`
+  }
+
+  return {
+    ssn: personal.ssn || fallback.ssn,
+    bankAccount: personal.bankAccount || fallback.bankAccount,
+    address: personal.address || fallback.address
+  }
+})
+const selectedEmployeeHistories = computed(() => {
+  if (!selectedEmployee.value?.employeeId) return []
+  return hrEvents.value
+    .filter((item) => item.employee_id === selectedEmployee.value.employeeId)
+    .sort(
+      (a, b) =>
+        Number(String(b.effective_from || '').replaceAll('.', '')) -
+        Number(String(a.effective_from || '').replaceAll('.', ''))
+    )
 })
 
 const kpiCards = computed(() => [
@@ -276,6 +383,9 @@ watch(filteredEmployees, (nextList) => {
 
 const openDetail = (employeeId) => {
   selectedEmployeeId.value = employeeId
+  sensitiveVisible.ssn = false
+  sensitiveVisible.bankAccount = false
+  sensitiveVisible.address = false
   showDetailModal.value = true
 }
 
@@ -291,6 +401,63 @@ const statusClass = (status) => {
   if (status === '재직') return 'ok'
   if (status === '휴직') return 'hold'
   return 'end'
+}
+const historyStatusText = (status) => {
+  if (status === 'APPROVED') return '완료'
+  if (status === 'REJECTED') return '반려'
+  return '진행중'
+}
+
+const openDataUrl = (url) => {
+  if (!url) return
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+const buildSkillEvidenceFallback = (skill) => {
+  const text = `${skill?.name || '역량'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const buildCareerEvidenceFallback = (career) => {
+  const text = `${career?.company || '경력'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const openSkillEvidence = (skill) => {
+  openDataUrl(skill?.fileUrl || buildSkillEvidenceFallback(skill))
+}
+
+const openCareerEvidence = (career) => {
+  openDataUrl(career?.fileUrl || buildCareerEvidenceFallback(career))
+}
+
+const toggleSensitive = (field) => {
+  if (!(field in sensitiveVisible)) return
+  sensitiveVisible[field] = !sensitiveVisible[field]
+}
+
+const maskSsn = (value) => {
+  const text = String(value || '')
+  const [frontRaw, backRaw = ''] = text.split('-')
+  const front = (frontRaw || '').replace(/\D/g, '').slice(0, 6).padEnd(6, '*')
+  const backFirst = (backRaw || '').replace(/\D/g, '').charAt(0) || '*'
+  return `${front}-${backFirst}${'*'.repeat(6)}`
+}
+
+const maskBankAccount = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return '***'
+  const parts = text.split(' ')
+  if (parts.length <= 1) return '****-****-****'
+  return `${parts[0]} ****-****-****`
+}
+
+const maskAddress = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return '주소 비공개'
+  const chunks = text.split(' ')
+  if (chunks.length <= 2) return `${chunks[0]} ${chunks[1] || ''} ***`.trim()
+  return `${chunks[0]} ${chunks[1]} ***`
 }
 </script>
 
@@ -416,13 +583,21 @@ const statusClass = (status) => {
 .page-btn:disabled { opacity: .5; cursor: not-allowed; }
 .page-text { color: var(--gray500); font-size: .8rem; }
 
-.detail-modal { display: grid; gap: 12px; max-height: 72vh; }
+.detail-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: min(78vh, 820px);
+}
 .detail-sections {
+  flex: 1;
   overflow-y: auto;
   min-height: 0;
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  padding-right: 4px;
+  padding-right: 6px;
+  align-content: start;
 }
 .sub-card {
   border: 1px solid var(--gray100);
@@ -430,6 +605,7 @@ const statusClass = (status) => {
   padding: 12px;
   background: #fff;
 }
+.sub-card-wide { grid-column: 1 / -1; }
 .sub-card h4 {
   margin: 0 0 8px;
   color: var(--gray800);
@@ -444,6 +620,29 @@ const statusClass = (status) => {
 }
 .detail-row span { color: var(--gray500); }
 .detail-row strong { color: var(--gray800); word-break: break-word; }
+.detail-row-sensitive {
+  grid-template-columns: 104px minmax(0, 1fr);
+}
+.sensitive-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.reveal-btn {
+  height: 26px;
+  min-width: 52px;
+  border: 1px solid var(--gray200);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--gray600);
+  font-size: .74rem;
+  font-weight: 700;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+.reveal-btn:hover { background: var(--gray50); }
 
 .scroll-list {
   max-height: 180px;
@@ -461,7 +660,68 @@ const statusClass = (status) => {
 }
 .chip-item strong { color: var(--gray800); font-size: .84rem; }
 .chip-item span { color: var(--gray500); font-size: .78rem; }
+.item-actions { margin-top: 2px; }
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.link-btn:hover { text-decoration: underline; }
 .empty-text { margin: 0; color: var(--gray400); font-size: .82rem; }
+.history-list {
+  max-height: 210px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 2px;
+}
+.history-item {
+  border: 1px solid var(--gray100);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+.history-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-top strong {
+  color: var(--gray800);
+  font-size: .84rem;
+}
+.history-type {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.history-meta {
+  margin-top: 5px;
+  display: flex;
+  gap: 10px;
+  color: var(--gray500);
+  font-size: .76rem;
+}
+.history-change {
+  margin: 6px 0 0;
+  color: var(--gray700);
+  font-size: .8rem;
+  font-weight: 600;
+}
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+}
 
 @media (max-width: 1200px) {
   .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -471,5 +731,6 @@ const statusClass = (status) => {
 @media (max-width: 900px) {
   .kpi-grid { grid-template-columns: minmax(0, 1fr); }
   .filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .detail-sections { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
