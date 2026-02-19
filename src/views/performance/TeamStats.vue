@@ -11,9 +11,7 @@
           <option v-for="team in teamOptions" :key="team" :value="team">{{ team }}</option>
         </select>
         <select class="stats-select">
-          <option>2023년 2분기</option>
-          <option>2023년 1분기</option>
-          <option>2022년 4분기</option>
+          <option v-for="option in periodOptions" :key="option">{{ option }}</option>
         </select>
       </div>
     </div>
@@ -88,6 +86,12 @@ const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
 
 const selectedTeam = ref('')
+const currentYear = new Date().getFullYear()
+const periodOptions = [
+  `${currentYear}년 2분기`,
+  `${currentYear}년 1분기`,
+  `${currentYear - 1}년 4분기`,
+]
 const orgRoot = createHrOrgTreeMock()
 
 function collectTeamNodes(node, acc = []) {

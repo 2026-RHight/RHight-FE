@@ -156,10 +156,10 @@
                 </div>
 
                 <div class="detail-grid">
-                  <div class="detail-item">
-                    <span class="detail-label">기간</span>
-                    <span class="detail-value">2023.01.01 ~ 2023.03.31</span>
-                  </div>
+                <div class="detail-item">
+                  <span class="detail-label">기간</span>
+                  <span class="detail-value">{{ approvalPeriodLabel }}</span>
+                </div>
                   <div class="detail-item">
                     <span class="detail-label">현재 달성률</span>
                     <div class="detail-progress">
@@ -258,6 +258,15 @@ const activeTab = ref('plan')
 const selectedItem = ref(null)
 const modalTab = ref('detail')
 const searchText = ref('')
+const currentDate = new Date()
+const currentYear = currentDate.getFullYear()
+const quarter = Math.floor(currentDate.getMonth() / 3)
+const quarterStartMonth = quarter * 3
+const periodStart = new Date(currentYear, quarterStartMonth, 1)
+const periodEnd = new Date(currentYear, quarterStartMonth + 3, 0)
+const pad2 = (value) => String(value).padStart(2, '0')
+const formatDate = (date) => `${date.getFullYear()}.${pad2(date.getMonth() + 1)}.${pad2(date.getDate())}`
+const approvalPeriodLabel = `${formatDate(periodStart)} ~ ${formatDate(periodEnd)}`
 
 const planItems = PERFORMANCE_APPROVAL.planItems
 const resultItems = PERFORMANCE_APPROVAL.resultItems

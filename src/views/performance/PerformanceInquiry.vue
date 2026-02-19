@@ -22,9 +22,18 @@
           </div>
           <input v-model="filterMonth" type="month" class="filter-month" />
         </div>
-        <div class="filter-search-wrap">
+        <div class="filter-search-wrap" :class="{ 'filter-search-wrap--manager': isPerformanceManager }">
+          <select v-if="isPerformanceManager" v-model="searchField" class="filter-search-mode">
+            <option value="title">제목</option>
+            <option value="coreTask">핵심 업무</option>
+          </select>
           <Search :size="14" class="filter-icon" />
-          <input v-model="searchText" type="text" placeholder="성과 제목 검색" class="filter-search" />
+          <input
+            v-model="searchText"
+            type="text"
+            :placeholder="isPerformanceManager && searchField === 'coreTask' ? '핵심 업무 검색' : '성과 제목 검색'"
+            class="filter-search"
+          />
         </div>
       </div>
 
@@ -38,7 +47,7 @@
               <th>기간</th>
               <th>상태</th>
               <th>달성률</th>
-              <th class="col-action">관리</th>
+              <th class="col-core">핵심 업무</th>
             </tr>
           </thead>
           <tbody>
@@ -61,11 +70,7 @@
                   <span class="progress-text">{{ item.progress }}%</span>
                 </div>
               </td>
-              <td class="col-action">
-                <button class="action-btn" @click.stop="openDetail(item)">
-                  <Eye :size="15" />
-                </button>
-              </td>
+              <td class="td-core">{{ item.coreTask || '-' }}</td>
             </tr>
             <tr v-if="filteredItems.length === 0">
               <td colspan="6" class="td-empty">검색 결과가 없습니다.</td>
@@ -157,8 +162,12 @@
                   </div>
                 </div>
 
+                <div class="result-template-chip" :class="isTeamResult ? 'chip-team' : 'chip-individual'">
+                  {{ isTeamResult ? '팀 성과 결과 보고서' : '개인 성과 결과 보고서' }}
+                </div>
+
                 <div class="result-group">
-                  <label class="result-label">최종 달성률</label>
+                  <label class="result-label">{{ isTeamResult ? '팀 목표 최종 달성률' : '개인 목표 최종 달성률' }}</label>
                   <div class="range-wrap">
                     <input v-model="resultProgress" type="range" min="0" max="100" class="range-input" />
                     <span class="range-value">{{ resultProgress }}%</span>
@@ -166,24 +175,27 @@
                 </div>
 
                 <div class="result-group">
-                  <label class="result-label">최종 성과 내용</label>
-                  <textarea rows="4" class="result-textarea" placeholder="구체적인 성과 달성 내용과 수치를 입력하세요."></textarea>
+                  <label class="result-label">{{ isTeamResult ? '팀 성과 요약' : '개인 성과 요약' }}</label>
+                  <textarea
+                    rows="4"
+                    class="result-textarea"
+                    :placeholder="isTeamResult ? '팀 단위 성과와 핵심 수치를 입력하세요.' : '개인 기여 성과와 핵심 수치를 입력하세요.'"
+                  ></textarea>
                 </div>
 
-                <div class="result-row">
-                  <div class="result-group">
-                    <label class="result-label">자가 평가 등급</label>
-                    <select class="result-select">
-                      <option>S (탁월)</option>
-                      <option>A (우수)</option>
-                      <option selected>B (보통)</option>
-                      <option>C (미흡)</option>
-                      <option>D (부족)</option>
-                    </select>
-                  </div>
+                <div v-if="isTeamResult" class="result-group">
+                  <label class="result-label">특이점</label>
+                  <input type="text" class="result-input" placeholder="성과 수행 중 특이사항을 입력하세요." />
+                </div>
+
+                <div v-else class="result-row">
                   <div class="result-group">
                     <label class="result-label">성장 포인트</label>
                     <input type="text" class="result-input" placeholder="이번 성과를 통해 성장한 점" />
+                  </div>
+                  <div class="result-group">
+                    <label class="result-label">개선 사항</label>
+                    <input type="text" class="result-input" placeholder="이전 보다 개선된 사항" />
                   </div>
                 </div>
 
@@ -220,7 +232,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Search, Filter, Eye, X, Upload, CheckCircle, AlertCircle, User } from 'lucide-vue-next'
+import { Search, Filter, X, Upload, CheckCircle, AlertCircle, User } from 'lucide-vue-next'
 import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 import { PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 
@@ -232,6 +244,7 @@ const filterStatus = ref('')
 const filterEmployee = ref('')
 const filterMonth = ref('')
 const searchText = ref('')
+const searchField = ref('title')
 
 const items = PERFORMANCE_INQUIRY_ITEMS
 const userId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
@@ -259,10 +272,16 @@ const filteredItems = computed(() => {
   return visibleItems.value.filter((item) => {
     if (filterEmployee.value && item.employeeName !== filterEmployee.value) return false
     if (filterStatus.value && item.status !== filterStatus.value) return false
-    if (searchText.value && !item.title.includes(searchText.value)) return false
+    if (searchText.value) {
+      const keyword = searchText.value.trim()
+      const targetText = searchField.value === 'coreTask' ? (item.coreTask || '') : (item.title || '')
+      if (!targetText.includes(keyword)) return false
+    }
     return true
   })
 })
+
+const isTeamResult = computed(() => selectedItem.value?.type === 'Team' || selectedItem.value?.type === '팀 성과')
 
 function statusClass(status) {
   if (status === '완료') return 'badge-gray'
@@ -323,11 +342,27 @@ function openDetail(item) {
   align-items: center;
 }
 
+.filter-search-mode {
+  height: 34px;
+  padding: 0 10px;
+  margin-right: 8px;
+  background: var(--gray50);
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+  color: var(--gray700);
+  font-family: var(--font);
+}
+
 .filter-icon {
   position: absolute;
   left: 10px;
   color: var(--gray400);
   pointer-events: none;
+}
+
+.filter-search-wrap--manager .filter-icon {
+  left: 102px;
 }
 
 .filter-select {
@@ -434,8 +469,8 @@ function openDetail(item) {
   width: 35%;
 }
 
-.col-action {
-  text-align: right;
+.col-core {
+  width: 24%;
 }
 
 .td-title {
@@ -447,6 +482,15 @@ function openDetail(item) {
   color: var(--gray500);
   font-size: 0.82rem;
   white-space: nowrap;
+}
+
+.td-core {
+  color: var(--gray600);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
 }
 
 .td-empty {
@@ -737,6 +781,29 @@ function openDetail(item) {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.result-template-chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.chip-team {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.chip-individual {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .result-label {

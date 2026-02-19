@@ -49,7 +49,7 @@
       </div>
 
       <!-- 폼 -->
-      <form class="reg-form" `@submit.prevent`="handleSubmit">
+      <form class="reg-form" @submit.prevent="handleSubmit">
         <!-- 날짜 -->
         <div class="form-row two-col">
           <div class="form-group">
@@ -80,6 +80,20 @@
             <FileText :size="14" /> {{ step === 'team-form' ? '업무 항목' : '성과 항목' }}
           </label>
           <input v-model="form.title" type="text" placeholder="제목을 입력하세요" class="form-input" required />
+        </div>
+
+        <!-- 핵심 업무 항목 -->
+        <div class="form-group">
+          <label class="form-label">
+            <FileText :size="14" /> 핵심 업무 항목
+          </label>
+          <input
+            v-model="form.coreTask"
+            type="text"
+            placeholder="예: 화장품, 중식, 프론트 vue와 같은 간단한 업무 내용"
+            class="form-input"
+            required
+          />
         </div>
 
         <!-- 상세 내용 -->
@@ -128,6 +142,10 @@
               <span class="modal-info-value">{{ form.title || '-' }}</span>
             </div>
             <div class="modal-info-row">
+              <span class="modal-info-label">핵심 업무</span>
+              <span class="modal-info-value">{{ form.coreTask || '-' }}</span>
+            </div>
+            <div class="modal-info-row">
               <span class="modal-info-label">기간</span>
               <span class="modal-info-value">{{ form.startDate || '-' }} ~ {{ form.endDate || '-' }}</span>
             </div>
@@ -157,6 +175,7 @@ const form = reactive({
   endDate: '',
   weight: '',
   title: '',
+  coreTask: '',
   content: '',
   value: '',
 })
@@ -166,7 +185,7 @@ function handleSubmit(){
   showModal.value = true
 }
 function resetForm() {
-  Object.assign(form, { startDate: '', endDate: '', weight: '', title: '', content: '', value: '' })
+  Object.assign(form, { startDate: '', endDate: '', weight: '', title: '', coreTask: '', content: '', value: '' })
 }
 
 function closeModal() {
