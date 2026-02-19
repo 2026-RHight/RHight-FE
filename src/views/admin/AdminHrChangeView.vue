@@ -90,6 +90,7 @@
           <p><span>근무지</span><strong>{{ selectedEmployee.workLocation }}</strong></p>
           <p><span>최종 반영일</span><strong class="font-num">{{ selectedEmployee.lastAppliedDate || '-' }}</strong></p>
         </div>
+        <div v-else class="current-empty">사원을 선택하면 현재 인사 정보가 표시됩니다.</div>
       </article>
     </div>
 
@@ -224,7 +225,7 @@ const historyTypeOptions = ['전체', '재직', '휴직', '사직', '퇴직', '�
 const selectedHistoryType = ref('전체')
 
 const showOrgPicker = ref(false)
-const selectedEmployeeId = ref('E001')
+const selectedEmployeeId = ref('')
 const editForm = reactive({
   team: '',
   job: '',
@@ -265,7 +266,18 @@ const fieldLabelMap = {
 }
 
 const syncFormFromSelected = () => {
-  if (!selectedEmployee.value) return
+  if (!selectedEmployee.value) {
+    editForm.team = ''
+    editForm.job = ''
+    editForm.position = ''
+    editForm.grade = ''
+    editForm.employmentStatus = ''
+    editForm.workType = ''
+    editForm.workLocation = ''
+    editForm.effectiveDate = ''
+    resultMessage.value = ''
+    return
+  }
   editForm.team = selectedEmployee.value.team
   editForm.job = selectedEmployee.value.job
   editForm.position = selectedEmployee.value.position
@@ -366,6 +378,7 @@ const applyHrChanges = () => {
 }
 
 const resetEditForm = () => {
+  selectedEmployeeId.value = ''
   syncFormFromSelected()
 }
 
@@ -514,6 +527,14 @@ input, select {
   border-radius: 10px;
   background: var(--gray50);
   padding: 10px;
+}
+.current-empty {
+  border: 1px dashed var(--gray200);
+  border-radius: 10px;
+  background: var(--gray50);
+  padding: 16px;
+  color: var(--gray500);
+  font-size: 0.82rem;
 }
 .current-box p {
   margin: 5px 0;

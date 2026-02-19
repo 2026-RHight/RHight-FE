@@ -184,6 +184,7 @@ const collectMembers = (node, trail = []) => {
     const rawEmploymentStatus = member.hrInfo?.employmentStatus || member.status || '재직'
     return {
       ...member,
+      organization: organizationText,
       organizationText,
       workType,
       workRegion,
@@ -198,7 +199,7 @@ const collectMembers = (node, trail = []) => {
 
 const allEmployees = ref(collectMembers(orgRoot.value))
 
-const teamOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.position))])
+const teamOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.organization))])
 const dutyOptions = computed(() => [...new Set(allEmployees.value.map((item) => item.duty))])
 const employmentStatusOptions = ['재직', '휴직', '퇴사']
 
