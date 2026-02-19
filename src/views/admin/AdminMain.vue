@@ -43,7 +43,7 @@
 
     <section class="card">
       <div class="card-head">
-        <h3>전 직원 인사정보</h3>
+        <h3>사원 목록</h3>
         <span class="count">총 {{ filteredEmployees.length }}명</span>
       </div>
 
