@@ -128,6 +128,9 @@
               <div class="chip-item" v-for="(skill, idx) in selectedEmployee.skills" :key="`${selectedEmployee.employeeId}-skill-${idx}`">
                 <strong>{{ skill.name }}</strong>
                 <span>{{ skill.type }} · {{ skill.issuer }} · {{ skill.date }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openSkillEvidence(skill)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 역량 정보가 없습니다.</p>
@@ -140,10 +143,39 @@
                 <strong>{{ career.company }}</strong>
                 <span>{{ career.role }}</span>
                 <span class="font-num">{{ career.period }}</span>
+                <div class="item-actions">
+                  <button type="button" class="link-btn" @click="openCareerEvidence(career)">증빙 조회</button>
+                </div>
               </div>
             </div>
             <p v-else class="empty-text">등록된 경력 정보가 없습니다.</p>
           </article>
+
+          <article class="sub-card sub-card-wide">
+            <h4>인사 히스토리</h4>
+            <div class="history-list" v-if="selectedEmployeeHistories.length">
+              <div
+                class="history-item"
+                v-for="history in selectedEmployeeHistories"
+                :key="history.hr_event_id"
+              >
+                <div class="history-top">
+                  <span class="history-type">{{ history.event_type }}</span>
+                  <strong>{{ history.event_title }}</strong>
+                </div>
+                <div class="history-meta">
+                  <span>적용일: {{ history.effective_from }}</span>
+                  <span>상태: {{ historyStatusText(history.event_status) }}</span>
+                </div>
+                <p class="history-change">{{ history.before_value }} → {{ history.after_value }}</p>
+              </div>
+            </div>
+            <p v-else class="empty-text">등록된 인사 히스토리가 없습니다.</p>
+          </article>
+        </div>
+
+        <div class="detail-actions">
+          <button type="button" class="btn-ghost" @click="showDetailModal = false">닫기</button>
         </div>
       </section>
     </BaseModal>
@@ -238,6 +270,16 @@ const selectedEmployee = computed(() => {
   if (!selectedEmployeeId.value) return null
   return allEmployees.value.find((item) => item.employeeId === selectedEmployeeId.value) || null
 })
+const selectedEmployeeHistories = computed(() => {
+  if (!selectedEmployee.value?.employeeId) return []
+  return hrEvents.value
+    .filter((item) => item.employee_id === selectedEmployee.value.employeeId)
+    .sort(
+      (a, b) =>
+        Number(String(b.effective_from || '').replaceAll('.', '')) -
+        Number(String(a.effective_from || '').replaceAll('.', ''))
+    )
+})
 
 const kpiCards = computed(() => [
   {
@@ -292,6 +334,34 @@ const statusClass = (status) => {
   if (status === '재직') return 'ok'
   if (status === '휴직') return 'hold'
   return 'end'
+}
+const historyStatusText = (status) => {
+  if (status === 'APPROVED') return '완료'
+  if (status === 'REJECTED') return '반려'
+  return '진행중'
+}
+
+const openDataUrl = (url) => {
+  if (!url) return
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+const buildSkillEvidenceFallback = (skill) => {
+  const text = `${skill?.name || '역량'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const buildCareerEvidenceFallback = (career) => {
+  const text = `${career?.company || '경력'} 증빙 더미 파일`
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`
+}
+
+const openSkillEvidence = (skill) => {
+  openDataUrl(skill?.fileUrl || buildSkillEvidenceFallback(skill))
+}
+
+const openCareerEvidence = (career) => {
+  openDataUrl(career?.fileUrl || buildCareerEvidenceFallback(career))
 }
 </script>
 
@@ -417,13 +487,21 @@ const statusClass = (status) => {
 .page-btn:disabled { opacity: .5; cursor: not-allowed; }
 .page-text { color: var(--gray500); font-size: .8rem; }
 
-.detail-modal { display: grid; gap: 12px; max-height: 72vh; }
+.detail-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: min(78vh, 820px);
+}
 .detail-sections {
+  flex: 1;
   overflow-y: auto;
   min-height: 0;
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  padding-right: 4px;
+  padding-right: 6px;
+  align-content: start;
 }
 .sub-card {
   border: 1px solid var(--gray100);
@@ -431,6 +509,7 @@ const statusClass = (status) => {
   padding: 12px;
   background: #fff;
 }
+.sub-card-wide { grid-column: 1 / -1; }
 .sub-card h4 {
   margin: 0 0 8px;
   color: var(--gray800);
@@ -462,7 +541,68 @@ const statusClass = (status) => {
 }
 .chip-item strong { color: var(--gray800); font-size: .84rem; }
 .chip-item span { color: var(--gray500); font-size: .78rem; }
+.item-actions { margin-top: 2px; }
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.link-btn:hover { text-decoration: underline; }
 .empty-text { margin: 0; color: var(--gray400); font-size: .82rem; }
+.history-list {
+  max-height: 210px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding-right: 2px;
+}
+.history-item {
+  border: 1px solid var(--gray100);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+}
+.history-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-top strong {
+  color: var(--gray800);
+  font-size: .84rem;
+}
+.history-type {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+}
+.history-meta {
+  margin-top: 5px;
+  display: flex;
+  gap: 10px;
+  color: var(--gray500);
+  font-size: .76rem;
+}
+.history-change {
+  margin: 6px 0 0;
+  color: var(--gray700);
+  font-size: .8rem;
+  font-weight: 600;
+}
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+}
 
 @media (max-width: 1200px) {
   .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -472,5 +612,6 @@ const statusClass = (status) => {
 @media (max-width: 900px) {
   .kpi-grid { grid-template-columns: minmax(0, 1fr); }
   .filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .detail-sections { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
