@@ -16,6 +16,14 @@
           </div>
           <p class="report-period">{{ currentYear }}년 {{ currentMonth }}월 1일 - {{ currentMonth }}월 {{ lastDay }}일</p>
         </div>
+        <div v-if="isPerformanceManager" class="report-header-right">
+          <label class="report-filter-label" for="member-filter">팀원 선택</label>
+          <select id="member-filter" v-model="selectedMemberId" class="report-filter-select">
+            <option v-for="member in teamMemberOptions" :key="member.id" :value="member.id">
+              {{ member.name }} ({{ member.role }})
+            </option>
+          </select>
+        </div>
       </div>
 
       <!-- 요약 지표 카드 -->
@@ -40,7 +48,7 @@
           월별 성과 추이 (개인 vs 팀 평균)
         </h3>
         <div class="chart-legend">
-          <span class="legend-item"><span class="legend-dot blue"></span>내 점수</span>
+          <span class="legend-item"><span class="legend-dot blue"></span>{{ personalLegendLabel }}</span>
           <span class="legend-item"><span class="legend-dot gray"></span>팀 평균</span>
         </div>
       </div>
@@ -172,7 +180,8 @@
 import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, BarChart3, FileText, TrendingUp, Users, Award, Star } from 'lucide-vue-next'
 import { Bar } from 'vue-chartjs'
-import { PERFORMANCE_MONTHLY } from '@/mocks/performance'
+import { PERFORMANCE_MONTHLY, PERFORMANCE_MEMBERS } from '@/mocks/performance'
+import { AUTH_KEYS, USER_ROLES } from '@/utils/auth'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -183,6 +192,18 @@ import {
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
+const TREND_MONTH_COUNT = 6
+const isPerformanceManager = computed(() => (sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user) === USER_ROLES.admin)
+const teamMemberOptions = PERFORMANCE_MEMBERS.map((member) => ({
+  id: member.id,
+  name: member.name,
+  role: member.role,
+}))
+const selectedMemberId = ref(teamMemberOptions[0]?.id || null)
+const selectedMember = computed(() => teamMemberOptions.find((member) => member.id === selectedMemberId.value) || null)
+const selectedMemberIndex = computed(() =>
+  Math.max(0, teamMemberOptions.findIndex((member) => member.id === selectedMemberId.value)),
+)
 
 const currentYear = ref(PERFORMANCE_MONTHLY.initialYear)
 const currentMonth = ref(PERFORMANCE_MONTHLY.initialMonth)
@@ -207,19 +228,46 @@ function nextMonth() {
   }
 }
 
-const currentMonthDataIndex = computed(() => {
-  const monthLabel = `${currentMonth.value}월`
-  const idx = PERFORMANCE_MONTHLY.chartLabels.findIndex((label) => label === monthLabel)
-  return idx >= 0 ? idx : PERFORMANCE_MONTHLY.myScores.length - 1
+const recentChartLabels = computed(() => PERFORMANCE_MONTHLY.chartLabels.slice(-TREND_MONTH_COUNT))
+const activeMyScores = computed(() => {
+  if (!isPerformanceManager.value || !selectedMember.value) return PERFORMANCE_MONTHLY.myScores
+  return PERFORMANCE_MONTHLY.myScores.map((score, index) => {
+    const offset = ((selectedMemberIndex.value + 1) * 2 + index) % 7 - 3
+    return Math.max(60, Math.min(100, score + offset))
+  })
+})
+const activeDetailItems = computed(() => {
+  if (!isPerformanceManager.value || !selectedMember.value) return PERFORMANCE_MONTHLY.detailItems
+  return PERFORMANCE_MONTHLY.detailItems.map((item, index) => {
+    const offset = ((selectedMemberIndex.value + index) % 5) - 2
+    return {
+      ...item,
+      id: `${selectedMember.value.id}-${item.id}`,
+      progress: Math.max(50, Math.min(100, item.progress + offset)),
+      score: Math.max(70, Math.min(100, item.score + offset)),
+    }
+  })
+})
+const recentMyScores = computed(() => activeMyScores.value.slice(-TREND_MONTH_COUNT))
+const recentTeamScores = computed(() => PERFORMANCE_MONTHLY.teamScores.slice(-TREND_MONTH_COUNT))
+const personalLegendLabel = computed(() => {
+  if (!isPerformanceManager.value || !selectedMember.value) return '내 점수'
+  return `${selectedMember.value.name} 점수`
 })
 
-const currentMyScore = computed(() => PERFORMANCE_MONTHLY.myScores[currentMonthDataIndex.value] ?? 0)
-const currentTeamScore = computed(() => PERFORMANCE_MONTHLY.teamScores[currentMonthDataIndex.value] ?? 0)
+const currentMonthDataIndex = computed(() => {
+  const monthLabel = `${currentMonth.value}월`
+  const idx = recentChartLabels.value.findIndex((label) => label === monthLabel)
+  return idx >= 0 ? idx : recentMyScores.value.length - 1
+})
+
+const currentMyScore = computed(() => recentMyScores.value[currentMonthDataIndex.value] ?? 0)
+const currentTeamScore = computed(() => recentTeamScores.value[currentMonthDataIndex.value] ?? 0)
 
 const monthChangePercent = computed(() => {
   const current = currentMyScore.value
   const prevIndex = currentMonthDataIndex.value - 1
-  const prev = prevIndex >= 0 ? (PERFORMANCE_MONTHLY.myScores[prevIndex] ?? 0) : 0
+  const prev = prevIndex >= 0 ? (recentMyScores.value[prevIndex] ?? 0) : 0
   if (!prev) return 0
   return ((current - prev) / prev) * 100
 })
@@ -239,12 +287,12 @@ const stats = computed(() => [
   { label: '종합 점수', value: `${totalScore.value}점`, icon: Star, bgColor: '#faf5ff', iconColor: '#a855f7' },
 ])
 
-const chartData = {
-  labels: PERFORMANCE_MONTHLY.chartLabels,
+const chartData = computed(() => ({
+  labels: recentChartLabels.value,
   datasets: [
     {
-      label: '내 점수',
-      data: PERFORMANCE_MONTHLY.myScores,
+      label: personalLegendLabel.value,
+      data: recentMyScores.value,
       backgroundColor: 'rgba(8, 145, 178, 0.85)',
       borderRadius: { topLeft: 5, topRight: 5 },
       barPercentage: 0.5,
@@ -252,14 +300,14 @@ const chartData = {
     },
     {
       label: '팀 평균',
-      data: PERFORMANCE_MONTHLY.teamScores,
+      data: recentTeamScores.value,
       backgroundColor: 'rgba(203, 213, 225, 0.7)',
       borderRadius: { topLeft: 5, topRight: 5 },
       barPercentage: 0.5,
       categoryPercentage: 0.6,
     },
   ],
-}
+}))
 
 const chartOptions = {
   responsive: true,
@@ -312,7 +360,7 @@ function closeFeedbackModal() {
   showFeedbackModal.value = false
 }
 
-const detailItems = PERFORMANCE_MONTHLY.detailItems
+const detailItems = computed(() => activeDetailItems.value)
 </script>
 
 <style scoped>
@@ -343,6 +391,29 @@ const detailItems = PERFORMANCE_MONTHLY.detailItems
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+}
+
+.report-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-filter-label {
+  font-size: 0.78rem;
+  color: var(--gray500);
+  font-weight: 600;
+}
+
+.report-filter-select {
+  min-width: 210px;
+  padding: 7px 10px;
+  border: 1px solid var(--gray200);
+  border-radius: var(--radius-xs);
+  background: #fff;
+  color: var(--gray700);
+  font-size: 0.8rem;
+  font-family: var(--font);
 }
 
 .month-selector {
