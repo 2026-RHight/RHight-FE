@@ -220,14 +220,33 @@ export const PERFORMANCE_APPROVAL = {
 }
 
 const evaluationStatuses = ['평가 대기', '진행 중', '완료']
-export const TEAM_EVALUATION_MEMBERS = linkedMembers.map((member, index) => ({
-  id: index + 1,
-  name: member.name,
-  role: member.job,
-  department: member.position,
-  status: evaluationStatuses[index % evaluationStatuses.length],
-  systemScore: Math.round((PERFORMANCE_MEMBERS[index]?.avgScore || 0) * 20),
-}))
+const peerReviewScoreTemplates = [4.4, 4.6, 4.8, 4.5, 4.7]
+export const TEAM_EVALUATION_MEMBERS = linkedMembers.map((member, index) => {
+  const template = PERFORMANCE_MEMBERS[index] || {}
+  const chartData = template.chartData || []
+  const getChartScore = (subject, fallback) => {
+    const found = chartData.find((item) => item.subject === subject)
+    return Number(found?.A ?? fallback)
+  }
+  const peerReviewScore = Number(peerReviewScoreTemplates[index % peerReviewScoreTemplates.length])
+  const peerCriteriaAverages = {
+    performance: getChartScore('업무성과', peerReviewScore),
+    attitude: getChartScore('업무태도', peerReviewScore),
+    collaboration: getChartScore('협업능력', peerReviewScore),
+    creativity: getChartScore('창의성', peerReviewScore),
+  }
+
+  return {
+    id: index + 1,
+    name: member.name,
+    role: member.job,
+    department: member.position,
+    status: evaluationStatuses[index % evaluationStatuses.length],
+    systemScore: Math.round((PERFORMANCE_MEMBERS[index]?.avgScore || 0) * 20),
+    peerReviewScore,
+    peerCriteriaAverages,
+  }
+})
 
 const peerReviewColors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4']
 export const PEER_REVIEW_COLLEAGUES = linkedMembers.map((member, index) => ({
