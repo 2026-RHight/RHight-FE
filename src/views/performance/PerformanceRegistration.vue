@@ -151,7 +151,7 @@
             </div>
           </div>
           <div class="modal-actions">
-            <button class="btn-modal-sub" @click="goToDashboard">대시보드로 이동</button>
+            <button class="btn-modal-sub" @click="goToInquiry">성과 조회로 이동</button>
             <button class="btn-modal-main" @click="registerMore">추가 등록</button>
           </div>
         </div>
@@ -192,16 +192,18 @@ function closeModal() {
   showModal.value = false
 }
 
-function goToDashboard() {
+function goToInquiry() {
   closeModal()
   resetForm()
   step.value = 'selection'
-  perfStore.setPage('dashboard')
+  perfStore.setPage('inquiry')
 }
 
 function registerMore() {
   closeModal()
   resetForm()
+  step.value = 'selection'
+  perfStore.setPage('registration')
 }
 </script>
 
