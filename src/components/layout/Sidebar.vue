@@ -229,6 +229,19 @@
       </div>
 
       <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">공통</div>
+      <div
+        v-for="item in kmsCommonMenus"
+        :key="item.label"
+        class="sidebar-item"
+        :class="{ 'sidebar-item--active': isMenuActive(item) }"
+        @click="handleNavigate(item.route)"
+      >
+        <component :is="item.icon" />
+        {{ item.label }}
+      </div>
+
+      <div class="sidebar-divider"></div>
       <div class="sidebar-section-label">업무 메뉴얼</div>
       <div
         v-for="item in kmsManualMenus"
@@ -478,6 +491,7 @@ const adminMenus = [
   { label: '인사 정보 조회', icon: DashboardIcon, route: '/admin/main' },
   { label: '사원 등록', icon: UserPlusIcon, route: '/admin/employees' },
   { label: '인사 정보 변경 관리', icon: RefreshCwIcon, route: '/admin/hr-change' },
+  { label: 'KMS 권한 변경 이력', icon: ClockIcon, route: '/admin/kms-permissions-history' },
   { label: '근태 관리', icon: ClockIcon, route: '/admin/attendance' },
   { label: '정책 관리', icon: ShieldIcon, route: '/admin/policies' },
   { label: '공지사항 관리', icon: BellIcon, route: '/admin/notices' },
@@ -678,13 +692,19 @@ const approvalMenus = computed(() => {
   return [...topMenus, boxMenu, ...boxSubMenus]
 })
 const approvalDashboardMenu = { label: '전자결재 대시보드', icon: DashboardIcon, route: '/approval' }
+const kmsCommonMenus = [
+  { label: '통합 검색', icon: SearchIcon, route: '/kms/search' },
+]
+
 const kmsManualMenus = [
   {
     label: '메뉴얼 대시보드',
     icon: FileTextIcon,
     route: '/kms/manuals',
-    routePrefixes: ['/kms/manuals/category', '/kms/manuals/detail', '/kms/manuals/edit']
+    routePrefixes: ['/kms/manuals/category', '/kms/manuals/detail', '/kms/manuals/edit', '/kms/manuals/history']
   },
+  { label: '내 메뉴얼', icon: UserIcon, route: '/kms/manuals/my' },
+  { label: '임시 보관함', icon: FolderIcon, route: '/kms/manuals/trash' },
   { label: '메뉴얼 업로드', icon: PlusIcon, route: '/kms/manuals/upload' },
 ]
 
@@ -694,8 +714,10 @@ const kmsArchiveMenus = [
     icon: FolderIcon,
     route: '/kms/archive',
     routePrefix: '/kms/archive',
-    excludePrefixes: ['/kms/archive/manage']
+    excludePrefixes: ['/kms/archive/manage', '/kms/archive/my', '/kms/archive/trash', '/kms/archive/history']
   },
+  { label: '내 회의록', icon: UserIcon, route: '/kms/archive/my' },
+  { label: '아카이브 임시 보관함', icon: FolderIcon, route: '/kms/archive/trash' },
   { label: '아카이브 문서 등록', icon: PlusIcon, route: '/kms/archive/manage/new', routePrefix: '/kms/archive/manage' },
 ]
 
