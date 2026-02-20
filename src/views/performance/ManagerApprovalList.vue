@@ -94,8 +94,8 @@
                 </div>
               </div>
               <div class="item-actions">
-                <button class="btn-reject" @click.stop>반려</button>
-                <button class="btn-approve" @click.stop>승인</button>
+                <button class="btn-reject" @click.stop="handleQuickReject(item)">반려</button>
+                <button class="btn-approve" @click.stop="handleQuickApprove(item)">승인</button>
                 <button class="btn-arrow">
                   <ChevronRight :size="18" />
                 </button>
@@ -204,6 +204,7 @@
                 <div class="form-group">
                   <label class="form-label">검토 의견</label>
                   <textarea
+                    v-model="reviewComment"
                     rows="5"
                     class="form-textarea"
                     placeholder="승인 또는 반려 사유를 입력하세요."
@@ -236,8 +237,8 @@
               </template>
               <template v-else>
                 <button class="btn-outline" @click="modalTab = 'detail'">이전</button>
-                <button class="btn-danger">반려</button>
-                <button class="btn-primary">
+                <button class="btn-danger" @click="handleReject">반려</button>
+                <button class="btn-primary" @click="handleApprove">
                   <CheckCircle :size="14" /> 최종 승인
                 </button>
               </template>
@@ -258,6 +259,7 @@ const activeTab = ref('plan')
 const selectedItem = ref(null)
 const modalTab = ref('detail')
 const searchText = ref('')
+const reviewComment = ref('')
 const currentDate = new Date()
 const currentYear = currentDate.getFullYear()
 const quarter = Math.floor(currentDate.getMonth() / 3)
@@ -268,11 +270,11 @@ const pad2 = (value) => String(value).padStart(2, '0')
 const formatDate = (date) => `${date.getFullYear()}.${pad2(date.getMonth() + 1)}.${pad2(date.getDate())}`
 const approvalPeriodLabel = `${formatDate(periodStart)} ~ ${formatDate(periodEnd)}`
 
-const planItems = PERFORMANCE_APPROVAL.planItems
-const resultItems = PERFORMANCE_APPROVAL.resultItems
+const planItems = ref(PERFORMANCE_APPROVAL.planItems.map((item) => ({ ...item })))
+const resultItems = ref(PERFORMANCE_APPROVAL.resultItems.map((item) => ({ ...item })))
 
 const currentItems = computed(() => {
-  const items = activeTab.value === 'plan' ? planItems : resultItems
+  const items = activeTab.value === 'plan' ? planItems.value : resultItems.value
   if (!searchText.value) return items
   return items.filter(
     (item) => item.user.includes(searchText.value) || item.title.includes(searchText.value),
@@ -282,6 +284,49 @@ const currentItems = computed(() => {
 const handleItemClick = (item) => {
   selectedItem.value = item
   modalTab.value = 'detail'
+  reviewComment.value = ''
+}
+
+const removeItemById = (id) => {
+  const source = activeTab.value === 'plan' ? planItems : resultItems
+  source.value = source.value.filter((item) => item.id !== id)
+}
+
+const handleQuickApprove = (item) => {
+  if (!confirm(`${item.user}님의 항목을 승인하시겠습니까?`)) return
+  removeItemById(item.id)
+  alert('승인 처리되었습니다.')
+}
+
+const handleQuickReject = (item) => {
+  if (!confirm(`${item.user}님의 항목을 반려하시겠습니까?`)) return
+  removeItemById(item.id)
+  alert('반려 처리되었습니다.')
+}
+
+const handleApprove = () => {
+  if (!selectedItem.value) return
+  if (!confirm('최종 승인하시겠습니까?')) return
+  removeItemById(selectedItem.value.id)
+  selectedItem.value = null
+  modalTab.value = 'detail'
+  reviewComment.value = ''
+  alert('최종 승인되었습니다.')
+}
+
+const handleReject = () => {
+  if (!selectedItem.value) return
+  const reason = reviewComment.value.trim()
+  if (!reason) {
+    alert('반려 사유를 입력해주세요.')
+    return
+  }
+  if (!confirm('반려 처리하시겠습니까?')) return
+  removeItemById(selectedItem.value.id)
+  selectedItem.value = null
+  modalTab.value = 'detail'
+  reviewComment.value = ''
+  alert('반려 처리되었습니다.')
 }
 </script>
 

@@ -67,8 +67,8 @@
             <div class="system-score">
               시스템 평가점수 <strong>{{ selectedMember.systemScore }}점</strong>
             </div>
-            <button class="btn-save">임시 저장</button>
-            <button class="btn-submit">
+            <button class="btn-save" @click="handleTempSave">임시 저장</button>
+            <button class="btn-submit" @click="handleSubmitEvaluation">
               <Send :size="14" /> 평가 제출
             </button>
           </div>
@@ -106,9 +106,11 @@
                 </div>
               </div>
               <textarea
+                v-model="currentForm.comments[criteria.id]"
                 :placeholder="`${criteria.label}에 대한 구체적인 피드백을 작성해주세요.`"
                 rows="3"
                 class="criteria-textarea"
+                @input="markInProgress(selectedMemberId)"
               ></textarea>
             </div>
 
@@ -146,14 +148,14 @@ import { User, Star, Send } from 'lucide-vue-next'
 import { TEAM_EVALUATION_MEMBERS } from '@/mocks/performance'
 
 const selectedMemberId = ref(1)
-const scores = reactive({})
+const evaluationForms = reactive({})
 const DEFAULT_AVATAR =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><rect width='80' height='80' rx='40' fill='%23eef2f7'/><circle cx='40' cy='31' r='14' fill='%2394a3b8'/><path d='M16 68c4-12 14-18 24-18s20 6 24 18' fill='%2394a3b8'/></svg>"
 
-const teamMembers = TEAM_EVALUATION_MEMBERS.map((member) => ({
+const teamMembers = ref(TEAM_EVALUATION_MEMBERS.map((member) => ({
   ...member,
   image: DEFAULT_AVATAR,
-}))
+})))
 
 const evaluationCriteria = [
   { id: 'performance', label: '업무 성과', description: '목표 달성도 및 업무의 질적/양적 성과' },
@@ -162,18 +164,67 @@ const evaluationCriteria = [
   { id: 'creativity', label: '창의성과 문제 해결 능력', description: '새로운 아이디어 제안 및 문제 해결 역량' },
 ]
 
-const selectedMember = computed(() => teamMembers.find((m) => m.id === selectedMemberId.value))
-const completedCount = computed(() => teamMembers.filter((m) => m.status === '완료').length)
+const selectedMember = computed(() => teamMembers.value.find((m) => m.id === selectedMemberId.value))
+const completedCount = computed(() => teamMembers.value.filter((m) => m.status === '완료').length)
 const peerReviewAverageText = computed(() => Number(selectedMember.value?.peerReviewScore || 0).toFixed(1))
 const getCriteriaPeerAverageText = (criteriaId) =>
   Number(selectedMember.value?.peerCriteriaAverages?.[criteriaId] || 0).toFixed(1)
 
+const getMemberForm = (memberId) => {
+  if (!evaluationForms[memberId]) {
+    evaluationForms[memberId] = {
+      scores: {},
+      comments: {},
+      savedAt: '',
+    }
+  }
+  return evaluationForms[memberId]
+}
+
+const currentForm = computed(() => getMemberForm(selectedMemberId.value))
+
+const markInProgress = (memberId) => {
+  const target = teamMembers.value.find((member) => member.id === memberId)
+  if (!target || target.status === '완료') return
+  if (target.status === '평가 대기') target.status = '진행 중'
+}
+
 const handleScoreChange = (criteriaId, score) => {
-  scores[`${selectedMemberId.value}-${criteriaId}`] = score
+  currentForm.value.scores[criteriaId] = score
+  markInProgress(selectedMemberId.value)
 }
 
 const getScore = (criteriaId) => {
-  return scores[`${selectedMemberId.value}-${criteriaId}`] || 0
+  return currentForm.value.scores[criteriaId] || 0
+}
+
+const handleTempSave = () => {
+  const form = currentForm.value
+  const hasScore = Object.values(form.scores).some((score) => Number(score) > 0)
+  const hasComment = Object.values(form.comments).some((comment) => String(comment || '').trim().length > 0)
+  if (!hasScore && !hasComment) {
+    alert('임시 저장할 평가 내용이 없습니다.')
+    return
+  }
+  form.savedAt = new Date().toISOString()
+  markInProgress(selectedMemberId.value)
+  alert('평가 내용이 임시 저장되었습니다.')
+}
+
+const handleSubmitEvaluation = () => {
+  if (!selectedMember.value) return
+  const form = currentForm.value
+  const hasAllScores = evaluationCriteria.every((criteria) => Number(form.scores[criteria.id] || 0) > 0)
+  if (!hasAllScores) {
+    alert('모든 평가 항목의 점수를 입력해주세요.')
+    return
+  }
+  if (!confirm(`${selectedMember.value.name}님 평가를 제출하시겠습니까?`)) return
+
+  const target = teamMembers.value.find((member) => member.id === selectedMemberId.value)
+  if (target) target.status = '완료'
+  form.savedAt = new Date().toISOString()
+  alert('평가가 제출되었습니다.')
 }
 </script>
 

@@ -177,6 +177,7 @@
                 <div class="result-group">
                   <label class="result-label">{{ isTeamResult ? '팀 성과 요약' : '개인 성과 요약' }}</label>
                   <textarea
+                    v-model="resultSummary"
                     rows="4"
                     class="result-textarea"
                     :placeholder="isTeamResult ? '팀 단위 성과와 핵심 수치를 입력하세요.' : '개인 기여 성과와 핵심 수치를 입력하세요.'"
@@ -185,17 +186,17 @@
 
                 <div v-if="isTeamResult" class="result-group">
                   <label class="result-label">특이점</label>
-                  <input type="text" class="result-input" placeholder="성과 수행 중 특이사항을 입력하세요." />
+                  <input v-model="resultNote" type="text" class="result-input" placeholder="성과 수행 중 특이사항을 입력하세요." />
                 </div>
 
                 <div v-else class="result-row">
                   <div class="result-group">
                     <label class="result-label">성장 포인트</label>
-                    <input type="text" class="result-input" placeholder="이번 성과를 통해 성장한 점" />
+                    <input v-model="growthPoint" type="text" class="result-input" placeholder="이번 성과를 통해 성장한 점" />
                   </div>
                   <div class="result-group">
                     <label class="result-label">개선 사항</label>
-                    <input type="text" class="result-input" placeholder="이전 보다 개선된 사항" />
+                    <input v-model="improvementPoint" type="text" class="result-input" placeholder="이전 보다 개선된 사항" />
                   </div>
                 </div>
 
@@ -213,12 +214,12 @@
             <!-- 모달 푸터 -->
             <div class="modal-footer">
               <template v-if="modalTab === 'detail'">
-                <button class="btn-outline">수정</button>
+                <button class="btn-outline" @click="handleEdit">수정</button>
                 <button class="btn-primary" @click="modalTab = 'result'">결과 등록하러 가기</button>
               </template>
               <template v-else>
                 <button class="btn-outline" @click="modalTab = 'detail'">이전</button>
-                <button class="btn-primary">
+                <button class="btn-primary" @click="submitResult">
                   <CheckCircle :size="14" /> 최종 결과 제출
                 </button>
               </template>
@@ -239,6 +240,10 @@ import { PERFORMANCE_INQUIRY_ITEMS } from '@/mocks/performance'
 const selectedItem = ref(null)
 const modalTab = ref('detail')
 const resultProgress = ref(85)
+const resultSummary = ref('')
+const resultNote = ref('')
+const growthPoint = ref('')
+const improvementPoint = ref('')
 
 const filterStatus = ref('')
 const filterEmployee = ref('')
@@ -246,7 +251,7 @@ const filterMonth = ref('')
 const searchText = ref('')
 const searchField = ref('title')
 
-const items = PERFORMANCE_INQUIRY_ITEMS
+const items = ref(PERFORMANCE_INQUIRY_ITEMS.map((item) => ({ ...item })))
 const userId = computed(() => sessionStorage.getItem(AUTH_KEYS.userId) || '')
 const userName = computed(() => sessionStorage.getItem(AUTH_KEYS.userName) || '')
 const userRole = computed(() => sessionStorage.getItem(AUTH_KEYS.role) || USER_ROLES.user)
@@ -258,9 +263,9 @@ const USER_TO_EMPLOYEE_ID = {
 const currentEmployeeId = computed(() => USER_TO_EMPLOYEE_ID[userId.value] || '')
 
 const visibleItems = computed(() => {
-  if (isPerformanceManager.value) return items
+  if (isPerformanceManager.value) return items.value
 
-  return items.filter((item) => {
+  return items.value.filter((item) => {
     if (currentEmployeeId.value) return item.employeeId === currentEmployeeId.value
     return item.employeeName === userName.value
   })
@@ -292,6 +297,30 @@ function statusClass(status) {
 function openDetail(item) {
   selectedItem.value = item
   modalTab.value = 'detail'
+  resultProgress.value = Number(item.progress) || 0
+  resultSummary.value = ''
+  resultNote.value = ''
+  growthPoint.value = ''
+  improvementPoint.value = ''
+}
+
+function handleEdit() {
+  alert('상세 항목을 확인한 뒤 결과 등록 탭에서 수정 내용을 제출할 수 있습니다.')
+}
+
+function submitResult() {
+  if (!selectedItem.value) return
+  if (!resultSummary.value.trim()) {
+    alert('성과 요약을 입력해주세요.')
+    return
+  }
+  const target = items.value.find((item) => item.id === selectedItem.value.id)
+  if (!target) return
+  target.progress = Number(resultProgress.value) || 0
+  target.status = '완료'
+  selectedItem.value = target
+  modalTab.value = 'detail'
+  alert('결과가 등록되었습니다.')
 }
 </script>
 
