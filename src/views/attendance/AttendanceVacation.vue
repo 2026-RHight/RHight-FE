@@ -20,7 +20,7 @@
         </div>
         <div class="card-info">
           <span class="label">총 연차</span>
-          <span class="value">15.0</span>
+          <span class="value">{{ leaveBalance.totalAnnualLeave.toFixed(1) }}</span>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
         </div>
         <div class="card-info">
           <span class="label">사용 연차</span>
-          <span class="value">3.5</span>
+          <span class="value">{{ leaveBalance.usedAnnualLeave.toFixed(1) }}</span>
         </div>
       </div>
 
@@ -45,7 +45,7 @@
         </div>
         <div class="card-info">
           <span class="label">잔여 연차</span>
-          <span class="value highlight">11.5</span>
+          <span class="value highlight">{{ leaveBalance.remainingAnnualLeave.toFixed(1) }}</span>
         </div>
         <div class="expiry-info">사용 기한: 2026.12.31</div>
       </div>
@@ -71,15 +71,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in usageHistory" :key="item.id">
-                <td class="col-date">{{ item.date }}</td>
-                <td><span class="type-badge">{{ item.type }}</span></td>
-                <td>{{ item.period }}</td>
-                <td class="col-days">-{{ item.days }}</td>
+              <tr v-for="item in myLeaveRequestsList" :key="item.leaveRequestId">
+                <td class="col-date">{{ item.applyDate }}</td>
+                <td><span class="type-badge">{{ item.leaveType }}</span></td>
+                <td>{{ item.startDate }} ~ {{ item.endDate }}</td>
+                <td class="col-days">-{{ item.usedDays }}</td>
                 <td>
-                  <span class="status-dot" :class="item.status"></span>
+                  <span class="status-dot" :class="item.status.toLowerCase()"></span>
                   {{ getStatusLabel(item.status) }}
                 </td>
+              </tr>
+              <tr v-if="myLeaveRequestsList.length === 0">
+                <td colspan="5" class="empty-row">휴가 신청 내역이 없습니다.</td>
               </tr>
             </tbody>
           </table>
@@ -120,26 +123,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAttendanceStore } from '@/store/attendance'
+import { storeToRefs } from 'pinia'
 
-const upcomingLeave = ref(null)
+const store = useAttendanceStore()
+const { leaveBalance, myLeaveRequestsList } = storeToRefs(store)
 
-const usageHistory = ref([
-  { id: 1, date: '2026.02.13', type: '반차', period: '2026.02.13 (오후)', days: 0.5, status: 'approved' },
-  { id: 2, date: '2026.01.20', type: '연차', period: '2026.01.20', days: 1.0, status: 'approved' },
-  { id: 3, date: '2026.01.05', type: '연차', period: '2026.01.05', days: 1.0, status: 'approved' },
-  { id: 4, date: '2025.12.24', type: '연차', period: '2025.12.24', days: 1.0, status: 'approved' },
-])
-
+const usageHistory = ref([])
 const grantHistory = ref([
   { id: 1, reason: '2026년 정기 부여', date: '2026.01.01', days: 15.0 },
   { id: 2, reason: '2025년 이월 연차', date: '2026.01.01', days: 0.0 },
 ])
 
+const upcomingLeave = ref(null)
+
 const getStatusLabel = (status) => {
-  const map = { approved: '승인완료', pending: '결재중', rejected: '반려' }
+  const map = { APPROVED: '승인완료', PENDING: '결재중', REJECTED: '반려', CANCELLED: '취소' }
   return map[status] || status
 }
+
+onMounted(() => {
+    store.fetchLeaveBalance()
+    store.fetchMyLeaveRequests()
+})
 </script>
 
 <style scoped>
@@ -406,5 +413,10 @@ const getStatusLabel = (status) => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--primary);
+}
+.empty-row {
+  text-align: center;
+  color: var(--gray400);
+  padding: 40px !important;
 }
 </style>

@@ -7,7 +7,7 @@
         <div class="card-header-row">
           <div class="date-info">
             <span class="icon-calendar">📅</span>
-            <span>{{ currentDate }}</span>
+            <span>{{ currentDateStr }}</span>
           </div>
           <span class="status-badge" :class="workStatusClass">{{ workStatusLabel }}</span>
         </div>
@@ -87,7 +87,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
             <div class="m-stat">
-              <span class="num">12</span>
+              <span class="num">{{ monthlySummary.normalCount }}</span>
               <span class="label">정상 출근</span>
             </div>
           </div>
@@ -98,7 +98,7 @@
                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <div class="m-stat">
-              <span class="num">1</span>
+              <span class="num">{{ monthlySummary.tardyCount + monthlySummary.earlyLeaveCount }}</span>
               <span class="label">지각/조퇴</span>
             </div>
           </div>
@@ -109,8 +109,8 @@
                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
             <div class="m-stat">
-              <span class="num">2</span>
-              <span class="label">재택/외근</span>
+              <span class="num">{{ monthlySummary.absentCount }}</span>
+              <span class="label">결근</span>
             </div>
           </div>
           <!-- Item 4 -->
@@ -119,7 +119,7 @@
                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
             </div>
             <div class="m-stat">
-              <span class="num">0.5</span>
+              <span class="num">{{ monthlySummary.vacationCount }}</span>
               <span class="label">휴가 사용</span>
             </div>
           </div>
@@ -137,12 +137,12 @@
               <span class="card-title">근무 일정</span>
               <div class="cal-badge">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                2026.02
+                {{ currentYear }}.{{ String(currentMonth).padStart(2, '0') }}
               </div>
             </div>
             <div class="cal-nav">
-              <button class="icon-btn">&lt;</button>
-              <button class="icon-btn">&gt;</button>
+              <button class="icon-btn" @click.stop="prevMonth">&lt;</button>
+              <button class="icon-btn" @click.stop="nextMonth">&gt;</button>
             </div>
           </div>
 
@@ -150,75 +150,25 @@
             <div class="cal-head">
               <span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span>
             </div>
-            <!-- Week 1: Feb 1 is Sunday -->
-            <div class="cal-week week-flex">
-              <div class="day sun">1</div>
-              <div class="day">2</div>
-              <div class="day">3</div>
-              <div class="day">4</div>
-              <div class="day">5</div>
-              <div class="day">6</div>
-              <div class="day sat">7</div>
-            </div>
-            <!-- Week 2 -->
-            <div class="cal-week week-flex">
-              <div class="day sun">8</div>
-              <div class="day">9</div>
-              <div class="day has-schedule">
-                10
-                <div class="bar-blue">8h 00m</div>
+            
+            <div class="cal-week week-flex" v-for="(week, index) in calendarWeeks" :key="index">
+              <div 
+                class="day" 
+                v-for="day in week" 
+                :key="day.fullDate"
+                :class="{ 
+                  'sun': day.dayOfWeek === 0,
+                  'sat': day.dayOfWeek === 6,
+                  'today': day.isToday,
+                  'other-month': day.isPrevMonth || day.isNextMonth,
+                  'has-schedule': day.hasSchedule
+                }"
+              >
+                {{ day.day }}
+                <div v-if="day.hasSchedule && !day.isPrevMonth && !day.isNextMonth" :class="day.scheduleClass">
+                   {{ day.scheduleLabel }}
+                </div>
               </div>
-              <div class="day has-schedule">
-                11
-                <div class="bar-blue">8h 10m</div>
-              </div>
-              <div class="day has-schedule">
-                12
-                <div class="bar-blue">8h 05m</div>
-              </div>
-              <div class="day has-schedule">
-                13
-                <div class="bar-blue">8h 15m</div>
-              </div>
-              <div class="day sat">14</div>
-            </div>
-             <!-- Week 3 -->
-             <div class="cal-week week-flex">
-              <div class="day sun">15</div>
-              <div class="day has-schedule">
-                16
-                <div class="bar-blue">8h 30m</div>
-              </div>
-              <div class="day has-schedule">
-                17
-                <div class="bar-blue">8h 20m</div>
-              </div>
-              <div class="day today has-schedule">
-                18
-                <div class="bar-blue">Working</div>
-              </div>
-              <div class="day has-schedule">
-                19
-                <div class="bar-blue">Plan</div>
-              </div>
-              <div class="day">20</div>
-              <div class="day sat">21</div>
-            </div>
-            <!-- Week 4 -->
-            <div class="cal-week week-flex">
-              <div class="day sun">22</div>
-              <div class="day">23</div>
-              <div class="day has-schedule">
-                24
-                <div class="bar-orange">Meeting</div>
-              </div>
-              <div class="day">25</div>
-              <div class="day">26</div>
-              <div class="day has-schedule">
-                27
-                <div class="bar-blue">Wrap-up</div>
-              </div>
-              <div class="day sat">28</div>
             </div>
           </div>
         </div>
@@ -309,9 +259,9 @@ const getApprStatusLabel = (s) => ({ pending: '결재 대기', approved: '승인
 const getApprStatusClass = (s) => ({ pending: 'warning', approved: 'success', rejected: 'danger' }[s])
 
 // -- Clock Logic --
-const currentDate = ref('')
+const currentDateStr = ref('')
 const currentTime = ref('')
-const { checkInTime, checkOutTime } = storeToRefs(store)
+const { checkInTime, checkOutTime, monthlySummary } = storeToRefs(store)
 
 const isCheckedIn = computed(() => {
   return !!checkInTime.value && !checkOutTime.value
@@ -335,38 +285,44 @@ const isLateCheckIn = (timeText) => {
   return h > 9 || (h === 9 && m > 0)
 }
 
-const handleCheckIn = () => {
+const handleCheckIn = async () => {
   const now = new Date()
-  const h = String(now.getHours()).padStart(2, '0')
-  const m = String(now.getMinutes()).padStart(2, '0')
-  const checkIn = `${h}:${m}`
-  const status = isLateCheckIn(checkIn) ? 'late' : 'normal'
-  // New check-in should start a fresh work session.
-  store.setCheckOutTime(null)
-  store.setCheckInTime(checkIn)
-  store.upsertMyDailyAttendance({ date: now, checkIn, checkOut: null, status })
+  const h = now.getHours()
+  const m = now.getMinutes()
+  
+  let tardyReason = null
+  if (h > 9 || (h === 9 && m > 0)) {
+    tardyReason = prompt('지각 사유를 입력해주세요:')
+    if (tardyReason === null) return // 취소 시 중단
+    if (!tardyReason.trim()) {
+      alert('지각 사유는 필수입니다.')
+      return
+    }
+  }
+
+  try {
+    await store.clockIn(tardyReason)
+  } catch (error) {
+    alert(error.response?.data?.message || '출근 처리에 실패했습니다.')
+  }
 }
 
-const handleCheckOut = () => {
-  const now = new Date()
-  const h = String(now.getHours()).padStart(2, '0')
-  const m = String(now.getMinutes()).padStart(2, '0')
-  const checkOut = `${h}:${m}`
-  store.setCheckOutTime(checkOut)
-  store.upsertMyDailyAttendance({
-    date: now,
-    checkIn: checkInTime.value,
-    checkOut,
-    status: isLateCheckIn(checkInTime.value) ? 'late' : 'normal'
-  })
+const handleCheckOut = async () => {
+  if (!confirm('퇴근하시겠습니까?')) return
+
+  try {
+    await store.clockOut()
+  } catch (error) {
+    alert(error.response?.data?.message || '퇴근 처리에 실패했습니다.')
+  }
 }
 
 const updateTime = () => {
   const now = new Date()
   const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
-  currentDate.value = now.toLocaleDateString('ko-KR', options)
+  currentDateStr.value = now.toLocaleDateString('ko-KR', options)
   
-  const h = String(now.getHours()).padStart(2, '0') // 24-hour format logic check? Design shows "9시 14분 10초"
+  const h = String(now.getHours()).padStart(2, '0') 
   // For design match "9시 14분 10초"
   const hours = now.getHours()
   const minutes = now.getMinutes()
@@ -374,10 +330,123 @@ const updateTime = () => {
   currentTime.value = `${hours}시 ${minutes}분 ${seconds}초`
 }
 
+// -- Calendar Logic --
+const today = new Date()
+const currentYear = ref(today.getFullYear())
+const currentMonth = ref(today.getMonth() + 1)
+
+const prevMonth = () => {
+  if (currentMonth.value === 1) {
+    currentYear.value--
+    currentMonth.value = 12
+  } else {
+    currentMonth.value--
+  }
+}
+
+const nextMonth = () => {
+  if (currentMonth.value === 12) {
+    currentYear.value++
+    currentMonth.value = 1
+  } else {
+    currentMonth.value++
+  }
+}
+
+// Generate a random schedule for demo purposes
+// In a real app, this would come from the store
+const getMockSchedule = (day, isWeekend) => {
+  if (isWeekend) return null
+  
+  // Predictable pseudo-random based on date
+  const seed = day * currentMonth.value
+  const rand = seed % 10
+  
+  if (rand === 0) return { label: 'Meeting', class: 'bar-orange' }
+  if (rand === 1) return { label: 'Wrap-up', class: 'bar-blue' }
+  if (rand === 5) return { label: 'Plan', class: 'bar-blue' }
+  // Most days just regular work implicitly, or basic hours
+  if (rand > 6) return { label: '8h 00m', class: 'bar-blue' }
+  
+  return null
+}
+
+const calendarWeeks = computed(() => {
+  const year = currentYear.value
+  const month = currentMonth.value
+  
+  const firstDay = new Date(year, month - 1, 1)
+  const lastDay = new Date(year, month, 0)
+  
+  const startDayOfWeek = firstDay.getDay() // 0 (Sun) - 6 (Sat)
+  const daysInMonth = lastDay.getDate()
+  
+  const days = []
+  
+  // Prev Month Padded Days
+  const prevMonthLastDay = new Date(year, month - 1, 0).getDate()
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    days.push({
+      day: prevMonthLastDay - i,
+      dayOfWeek: new Date(year, month - 2, prevMonthLastDay - i).getDay(), // approx
+      isPrevMonth: true,
+      fullDate: `prev-${i}`
+    })
+  }
+  
+  // Current Month Days
+  const todayStr = new Date().toDateString()
+  for (let i = 1; i <= daysInMonth; i++) {
+    const d = new Date(year, month - 1, i)
+    const isToday = d.toDateString() === todayStr
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6
+    
+    // Mock schedule
+    const mock = getMockSchedule(i, isWeekend)
+    
+    days.push({
+      day: i,
+      dayOfWeek: d.getDay(),
+      isToday,
+      fullDate: d.toISOString(),
+      hasSchedule: !!mock,
+      scheduleLabel: mock?.label,
+      scheduleClass: mock?.class
+    })
+  }
+  
+  // Next Month Padding
+  // Ensure we have at least 5 weeks (35 days) or 6 weeks (42 days)
+  const totalSlots = days.length > 35 ? 42 : 35
+  const remaining = totalSlots - days.length
+  
+  for (let i = 1; i <= remaining; i++) {
+    days.push({
+      day: i,
+      dayOfWeek: (days.length + i) % 7, // approximate but not strictly needed for rendering loop
+      isNextMonth: true,
+      fullDate: `next-${i}` 
+    })
+  }
+
+  // Chunk into weeks
+  const weeks = []
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7))
+  }
+  
+  return weeks
+})
+
 let timer = null
-onMounted(() => {
+onMounted(async () => {
   updateTime()
   timer = setInterval(updateTime, 1000)
+  
+  // Fetch actual data
+  const now = new Date()
+  await store.fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1)
+  await store.fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1)
 })
 
 onUnmounted(() => {
@@ -798,9 +867,7 @@ onUnmounted(() => {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .quick-text {

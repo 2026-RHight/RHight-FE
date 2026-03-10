@@ -14,7 +14,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
           <div class="stat-text">
-            <span class="num">{{ monthlyStats.normalCount }}</span>
+            <span class="num">{{ monthlySummary.normalCount }}</span>
             <span class="label">정상 출근</span>
           </div>
         </div>
@@ -24,7 +24,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
           <div class="stat-text">
-            <span class="num">{{ monthlyStats.lateCount }}</span>
+            <span class="num">{{ monthlySummary.tardyCount + monthlySummary.earlyLeaveCount }}</span>
             <span class="label">지각/조퇴</span>
           </div>
         </div>
@@ -34,8 +34,8 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
           <div class="stat-text">
-            <span class="num">{{ monthlyStats.remoteCount }}</span>
-            <span class="label">재택/외근</span>
+            <span class="num">{{ monthlySummary.absentCount }}</span>
+            <span class="label">결근</span>
           </div>
         </div>
         <!-- Leave -->
@@ -44,7 +44,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           </div>
           <div class="stat-text">
-            <span class="num">{{ monthlyStats.leaveDays }}</span>
+            <span class="num">{{ monthlySummary.vacationCount }}</span>
             <span class="label">휴가 사용</span>
           </div>
         </div>
@@ -77,6 +77,10 @@
 
     <!-- List Section -->
     <div class="list-section-card">
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>기록을 불러오는 중입니다...</p>
+      </div>
       <div class="filter-row">
         <div class="tabs">
           <button
@@ -110,12 +114,12 @@
           <tbody>
             <!-- Mock Data Rows -->
             <tr v-for="(row, idx) in paginatedRecords" :key="idx">
-              <td>{{ row.date }} <span class="weekday">({{ row.day }})</span></td>
-              <td>{{ row.inTime }}</td>
-              <td>{{ row.outTime }}</td>
-              <td><span class="status-tag" :class="row.statusClass">{{ row.status }}</span></td>
-              <td class="memo">{{ row.memo }}</td>
-              <td class="text-right font-bold">{{ row.total }}</td>
+              <td>{{ row.date }} <span class="weekday">({{ getDayName(row.date) }})</span></td>
+              <td>{{ row.checkIn || '-' }}</td>
+              <td>{{ row.checkOut || '-' }}</td>
+              <td><span class="status-tag" :class="row.status">{{ row.statusDescription }}</span></td>
+              <td class="memo">{{ row.memo || '-' }}</td>
+              <td class="text-right font-bold">{{ row.workHours }}</td>
             </tr>
           </tbody>
         </table>
@@ -141,37 +145,32 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
+import { useAttendanceStore } from '@/store/attendance'
+import { storeToRefs } from 'pinia'
+
+const store = useAttendanceStore()
+const { dailyAttendance, monthlySummary, isLoading } = storeToRefs(store)
 
 const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+const getDayName = (dateStr) => {
+  if (!dateStr) return ''
+  return dayNames[new Date(dateStr).getDay()]
+}
 
 const tabs = [
   { value: 'all', label: '전체' },
   { value: 'normal', label: '정상' },
-  { value: 'late', label: '지각/조퇴' },
-  { value: 'leave', label: '휴가' }
+  { value: 'tardy', label: '지각' },
+  { value: 'early_leave', label: '조퇴' },
+  { value: 'vacation', label: '휴가' }
 ]
 
-const statusMap = {
-  normal: { status: '정상', statusClass: 'normal', inTime: '08:55', outTime: '18:10', memo: '-', total: '8h 15m', leaveDays: 0 },
-  late: { status: '지각/조퇴', statusClass: 'late', inTime: '09:10', outTime: '18:20', memo: '대중교통 지연', total: '8h 10m', leaveDays: 0 },
-  remote: { status: '재택/외근', statusClass: 'remote', inTime: '09:00', outTime: '18:00', memo: '재택근무', total: '8h 00m', leaveDays: 0 },
-  leave: { status: '휴가', statusClass: 'leave', inTime: '-', outTime: '-', memo: '연차 사용', total: '-', leaveDays: 1 }
-}
-
-const monthPatterns = [
-  ['normal', 'late', 'normal', 'normal', 'remote', 'normal', 'leave', 'normal'],
-  ['normal', 'normal', 'late', 'remote', 'normal', 'leave', 'normal', 'normal'],
-  ['late', 'normal', 'normal', 'normal', 'leave', 'normal', 'remote', 'normal'],
-  ['normal', 'leave', 'normal', 'late', 'normal', 'remote', 'normal', 'normal']
-]
-
-const selectedMonth = ref({ year: 2026, month: 2 })
+const today = new Date()
+const selectedMonth = ref({ year: today.getFullYear(), month: today.getMonth() + 1 })
 const activeTab = ref('all')
 const searchQuery = ref('')
 const currentPage = ref(1)
-
-const monthOffset = computed(() => (selectedMonth.value.year - 2026) * 12 + (selectedMonth.value.month - 2))
 
 const selectorMonthLabel = computed(() => {
   const month = String(selectedMonth.value.month).padStart(2, '0')
@@ -180,59 +179,22 @@ const selectorMonthLabel = computed(() => {
 
 const headerMonthLabel = computed(() => `${selectedMonth.value.year}년 ${selectedMonth.value.month}월`)
 
-const monthlyRecords = computed(() => {
-  const { year, month } = selectedMonth.value
-  const pattern = monthPatterns[Math.abs(monthOffset.value) % monthPatterns.length]
-  const daysInMonth = new Date(year, month, 0).getDate()
-  const today = new Date()
-  const startOfSelectedMonth = new Date(year, month - 1, 1)
-  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999)
-  const currentYear = today.getFullYear()
-  const currentMonth = today.getMonth() + 1
+const fetchDetails = async () => {
+    await store.fetchMonthlyRecords(selectedMonth.value.year, selectedMonth.value.month)
+    await store.fetchMonthlySummary(selectedMonth.value.year, selectedMonth.value.month)
+}
 
-  if (startOfSelectedMonth > endOfToday) return []
-
-  const maxDay = year === currentYear && month === currentMonth ? today.getDate() : daysInMonth
-
-  return Array.from({ length: maxDay }, (_, idx) => maxDay - idx)
-    .map((day) => {
-      const dateObj = new Date(year, month - 1, day)
-      const y = dateObj.getFullYear()
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0')
-      const d = String(dateObj.getDate()).padStart(2, '0')
-      const dayType = pattern[(day - 1) % pattern.length]
-      const statusInfo = statusMap[dayType]
-
-      return {
-        ...statusInfo,
-        type: dayType,
-        date: `${y}.${m}.${d}`,
-        day: dayNames[dateObj.getDay()],
-        dateObj
-      }
-    })
-    .filter((record) => ![0, 6].includes(record.dateObj.getDay()))
-    .filter((record) => record.dateObj <= endOfToday)
-    .map(({ dateObj, ...record }) => record)
+onMounted(() => {
+    fetchDetails()
 })
 
-const monthlyStats = computed(() => {
-  const normalCount = monthlyRecords.value.filter((record) => record.type === 'normal').length
-  const lateCount = monthlyRecords.value.filter((record) => record.type === 'late').length
-  const remoteCount = monthlyRecords.value.filter((record) => record.type === 'remote').length
-  const leaveTotal = monthlyRecords.value.reduce((sum, record) => sum + (record.leaveDays || 0), 0)
-
-  return {
-    normalCount,
-    lateCount,
-    remoteCount,
-    leaveDays: Number.isInteger(leaveTotal) ? String(leaveTotal) : leaveTotal.toFixed(1)
-  }
+watch([() => selectedMonth.value.year, () => selectedMonth.value.month], () => {
+    fetchDetails()
 })
 
 const displayedRecords = computed(() => {
-  if (activeTab.value === 'all') return monthlyRecords.value
-  return monthlyRecords.value.filter((record) => record.type === activeTab.value)
+  if (activeTab.value === 'all') return dailyAttendance.value
+  return dailyAttendance.value.filter((record) => record.status === activeTab.value)
 })
 
 const filteredRecords = computed(() => {
@@ -242,12 +204,11 @@ const filteredRecords = computed(() => {
   return displayedRecords.value.filter((record) => {
     const searchTargets = [
       record.date,
-      record.day,
-      record.inTime,
-      record.outTime,
-      record.status,
+      record.checkIn,
+      record.checkOut,
+      record.statusDescription,
       record.memo,
-      record.total
+      record.workHours
     ]
     return searchTargets.some((target) => String(target).toLowerCase().includes(keyword))
   })
@@ -264,7 +225,7 @@ const paginatedRecords = computed(() => {
   return filteredRecords.value.slice(start, start + pageSize.value)
 })
 
-watch([activeTab, searchQuery, monthOffset], () => {
+watch([activeTab, searchQuery, () => selectedMonth.value.month], () => {
   currentPage.value = 1
 })
 
@@ -548,5 +509,28 @@ const goNextMonth = () => {
 .page-arrow:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+/* Loading Overlay */
+.list-section-card {
+  position: relative;
+}
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10; gap: 12px;
+  border-radius: 12px;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--gray200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
