@@ -32,34 +32,34 @@
         <div class="card-header-row">
           <div class="date-info">
             <span class="icon-calendar">📅</span>
-            <span>2026년 2월 급여 명세서</span>
+          <span>{{ detailMonthLabel }}</span>
           </div>
           <span class="status-badge">지급 완료</span>
         </div>
 
         <div class="salary-display">
-          <div class="amount-main">₩ 3,500,000</div>
-          <div class="sub-info">실수령액 (세전 ₩ 4,200,000)</div>
+          <div class="amount-main">₩ {{ formatCurrency(detail.netPay) }}</div>
+          <div class="sub-info">실수령액 (세전 ₩ {{ formatCurrency(detail.totalPayment) }})</div>
         </div>
 
         <div class="salary-actions">
           <div class="detail-row">
             <div class="detail-item">
               <span class="label">기본급</span>
-              <span class="value">₩ 3,800,000</span>
+              <span class="value">₩ {{ formatCurrency(detail.salaryAmount) }}</span>
             </div>
             <div class="divider"></div>
             <div class="detail-item">
               <span class="label">식대</span>
-              <span class="value">₩ 200,000</span>
+              <span class="value">₩ {{ formatCurrency(detail.mealAmount) }}</span>
             </div>
             <div class="divider"></div>
             <div class="detail-item">
               <span class="label">상여금</span>
-              <span class="value">₩ 200,000</span>
+              <span class="value">₩ {{ formatCurrency(detail.overtimeAmount) }}</span>
             </div>
           </div>
-          <button class="btn-download" @click="handleDownload">
+          <button class="btn-download" @click="handleDownload(currentPayrollDetail?.ledgerId)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             명세서 다운로드
           </button>
@@ -70,33 +70,33 @@
       <div class="card deduction-card">
         <div class="card-header-row">
            <span class="card-title">공제 내역</span>
-           <span class="total-deduction">- ₩ 700,000</span>
+           <span class="total-deduction">- ₩ {{ formatCurrency(detail.totalDeductionAmount) }}</span>
         </div>
         
         <div class="deduction-list">
           <div class="d-item">
             <span class="label">국민연금</span>
-            <span class="value">180,000</span>
+            <span class="value">{{ formatCurrency(detail.nationalPensionAmount) }}</span>
           </div>
           <div class="d-item">
              <span class="label">건강보험</span>
-             <span class="value">140,000</span>
+             <span class="value">{{ formatCurrency(detail.healthInsuranceAmount) }}</span>
           </div>
           <div class="d-item">
              <span class="label">장기요양</span>
-             <span class="value">18,000</span>
+             <span class="value">{{ formatCurrency(detail.longTermCareAmount) }}</span>
           </div>
           <div class="d-item">
              <span class="label">고용보험</span>
-             <span class="value">32,000</span>
+             <span class="value">{{ formatCurrency(detail.empInsuranceAmount) }}</span>
           </div>
           <div class="d-item">
              <span class="label">소득세</span>
-             <span class="value">300,000</span>
+             <span class="value">{{ formatCurrency(detail.incomeTaxAmount) }}</span>
           </div>
            <div class="d-item">
              <span class="label">지방소득세</span>
-             <span class="value">30,000</span>
+             <span class="value">{{ formatCurrency(detail.localTaxAmount) }}</span>
           </div>
         </div>
         
@@ -104,7 +104,7 @@
           <!-- Create a simple donut chart using conic-gradient -->
           <div class="donut-chart">
             <div class="donut-center">
-              <span class="percent">16.6%</span>
+              <span class="percent">{{ deductionRate }}</span>
               <span class="text">공제율</span>
             </div>
           </div>
@@ -137,14 +137,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in salaryHistory" :key="index">
-                <td>{{ item.date }}</td>
-                <td>{{ item.month }}</td>
-                <td>{{ item.total }}</td>
-                <td class="text-red">{{ item.deduction }}</td>
-                <td class="text-blue">{{ item.net }}</td>
+              <tr v-for="item in recentPayrolls" :key="item.ledgerId">
+                <td>{{ item.payoutDate }}</td>
+                <td>{{ item.year }}-{{ String(item.month).padStart(2, '0') }}</td>
+                <td>{{ item.totalPayment.toLocaleString() }}</td>
+                <td class="text-red">{{ formatCurrency(item.totalDeduction ?? 0) }}</td>
+                <td class="text-blue">{{ item.netPayment.toLocaleString() }}</td>
                 <td>
-                   <button class="btn-icon">
+                   <button class="btn-icon" @click="handleOpenDetail(item.ledgerId)">
                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                    </button>
                 </td>
@@ -159,31 +159,64 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
+import { usePayrollStore } from '@/store/payroll'
+import { storeToRefs } from 'pinia'
 
-const isVerified = ref(false)
+const store = usePayrollStore()
+const { isVerified, recentPayrolls, currentPayrollDetail } = storeToRefs(store)
+
 const password = ref('')
+const detail = computed(() => currentPayrollDetail.value ?? {
+  targetMonth: '',
+  salaryAmount: 0,
+  overtimeAmount: 0,
+  mealAmount: 0,
+  totalPayment: 0,
+  nationalPensionAmount: 0,
+  healthInsuranceAmount: 0,
+  longTermCareAmount: 0,
+  empInsuranceAmount: 0,
+  incomeTaxAmount: 0,
+  localTaxAmount: 0,
+  totalDeductionAmount: 0,
+  netPay: 0,
+})
+const detailMonthLabel = computed(() => {
+  if (!detail.value.targetMonth) return '급여 명세서'
+  const [year, month] = detail.value.targetMonth.split('-')
+  return `${year}년 ${Number(month)}월 급여 명세서`
+})
+const deductionRate = computed(() => {
+  if (!detail.value.totalPayment) return '0.0%'
+  return `${((detail.value.totalDeductionAmount / detail.value.totalPayment) * 100).toFixed(1)}%`
+})
 
-const verifyPassword = () => {
-  if (password.value === 'test1234!' || password.value === 'admin1234!') {
-    isVerified.value = true
+const formatCurrency = (value) => Number(value || 0).toLocaleString()
+
+const verifyPassword = async () => {
+  const verified = await store.verifyPassword(password.value)
+  if (verified) {
+    await store.fetchRecentPayrolls(6)
+    if (recentPayrolls.value.length > 0) {
+      await store.fetchPayrollDetail(recentPayrolls.value[0].ledgerId)
+    }
   } else {
     alert('비밀번호가 올바르지 않습니다.')
     password.value = ''
   }
 }
 
-const salaryHistory = ref([
-  { date: '2026.02.25', month: '2026-02', total: '4,200,000', deduction: '-700,000', net: '3,500,000' },
-  { date: '2026.01.25', month: '2026-01', total: '4,200,000', deduction: '-700,000', net: '3,500,000' },
-  { date: '2025.12.24', month: '2025-12', total: '4,100,000', deduction: '-680,000', net: '3,420,000' },
-  { date: '2025.11.25', month: '2025-11', total: '4,100,000', deduction: '-680,000', net: '3,420,000' },
-  { date: '2025.10.25', month: '2025-10', total: '4,100,000', deduction: '-680,000', net: '3,420,000' },
-  { date: '2025.09.25', month: '2025-09', total: '4,800,000', deduction: '-820,000', net: '3,980,000' }, // Bonus
-])
+const handleOpenDetail = async (ledgerId) => {
+  await store.fetchPayrollDetail(ledgerId)
+}
 
-const handleDownload = () => {
-  alert('명세서 다운로드를 시작합니다.')
+const handleDownload = async (ledgerId) => {
+  if (!ledgerId) {
+    alert('명세서 정보를 찾을 수 없습니다.')
+    return
+  }
+  await store.downloadPayslip(ledgerId)
 }
 </script>
 

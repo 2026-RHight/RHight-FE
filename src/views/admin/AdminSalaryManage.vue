@@ -304,6 +304,9 @@ import {
   findPathByNodeId,
   sortMembersByRule
 } from '@/mocks/hr/organization'
+import { usePayrollStore } from '@/store/payroll'
+
+const store = usePayrollStore()
 
 const currentTab = ref('monthly')
 const targetMonth = ref('2026-02')
@@ -329,9 +332,17 @@ const monthStatusLabel = computed(() => {
 // --- Mock Data: Monthly Salary ---
 const monthlySalaryData = ref([])
 
-const runCalculation = () => {
+const runCalculation = async () => {
   alert(`${targetMonth.value} 급여 계산을 시작합니다.\n(근태 마감 데이터와 연동되어 연장수당이 자동 계산됩니다)`)
-  // Mock calculation result
+  try {
+    const [year, month] = targetMonth.value.split('-')
+    // 백엔드 단일 사원 계산 API를 활용해 샘플 사원(직원ID: 2) 계산 호출 연동
+    await store.calculatePayroll(2, parseInt(year), parseInt(month))
+  } catch (error) {
+    console.warn('백엔드 급여 계산 호출 실패 (테스트 데이터 표출)', error)
+  }
+
+  // 화면엔 모의 데이터 표출 유지 (모든 사원 리스트 조회가 현재 백엔드엔 단일조회만 있으므로)
   monthlySalaryData.value = [
     { id: 1, name: '김철수', dept: '개발팀', position: '대리', basePay: 3500000, mealAllowance: 200000, overtimePay: 150000, totalPay: 3850000, pension: 173250, healthLimit: 135000, incomeTax: 85000, totalDeduct: 393250, netPay: 3456750 },
     { id: 2, name: '이영희', dept: '인사팀', position: '사원', basePay: 3000000, mealAllowance: 200000, overtimePay: 50000, totalPay: 3250000, pension: 146250, healthLimit: 115000, incomeTax: 65000, totalDeduct: 326250, netPay: 2923750 },

@@ -249,9 +249,8 @@ import { storeToRefs } from 'pinia'
 const store = useAttendanceStore()
 
 const recentApplications = computed(() => {
-  // Sort by appliedAt desc
-  return [...store.myLeaveRequests]
-    .sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
+  return [...store.requestHistory]
+    .sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0))
     .slice(0, 2)
 })
 
@@ -445,8 +444,11 @@ onMounted(async () => {
   
   // Fetch actual data
   const now = new Date()
-  await store.fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1)
-  await store.fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1)
+  await Promise.all([
+    store.fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1),
+    store.fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1),
+    store.fetchRequestHistory(),
+  ])
 })
 
 onUnmounted(() => {

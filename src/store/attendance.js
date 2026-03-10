@@ -1,257 +1,516 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import api from '@/api'
+import { computed, ref } from 'vue'
+import {
+  applyBusinessTrip,
+  applyLeave as applyLeaveRequest,
+  applyOvertime as applyOvertimeRequest,
+  applyWeeklyWorkSchedule,
+  cancelBusinessTrip,
+  cancelLeave as cancelLeaveRequest,
+  cancelOvertime,
+  cancelWeeklyWorkSchedule,
+  clockIn as clockInRequest,
+  clockOut as clockOutRequest,
+  getAdminBusinessTripRequests,
+  getAdminLeaveRequests,
+  getAdminOvertimeRequests,
+  getAttendanceRecords,
+  getAttendanceSummary,
+  getBusinessTripStatusCounts,
+  getLeaveBalance as getLeaveBalanceRequest,
+  getLeaveStatusCounts,
+  getMyBusinessTripRequests,
+  getMyLeaveRequests,
+  getMyOvertimeRequests,
+  getMyWeeklyWorkSchedules,
+  getOvertimeStatusCounts,
+  getTeamWeeklyWorkSchedules,
+  getWeeklyWorkScheduleStatusCounts,
+  modifyAttendanceByAdmin,
+  processBusinessTrip,
+  processLeave,
+  processOvertime,
+  processWeeklyWorkSchedule,
+} from '@/api/attendance'
 
-export const useAttendanceStore = defineStore('attendance', () => {
-    // --- State ---
+const formatDate = (value) => {
+  if (!value) return ''
+  return String(value).slice(0, 10)
+}
 
-    // 1. Daily Attendance Data (populating from backend)
-    const dailyAttendance = ref([])
-    const isLoading = ref(false)
+const formatDateTime = (value) => {
+  if (!value) return ''
+  return String(value).slice(0, 16).replace('T', ' ')
+}
 
-    // 2. Monthly Summary Data (matching backend DTO)
-    const monthlySummary = ref({
-        normalCount: 0,
-        tardyCount: 0,
-        earlyLeaveCount: 0,
-        absentCount: 0,
-        vacationCount: 0
-    })
+const formatTime = (value) => {
+  if (!value) return null
+  return String(value).slice(0, 5)
+}
 
-    // 3. Leave Requests Data (Mock for now, as it might be in a different module)
-    const leaveRequests = ref([
-        { id: 101, userId: 'user1', name: '김철수', position: '사원', deptName: '개발팀', type: '연차', title: '연차 신청 (1일)', period: '2026-02-20', days: 1, reason: '개인 사정', status: 'pending', appliedAt: '2026-02-10', targetDate: '2026-02-20', approver: 'Steve 매니저' },
-        { id: 102, userId: 'user2', name: '이영희', position: '대리', deptName: '개발팀', type: '반차', title: '반차 신청 (오후)', period: '2026-02-21 (오후)', days: 0.5, reason: '병원 진료', status: 'approved', appliedAt: '2026-02-12', targetDate: '2026-02-21', approver: 'Steve 매니저' },
-        { id: 103, userId: 'user3', name: '홍길동', position: '과장', deptName: '영업팀', type: '연차', title: '연차 신청 (2일)', period: '2026-02-24 ~ 02-25', days: 2, reason: '가족 여행', status: 'pending', appliedAt: '2026-02-15', targetDate: '2026-02-24', approver: 'Steve 매니저' },
-        { id: 104, userId: 'user1', name: '김철수', position: '사원', deptName: '개발팀', type: '연장', title: '연장근무 신청 (2h)', period: '2026-02-12', days: 0, reason: '프로젝트 마감', status: 'approved', appliedAt: '2026-02-12', targetDate: '2026-02-12', approver: 'Steve 매니저' },
-        { id: 105, userId: 'user1', name: '김철수', position: '사원', deptName: '개발팀', type: '재택', title: '재택근무 신청', period: '2026-02-03', days: 1, reason: '집중 근무', status: 'rejected', appliedAt: '2026-02-02', targetDate: '2026-02-03', approver: 'Kim 이사' },
-    ])
+const formatPeriod = (start, end) => {
+  const safeStart = formatDateTime(start) || formatDate(start)
+  const safeEnd = formatDateTime(end) || formatDate(end)
+  if (!safeStart && !safeEnd) return '-'
+  if (!safeEnd || safeStart === safeEnd) return safeStart
+  return `${safeStart} ~ ${safeEnd}`
+}
 
-    // 4. Flexible Work Plans Data (Mock for now)
-    const flexibleWorkPlans = ref([
-        { id: 1, userId: 'user1', name: '김철수', position: '대리', dept: '개발팀', period: '02.23 - 02.27', type: '시차출퇴근', status: 'pending' },
-        { id: 2, userId: 'user2', name: '이영희', position: '사원', dept: '개발팀', period: '02.23 - 02.27', type: '선택적근로', status: 'pending' },
-        { id: 3, userId: 'user3', name: '박민수', position: '과장', dept: '영업팀', period: '02.23 - 02.27', type: '재택근무', status: 'approved' },
-        { id: 4, userId: 'user4', name: '최자바', position: '팀장', dept: '개발팀', period: '02.23 - 02.27', type: '시차출퇴근', status: 'rejected' },
-        { id: 5, userId: 'user5', name: '정뷰', position: '사원', dept: '디자인', period: '02.23 - 02.27', type: '시차출퇴근', status: 'pending' },
-    ])
+const toRequestStatus = (value) => {
+  const normalized = String(value || '').toUpperCase()
+  if (normalized === 'APPROVED') return 'approved'
+  if (normalized === 'REJECTED') return 'rejected'
+  if (normalized === 'CANCELLED') return 'cancelled'
+  return 'pending'
+}
 
-    // Current User Check-in/out State
-    const checkInTime = ref(null)
-    const checkOutTime = ref(null)
+const toAttendanceStatus = (value) => {
+  const normalized = String(value || '').toUpperCase()
+  if (normalized === 'TARDY' || normalized === 'LATE') return 'tardy'
+  if (normalized === 'EARLY_LEAVE') return 'early_leave'
+  if (normalized === 'ABSENT') return 'absent'
+  if (normalized === 'VACATION' || normalized === 'LEAVE') return 'vacation'
+  return 'normal'
+}
 
-    // --- Actions ---
+const calculateWorkHours = (inTime, outTime) => {
+  if (!inTime || !outTime) return '0h'
+  const [h1, m1] = String(inTime).slice(0, 5).split(':').map(Number)
+  const [h2, m2] = String(outTime).slice(0, 5).split(':').map(Number)
+  const diffMinutes = (h2 * 60 + m2) - (h1 * 60 + m1)
+  if (diffMinutes <= 0) return '0h'
+  const hours = Math.floor(diffMinutes / 60)
+  const minutes = diffMinutes % 60
+  return `${hours}h ${String(minutes).padStart(2, '0')}m`
+}
 
-    // Fetch Monthly Summary
-    const fetchMonthlySummary = async (year, month) => {
-        try {
-            const response = await api.get('/v1/attendance/summary', {
-                params: { year, month }
-            })
-            monthlySummary.value = response.data
-        } catch (error) {
-            console.error('Failed to fetch monthly summary:', error)
-        }
-    }
-
-    // Fetch Monthly Records
-    const fetchMonthlyRecords = async (year, month, status = null) => {
-        isLoading.value = true
-        try {
-            const params = { year, month }
-            if (status) params.status = status
-            const response = await api.get('/v1/attendance/records', { params })
-
-            // Transform backend data to frontend format
-            dailyAttendance.value = response.data.map(record => ({
-                id: record.attendanceId,
-                date: record.workDate,
-                checkIn: record.checkInTime ? record.checkInTime.substring(0, 5) : null,
-                checkOut: record.checkOutTime ? record.checkOutTime.substring(0, 5) : null,
-                status: record.status.toLowerCase(),
-                statusDescription: record.statusDescription,
-                workHours: calculateWorkHours(record.checkInTime, record.checkOutTime)
-            }))
-
-            // Update check-in/out time if it's today
-            const today = new Date().toISOString().split('T')[0]
-            const todaysRecord = dailyAttendance.value.find(r => r.date === today)
-            if (todaysRecord) {
-                checkInTime.value = todaysRecord.checkIn
-                checkOutTime.value = todaysRecord.checkOut
-            } else {
-                checkInTime.value = null
-                checkOutTime.value = null
-            }
-        } catch (error) {
-            console.error('Failed to fetch monthly records:', error)
-        } finally {
-            isLoading.value = false
-        }
-    }
-
-    // Attendance Actions
-    const clockIn = async (tardyReason = null) => {
-        try {
-            await api.post('/v1/attendance/clock-in', { tardyReason })
-            // Re-fetch records for the current month
-            const now = new Date()
-            await fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1)
-            await fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1)
-            return true
-        } catch (error) {
-            console.error('Clock-in failed:', error)
-            throw error
-        }
-    }
-
-    const clockOut = async () => {
-        try {
-            await api.put('/v1/attendance/clock-out')
-            const now = new Date()
-            await fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1)
-            await fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1)
-            return true
-        } catch (error) {
-            console.error('Clock-out failed:', error)
-            throw error
-        }
-    }
-
-    // Helper functions
-    const calculateWorkHours = (inTime, outTime) => {
-        if (!inTime || !outTime) return '0h'
-        const [h1, m1] = inTime.split(':').map(Number)
-        const [h2, m2] = outTime.split(':').map(Number)
-        let diffMs = (h2 * 60 + m2) - (h1 * 60 + m1)
-        if (diffMs < 0) return '0h'
-
-        const h = Math.floor(diffMs / 60)
-        const m = diffMs % 60
-        return `${h}h ${String(m).padStart(2, '0')}m`
-    }
-
-    // Admin Actions (Keep existing for UI consistency for now)
-    const updateDailyAttendance = (id, updates) => {
-        const idx = dailyAttendance.value.findIndex(item => item.id === id)
-        if (idx !== -1) {
-            dailyAttendance.value[idx] = { ...dailyAttendance.value[idx], ...updates }
-        }
-    }
-
-    const updateLeaveStatus = (id, status, rejectReason = '') => {
-        const idx = leaveRequests.value.findIndex(item => item.id === id)
-        if (idx !== -1) {
-            leaveRequests.value[idx].status = status
-            if (status === 'rejected' && rejectReason) {
-                leaveRequests.value[idx].rejectReason = rejectReason
-            }
-        }
-    }
-
-    const updateFlexibleStatus = (id, status, rejectReason = '') => {
-        const idx = flexibleWorkPlans.value.findIndex(item => item.id === id)
-        if (idx !== -1) {
-            flexibleWorkPlans.value[idx].status = status
-            if (status === 'rejected' && rejectReason) {
-                flexibleWorkPlans.value[idx].rejectReason = rejectReason
-            }
-        }
-    }
-
-    const setCheckInTime = (time) => {
-        checkInTime.value = time
-    }
-
-    const setCheckOutTime = (time) => {
-        checkOutTime.value = time
-    }
-
-    // 5. Leave State
-    const leaveBalance = ref({
-        totalAnnualLeave: 0,
-        usedAnnualLeave: 0,
-        pendingAnnualLeave: 0,
-        remainingAnnualLeave: 0
-    })
-    const myLeaveRequestsList = ref([])
-
-    // ... Actions ...
-
-    // Fetch Leave Balance
-    const fetchLeaveBalance = async () => {
-        try {
-            const response = await api.get('/v1/leaves/balance')
-            leaveBalance.value = response.data
-        } catch (error) {
-            console.error('Failed to fetch leave balance:', error)
-        }
-    }
-
-    // Fetch My Leave Requests
-    const fetchMyLeaveRequests = async (page = 1, size = 10) => {
-        try {
-            const response = await api.get('/v1/leaves/my-requests', {
-                params: { page, size }
-            })
-            myLeaveRequestsList.value = response.data.list
-        } catch (error) {
-            console.error('Failed to fetch my leave requests:', error)
-        }
-    }
-
-    // Apply for Leave
-    const applyLeave = async (payload) => {
-        try {
-            await api.post('/v1/leaves/apply', payload)
-            await fetchLeaveBalance()
-            await fetchMyLeaveRequests()
-            return true
-        } catch (error) {
-            console.error('Failed to apply for leave:', error)
-            throw error
-        }
-    }
-
-    // Cancel Leave
-    const cancelLeave = async (leaveRequestId) => {
-        try {
-            await api.put(`/v1/leaves/${leaveRequestId}/cancel`)
-            await fetchLeaveBalance()
-            await fetchMyLeaveRequests()
-            return true
-        } catch (error) {
-            console.error('Failed to cancel leave:', error)
-            throw error
-        }
-    }
-
-    // ... existing actions ...
-
-    return {
-        dailyAttendance,
-        monthlySummary,
-        leaveRequests,
-        flexibleWorkPlans,
-        isLoading,
-        leaveBalance,
-        myLeaveRequestsList,
-        updateDailyAttendance,
-        updateLeaveStatus,
-        updateFlexibleStatus,
-        myLeaveRequests, // This was a computed for mock data, I'll keep it but maybe it should use myLeaveRequestsList now
-        checkInTime,
-        checkOutTime,
-        setCheckInTime,
-        setCheckOutTime,
-        fetchMonthlySummary,
-        fetchMonthlyRecords,
-        clockIn,
-        clockOut,
-        fetchLeaveBalance,
-        fetchMyLeaveRequests,
-        applyLeave,
-        cancelLeave
-    }
+const placeholderIdentity = (employeeId) => ({
+  name: `사원 #${employeeId ?? '-'}`,
+  position: '직원',
+  deptName: '-',
 })
 
+const mapLeaveRequest = (item) => ({
+  id: item.leaveRequestId,
+  leaveRequestId: item.leaveRequestId,
+  employeeId: item.employeeId,
+  ...placeholderIdentity(item.employeeId),
+  type: '휴가',
+  leaveType: item.leaveType,
+  title: `${item.leaveType || '휴가'} 신청`,
+  period: formatPeriod(item.startDate, item.endDate),
+  targetDate: formatDate(item.startDate),
+  startDate: formatDate(item.startDate),
+  endDate: formatDate(item.endDate),
+  applyDate: formatDate(item.startDate),
+  usedDays: Number(item.usedDays || 0),
+  days: Number(item.usedDays || 0),
+  reason: item.reason || '',
+  status: toRequestStatus(item.leaveStatus),
+  rawStatus: item.leaveStatus,
+  appliedAt: formatDate(item.startDate),
+  approver: '-',
+  rejectReason: item.rejectReason || '',
+  category: 'leave',
+})
+
+const mapOvertimeRequest = (item) => ({
+  id: item.overtimeId,
+  overtimeId: item.overtimeId,
+  employeeId: item.employeeId,
+  ...placeholderIdentity(item.employeeId),
+  type: '연장근무',
+  title: '연장근무 신청',
+  period: formatPeriod(item.startTime, item.endTime),
+  targetDate: formatDate(item.workDate),
+  workDate: formatDate(item.workDate),
+  startTime: formatDateTime(item.startTime),
+  endTime: formatDateTime(item.endTime),
+  days: 0,
+  reason: item.reason || '',
+  status: toRequestStatus(item.approvalStatus),
+  rawStatus: item.approvalStatus,
+  appliedAt: formatDate(item.workDate),
+  approver: '-',
+  rejectReason: item.rejectReason || '',
+  category: 'work',
+})
+
+const mapBusinessTripRequest = (item) => ({
+  id: item.tripId,
+  tripId: item.tripId,
+  employeeId: item.employeeId,
+  ...placeholderIdentity(item.employeeId),
+  type: item.tripType === 'BUSINESS_TRIP' ? '출장' : '외근',
+  tripType: item.tripType,
+  title: `${item.tripType === 'BUSINESS_TRIP' ? '출장' : '외근'} 신청`,
+  period: formatPeriod(item.startDatetime, item.endDatetime),
+  targetDate: formatDateTime(item.startDatetime),
+  destination: item.destination || '',
+  reason: item.reason || '',
+  status: toRequestStatus(item.approvalStatus),
+  rawStatus: item.approvalStatus,
+  appliedAt: formatDateTime(item.startDatetime),
+  approver: '-',
+  rejectReason: item.rejectReason || '',
+  category: 'work',
+})
+
+const mapWeeklySchedule = (item) => ({
+  id: item.weeklyId,
+  weeklyId: item.weeklyId,
+  employeeId: item.employeeId,
+  ...placeholderIdentity(item.employeeId),
+  period: formatPeriod(item.startDate, item.endDate),
+  startDate: formatDateTime(item.startDate),
+  endDate: formatDateTime(item.endDate),
+  planDate: formatDate(item.planDate),
+  type: item.workForm || '유연근무',
+  workForm: item.workForm,
+  scheduleTitle: item.scheduleTitle || '유연근무 신청',
+  title: item.scheduleTitle || '유연근무 신청',
+  dept: '-',
+  reason: item.memo || '',
+  memo: item.memo || '',
+  status: toRequestStatus(item.approvalStatus),
+  rawStatus: item.approvalStatus,
+  rejectionReason: '',
+  appliedAt: formatDateTime(item.createdAt) || formatDate(item.planDate),
+  category: 'work',
+})
+
+const sortByAppliedAtDesc = (items) =>
+  [...items].sort((a, b) => String(b.appliedAt || '').localeCompare(String(a.appliedAt || '')))
+
+export const useAttendanceStore = defineStore('attendance', () => {
+  const dailyAttendance = ref([])
+  const monthlySummary = ref({
+    normalCount: 0,
+    tardyCount: 0,
+    earlyLeaveCount: 0,
+    absentCount: 0,
+    vacationCount: 0,
+  })
+  const leaveBalance = ref({
+    totalAnnualLeave: 0,
+    usedAnnualLeave: 0,
+    pendingAnnualLeave: 0,
+    remainingAnnualLeave: 0,
+  })
+  const myLeaveRequestsList = ref([])
+  const requestHistory = ref([])
+  const leaveRequests = ref([])
+  const flexibleWorkPlans = ref([])
+  const overtimeRequests = ref([])
+  const businessTripRequests = ref([])
+  const checkInTime = ref(null)
+  const checkOutTime = ref(null)
+  const isLoading = ref(false)
+  const requestCounts = ref({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  })
+
+  const refreshCurrentMonth = async () => {
+    const now = new Date()
+    await Promise.all([
+      fetchMonthlyRecords(now.getFullYear(), now.getMonth() + 1),
+      fetchMonthlySummary(now.getFullYear(), now.getMonth() + 1),
+    ])
+  }
+
+  const fetchMonthlySummary = async (year, month) => {
+    const response = await getAttendanceSummary({ year, month })
+    monthlySummary.value = response.data
+  }
+
+  const fetchMonthlyRecords = async (year, month, status = null) => {
+    isLoading.value = true
+    try {
+      const params = { year, month }
+      if (status && status !== 'all') params.status = status.toUpperCase()
+      const response = await getAttendanceRecords(params)
+      dailyAttendance.value = response.data.map((record) => ({
+        id: record.attendanceId,
+        attendanceId: record.attendanceId,
+        ...placeholderIdentity(record.employeeId),
+        date: formatDate(record.workDate),
+        checkIn: formatTime(record.checkInTime),
+        checkOut: formatTime(record.checkOutTime),
+        status: toAttendanceStatus(record.status),
+        statusDescription: record.statusDescription,
+        memo: record.statusDescription,
+        workHours: calculateWorkHours(record.checkInTime, record.checkOutTime),
+      }))
+
+      const today = formatDate(new Date().toISOString())
+      const todaysRecord = dailyAttendance.value.find((record) => record.date === today)
+      checkInTime.value = todaysRecord?.checkIn || null
+      checkOutTime.value = todaysRecord?.checkOut || null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const clockIn = async (tardyReason = null) => {
+    await clockInRequest({ tardyReason })
+    await refreshCurrentMonth()
+    return true
+  }
+
+  const clockOut = async () => {
+    await clockOutRequest()
+    await refreshCurrentMonth()
+    return true
+  }
+
+  const updateDailyAttendance = async (attendance) => {
+    await modifyAttendanceByAdmin(attendance)
+  }
+
+  const fetchLeaveBalance = async () => {
+    const response = await getLeaveBalanceRequest()
+    leaveBalance.value = response.data
+  }
+
+  const fetchMyLeaveRequests = async (page = 1, size = 20) => {
+    const response = await getMyLeaveRequests({ page, size })
+    myLeaveRequestsList.value = (response.data?.content || []).map(mapLeaveRequest)
+    return response.data
+  }
+
+  const refreshRequestCounts = async () => {
+    const [leaveResponse, overtimeResponse, tripResponse, weeklyResponse] = await Promise.all([
+      getLeaveStatusCounts(),
+      getOvertimeStatusCounts(),
+      getBusinessTripStatusCounts(),
+      getWeeklyWorkScheduleStatusCounts(),
+    ])
+
+    requestCounts.value = {
+      pending:
+        (leaveResponse.data?.pendingCount || 0) +
+        (overtimeResponse.data?.pendingCount || 0) +
+        (tripResponse.data?.pendingCount || 0) +
+        (weeklyResponse.data?.pendingCount || 0),
+      approved:
+        (leaveResponse.data?.approvedCount || 0) +
+        (overtimeResponse.data?.approvedCount || 0) +
+        (tripResponse.data?.approvedCount || 0) +
+        (weeklyResponse.data?.approvedCount || 0),
+      rejected:
+        (leaveResponse.data?.rejectedCount || 0) +
+        (overtimeResponse.data?.rejectedCount || 0) +
+        (tripResponse.data?.rejectedCount || 0) +
+        (weeklyResponse.data?.rejectedCount || 0),
+    }
+  }
+
+  const fetchRequestHistory = async () => {
+    const [leaveResponse, overtimeResponse, tripResponse, weeklyResponse] = await Promise.all([
+      getMyLeaveRequests({ page: 1, size: 100 }),
+      getMyOvertimeRequests({ page: 1, size: 100 }),
+      getMyBusinessTripRequests({ page: 1, size: 100 }),
+      getMyWeeklyWorkSchedules({ page: 1, size: 100 }),
+    ])
+
+    const history = [
+      ...(leaveResponse.data?.content || []).map(mapLeaveRequest),
+      ...(overtimeResponse.data?.content || []).map(mapOvertimeRequest),
+      ...(tripResponse.data?.content || []).map(mapBusinessTripRequest),
+      ...(weeklyResponse.data?.content || []).map(mapWeeklySchedule),
+    ]
+
+    requestHistory.value = sortByAppliedAtDesc(history)
+    return requestHistory.value
+  }
+
+  const applyLeave = async (payload) => {
+    await applyLeaveRequest(payload)
+    await Promise.all([fetchLeaveBalance(), fetchMyLeaveRequests(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const cancelLeave = async (leaveRequestId) => {
+    await cancelLeaveRequest(leaveRequestId)
+    await Promise.all([fetchLeaveBalance(), fetchMyLeaveRequests(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const fetchAdminLeaveRequestsList = async (page = 1, size = 100, status = null) => {
+    const params = { page, size }
+    if (status) params.status = status.toUpperCase()
+    const response = await getAdminLeaveRequests(params)
+    leaveRequests.value = (response.data?.content || []).map(mapLeaveRequest)
+    return response.data
+  }
+
+  const processLeaveRequests = async (ids, approve, rejectReason = '') => {
+    await Promise.all(
+      ids.map((leaveRequestId) =>
+        processLeave({
+          leaveRequestId,
+          approve,
+          rejectReason: approve ? null : rejectReason,
+        }),
+      ),
+    )
+    await fetchAdminLeaveRequestsList()
+  }
+
+  const fetchMyOvertimeRequestsList = async (page = 1, size = 100) => {
+    const response = await getMyOvertimeRequests({ page, size })
+    overtimeRequests.value = (response.data?.content || []).map(mapOvertimeRequest)
+    return response.data
+  }
+
+  const applyOvertime = async (payload) => {
+    await applyOvertimeRequest(payload)
+    await Promise.all([fetchMyOvertimeRequestsList(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const cancelOvertimeRequestById = async (overtimeId) => {
+    await cancelOvertime(overtimeId)
+    await Promise.all([fetchMyOvertimeRequestsList(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const fetchAdminOvertimeRequestsList = async (page = 1, size = 100, status = null) => {
+    const params = { page, size }
+    if (status) params.status = status.toUpperCase()
+    const response = await getAdminOvertimeRequests(params)
+    overtimeRequests.value = (response.data?.content || []).map(mapOvertimeRequest)
+    return response.data
+  }
+
+  const processOvertimeRequests = async (ids, approve, rejectReason = '') => {
+    await Promise.all(
+      ids.map((overtimeId) =>
+        processOvertime({
+          overtimeId,
+          approve,
+          rejectReason: approve ? null : rejectReason,
+        }),
+      ),
+    )
+    await fetchAdminOvertimeRequestsList()
+  }
+
+  const fetchMyBusinessTripRequestsList = async (page = 1, size = 100) => {
+    const response = await getMyBusinessTripRequests({ page, size })
+    businessTripRequests.value = (response.data?.content || []).map(mapBusinessTripRequest)
+    return response.data
+  }
+
+  const submitBusinessTrip = async (payload) => {
+    await applyBusinessTrip(payload)
+    await Promise.all([fetchMyBusinessTripRequestsList(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const cancelBusinessTripRequestById = async (tripId) => {
+    await cancelBusinessTrip(tripId)
+    await Promise.all([fetchMyBusinessTripRequestsList(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const fetchAdminBusinessTripRequestsList = async (page = 1, size = 100, status = null) => {
+    const params = { page, size }
+    if (status) params.status = status.toUpperCase()
+    const response = await getAdminBusinessTripRequests(params)
+    businessTripRequests.value = (response.data?.content || []).map(mapBusinessTripRequest)
+    return response.data
+  }
+
+  const processBusinessTripRequests = async (ids, approve, rejectReason = '') => {
+    await Promise.all(
+      ids.map((tripId) =>
+        processBusinessTrip({
+          tripId,
+          approve,
+          rejectReason: approve ? null : rejectReason,
+        }),
+      ),
+    )
+    await fetchAdminBusinessTripRequestsList()
+  }
+
+  const fetchMyFlexibleWorkPlans = async (page = 1, size = 100) => {
+    const response = await getMyWeeklyWorkSchedules({ page, size })
+    flexibleWorkPlans.value = (response.data?.content || []).map(mapWeeklySchedule)
+    return response.data
+  }
+
+  const submitWeeklyWorkSchedule = async (payload) => {
+    await applyWeeklyWorkSchedule(payload)
+    await Promise.all([fetchMyFlexibleWorkPlans(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const cancelWeeklyWorkScheduleRequestById = async (weeklyId) => {
+    await cancelWeeklyWorkSchedule(weeklyId)
+    await Promise.all([fetchMyFlexibleWorkPlans(), fetchRequestHistory(), refreshRequestCounts()])
+    return true
+  }
+
+  const fetchTeamFlexibleWorkPlans = async (page = 1, size = 100, status = null) => {
+    const params = { page, size }
+    if (status) params.status = status.toUpperCase()
+    const response = await getTeamWeeklyWorkSchedules(params)
+    flexibleWorkPlans.value = (response.data?.content || []).map(mapWeeklySchedule)
+    return response.data
+  }
+
+  const processFlexiblePlans = async (ids, approve) => {
+    await Promise.all(ids.map((weeklyId) => processWeeklyWorkSchedule({ weeklyId, approve })))
+    await fetchTeamFlexibleWorkPlans()
+  }
+
+  return {
+    businessTripRequests,
+    checkInTime,
+    checkOutTime,
+    dailyAttendance,
+    flexibleWorkPlans,
+    isLoading,
+    leaveBalance,
+    leaveRequests,
+    monthlySummary,
+    myLeaveRequests: computed(() => myLeaveRequestsList.value),
+    myLeaveRequestsList,
+    overtimeRequests,
+    requestCounts,
+    requestHistory,
+    applyLeave,
+    applyOvertime,
+    cancelBusinessTrip: cancelBusinessTripRequestById,
+    cancelLeave,
+    cancelOvertime: cancelOvertimeRequestById,
+    cancelWeeklyWorkSchedule: cancelWeeklyWorkScheduleRequestById,
+    clockIn,
+    clockOut,
+    fetchAdminBusinessTripRequestsList,
+    fetchAdminLeaveRequestsList,
+    fetchAdminOvertimeRequestsList,
+    fetchAttendanceRecords: fetchMonthlyRecords,
+    fetchLeaveBalance,
+    fetchMonthlyRecords,
+    fetchMonthlySummary,
+    fetchMyBusinessTripRequestsList,
+    fetchMyFlexibleWorkPlans,
+    fetchMyLeaveRequests,
+    fetchMyOvertimeRequestsList,
+    fetchRequestHistory,
+    fetchTeamFlexibleWorkPlans,
+    processBusinessTripRequests,
+    processFlexiblePlans,
+    processLeaveRequests,
+    processOvertimeRequests,
+    refreshRequestCounts,
+    submitBusinessTrip,
+    submitWeeklyWorkSchedule,
+    updateDailyAttendance,
+  }
+})
