@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { clearLoginSession, getAccessToken } from '@/utils/auth'
+import { expireSessionAndRedirectToLogin, getAccessToken } from '@/utils/auth'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1',
@@ -21,7 +21,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      clearLoginSession()
+      expireSessionAndRedirectToLogin('인증이 필요합니다.')
     }
     return Promise.reject(error)
   },
