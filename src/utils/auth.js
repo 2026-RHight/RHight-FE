@@ -87,6 +87,8 @@ const readSessionAllowedViewCodes = () => {
 export const sessionRoleRef = ref(readSessionItem(AUTH_KEYS.role, USER_ROLES.user))
 export const sessionRoleCodesRef = ref(readSessionRoleCodes())
 export const sessionAllowedViewCodesRef = ref(readSessionAllowedViewCodes())
+export const authExpiredModalVisible = ref(false)
+export const authExpiredMessage = ref('인증이 필요합니다.')
 
 const syncSessionAuthState = () => {
   sessionRoleRef.value = readSessionItem(AUTH_KEYS.role, USER_ROLES.user)
@@ -225,4 +227,32 @@ export const clearLoginSession = () => {
   sessionStorage.removeItem(AUTH_KEYS.lastLoginAt)
   syncSessionAuthState()
   dispatchSessionStorageChanged()
+}
+
+let isAuthRedirectInProgress = false
+
+export const expireSessionAndRedirectToLogin = (message = '') => {
+  clearLoginSession()
+
+  if (typeof window === 'undefined' || isAuthRedirectInProgress) return
+
+  const currentPath = window.location.pathname || ''
+  if (currentPath === '/login') return
+
+  isAuthRedirectInProgress = true
+  authExpiredMessage.value = message || '인증이 필요합니다.'
+  authExpiredModalVisible.value = true
+}
+
+export const confirmAuthExpiredRedirect = () => {
+  if (typeof window === 'undefined') return
+
+  authExpiredModalVisible.value = false
+  window.location.replace('/login')
+}
+
+export const resetAuthExpiredRedirectState = () => {
+  isAuthRedirectInProgress = false
+  authExpiredModalVisible.value = false
+  authExpiredMessage.value = '인증이 필요합니다.'
 }

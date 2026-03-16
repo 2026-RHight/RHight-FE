@@ -12,6 +12,17 @@
     <template v-else>
       <router-view />
     </template>
+
+    <ActionConfirmModal
+      :model-value="authExpiredModalVisible"
+      title="인증 만료"
+      :message="authExpiredMessage"
+      confirm-text="닫기"
+      :hide-cancel="true"
+      :loading="false"
+      @update:modelValue="handleAuthExpiredModalVisibility"
+      @confirm="handleAuthExpiredConfirm"
+    />
   </div>
 </template>
 
@@ -19,8 +30,15 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePerformanceStore } from '@/store/performance'
+import ActionConfirmModal from '@/components/common/ActionConfirmModal.vue'
 import Headerbar from '@/components/layout/Headerbar.vue'
 import Sidebar from '@/components/layout/Sidebar.vue'
+import {
+  authExpiredMessage,
+  authExpiredModalVisible,
+  confirmAuthExpiredRedirect,
+  resetAuthExpiredRedirectState,
+} from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -56,6 +74,10 @@ const handleNavClick = (nav) => {
 
 // 라우트 변경 감지하여 헤더 메뉴 활성화 상태 동기화
 watch(() => route.path, (newPath) => {
+  if (newPath === '/login') {
+    resetAuthExpiredRedirectState()
+  }
+
   if (newPath.startsWith('/approval')) {
     activeNav.value = '전자결재'
   } else if (newPath.startsWith('/attendance')) {
@@ -72,4 +94,13 @@ watch(() => route.path, (newPath) => {
     activeNav.value = '메인'
   }
 }, { immediate: true })
+
+const handleAuthExpiredConfirm = () => {
+  confirmAuthExpiredRedirect()
+}
+
+const handleAuthExpiredModalVisibility = (visible) => {
+  if (visible) return
+  confirmAuthExpiredRedirect()
+}
 </script>
