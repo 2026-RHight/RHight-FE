@@ -212,6 +212,7 @@ export const setLoginSession = ({
 }
 
 export const clearLoginSession = () => {
+  if (typeof window === 'undefined') return
   sessionStorage.setItem(AUTH_KEYS.loggedIn, 'false')
   sessionStorage.removeItem(AUTH_KEYS.userId)
   sessionStorage.removeItem(AUTH_KEYS.employeeId)
@@ -232,9 +233,8 @@ export const clearLoginSession = () => {
 let isAuthRedirectInProgress = false
 
 export const expireSessionAndRedirectToLogin = (message = '') => {
-  clearLoginSession()
-
   if (typeof window === 'undefined' || isAuthRedirectInProgress) return
+  clearLoginSession()
 
   const currentPath = window.location.pathname || ''
   if (currentPath === '/login') return

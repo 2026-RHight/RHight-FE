@@ -21,6 +21,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
+      error.__authExpiredHandled = true
       expireSessionAndRedirectToLogin('인증이 필요합니다.')
     }
     return Promise.reject(error)

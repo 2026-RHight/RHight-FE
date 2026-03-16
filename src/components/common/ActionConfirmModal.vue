@@ -2,7 +2,7 @@
   <BaseModal
     :model-value="modelValue"
     :width="width"
-    :closable="!loading"
+    :closable="!loading && !hideCancel"
     @update:modelValue="emit('update:modelValue', $event)"
   >
     <div class="modal-header">

@@ -793,6 +793,7 @@ onMounted(async () => {
 .profile-avatar-skeleton {
   width: 56px;
   height: 56px;
+  border-radius: 12px;
 }
 
 .profile-avatar-image {
