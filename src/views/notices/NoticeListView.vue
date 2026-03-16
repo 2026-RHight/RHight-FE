@@ -89,22 +89,31 @@
         <div>공지사항 유형</div>
       </div>
 
-      <div v-if="loading" class="empty">공지사항을 불러오는 중입니다.</div>
+      <div v-if="loading" class="list-skeleton">
+        <div v-for="n in 8" :key="`notice-skeleton-${n}`" class="list-row list-row-skeleton">
+          <div class="skeleton-block title-skeleton" />
+          <div class="skeleton-block date-skeleton" />
+          <div class="skeleton-block author-skeleton" />
+          <div><span class="skeleton-block type-skeleton" /></div>
+        </div>
+      </div>
       <div v-else-if="filteredNotices.length === 0" class="empty">검색 결과가 없습니다.</div>
 
-      <div v-for="notice in pagedNotices" :key="notice.id" class="list-row">
-        <button class="title-btn" type="button" @click="openDetailModal(notice)">
-          <span v-if="notice.isPinned" class="pin-badge" aria-label="고정">
-            <span class="pin-icon" aria-hidden="true"></span>
-          </span>
-          {{ notice.title }}
-        </button>
-        <div class="font-num">{{ notice.createdAt }}</div>
-        <div>{{ notice.department }} ({{ notice.author }})</div>
-        <div><span class="type-chip">{{ notice.typeLabel }}</span></div>
-      </div>
+      <template v-else>
+        <div v-for="notice in pagedNotices" :key="notice.id" class="list-row">
+          <button class="title-btn" type="button" @click="openDetailModal(notice)">
+            <span v-if="notice.isPinned" class="pin-badge" aria-label="고정">
+              <span class="pin-icon" aria-hidden="true"></span>
+            </span>
+            {{ notice.title }}
+          </button>
+          <div class="font-num">{{ notice.createdAt }}</div>
+          <div>{{ notice.department }} ({{ notice.author }})</div>
+          <div><span class="type-chip">{{ notice.typeLabel }}</span></div>
+        </div>
+      </template>
 
-      <div v-if="filteredNotices.length > 0" class="pagination">
+      <div v-if="!loading && filteredNotices.length > 0" class="pagination">
         <button type="button" class="page-btn" :disabled="currentPage === 1" @click="currentPage--">이전</button>
         <span class="page-info font-num">{{ currentPage }} / {{ totalPages }}</span>
         <button type="button" class="page-btn" :disabled="currentPage === totalPages" @click="currentPage++">다음</button>
@@ -232,6 +241,12 @@ onMounted(async () => {
 .list-head{background:var(--gray50);border-bottom:1px solid var(--gray200);font-size:.8rem;font-weight:700;color:var(--gray500)}
 .list-row{border-bottom:1px solid var(--gray100)}
 .list-row:last-child{border-bottom:none}
+.list-skeleton{display:block}
+.list-row-skeleton .skeleton-block{display:block;border-radius:999px}
+.title-skeleton{width:72%;height:18px}
+.date-skeleton{width:82px;height:16px}
+.author-skeleton{width:180px;height:16px}
+.type-skeleton{width:92px;height:24px;border-radius:999px}
 .title-btn{
   border:none;background:transparent;text-align:left;font-size:.9rem;color:var(--gray700);font-weight:600;
   display:flex;align-items:center;gap:8px;

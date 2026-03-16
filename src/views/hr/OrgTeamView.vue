@@ -13,7 +13,8 @@
     </section>
 
     <section class="info-bar">
-      <strong>전체 인원 {{ memberTotal }}명</strong>
+      <strong v-if="loading" class="info-skeleton skeleton-block"></strong>
+      <strong v-else>전체 인원 {{ memberTotal }}명</strong>
       <span v-if="canViewMemberDetail" class="permission-text"></span>
     </section>
 
@@ -27,45 +28,78 @@
       </select>
     </section>
 
-    <section v-for="group in groupedMembers" :key="group.teamName" class="team-section">
-      <div class="team-section-head">
-        <strong>{{ group.teamName }}</strong>
-        <span>{{ group.members.length }}명</span>
-      </div>
-      <div class="member-grid">
-        <article
-          v-for="member in group.members"
-          :key="member.employeeId"
-          class="member-card"
-          :class="{ clickable: canViewMemberDetail }"
-          @click="openMemberDetail(member)"
-        >
-          <div class="profile-top">
-            <div class="profile-avatar">
-              <img
-                v-if="member.profileFileUrl"
-                :src="member.profileFileUrl"
-                alt="프로필 이미지"
-                class="profile-avatar-image"
-              />
-              <span v-else>{{ member.profileInitial }}</span>
+    <template v-if="loading">
+      <section v-for="group in 2" :key="`skeleton-${group}`" class="team-section">
+        <div class="team-section-head">
+          <strong class="team-title-skeleton skeleton-block"></strong>
+          <span class="team-count-skeleton skeleton-block"></span>
+        </div>
+        <div class="member-grid">
+          <article
+            v-for="member in 4"
+            :key="`skeleton-member-${group}-${member}`"
+            class="member-card"
+          >
+            <div class="profile-top">
+              <div class="profile-avatar skeleton-circle skeleton-block"></div>
+              <div class="profile-head profile-head-skeleton">
+                <strong class="member-name-skeleton skeleton-block"></strong>
+                <span class="member-status-skeleton skeleton-block"></span>
+              </div>
             </div>
-            <div class="profile-head">
-              <strong>{{ member.name }}</strong>
-              <span class="status" :class="statusClass(member.status)">{{ member.status }}</span>
-            </div>
-          </div>
 
-          <div class="member-rows">
-            <div class="row"><span>내선</span><strong>{{ member.extension }}</strong></div>
-            <div class="row"><span>연락처</span><strong>{{ member.phone }}</strong></div>
-            <div class="row"><span>이메일</span><strong>{{ member.email }}</strong></div>
-            <div class="row"><span>소속팀</span><strong>{{ member.orgName }}</strong></div>
-            <div class="row"><span>직책/직무/직위</span><strong>{{ member.duty }} · {{ member.job }} · {{ member.position }}</strong></div>
-          </div>
-        </article>
-      </div>
-    </section>
+            <div class="member-rows">
+              <div v-for="row in 5" :key="row" class="row row-skeleton">
+                <span class="skeleton-block"></span>
+                <strong class="skeleton-block"></strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </template>
+
+    <template v-else>
+      <section v-for="group in groupedMembers" :key="group.teamName" class="team-section">
+        <div class="team-section-head">
+          <strong>{{ group.teamName }}</strong>
+          <span>{{ group.members.length }}명</span>
+        </div>
+        <div class="member-grid">
+          <article
+            v-for="member in group.members"
+            :key="member.employeeId"
+            class="member-card"
+            :class="{ clickable: canViewMemberDetail }"
+            @click="openMemberDetail(member)"
+          >
+            <div class="profile-top">
+              <div class="profile-avatar">
+                <img
+                  v-if="member.profileFileUrl"
+                  :src="member.profileFileUrl"
+                  alt="프로필 이미지"
+                  class="profile-avatar-image"
+                />
+                <span v-else>{{ member.profileInitial }}</span>
+              </div>
+              <div class="profile-head">
+                <strong>{{ member.name }}</strong>
+                <span class="status" :class="statusClass(member.status)">{{ member.status }}</span>
+              </div>
+            </div>
+
+            <div class="member-rows">
+              <div class="row"><span>내선</span><strong>{{ member.extension }}</strong></div>
+              <div class="row"><span>연락처</span><strong>{{ member.phone }}</strong></div>
+              <div class="row"><span>이메일</span><strong>{{ member.email }}</strong></div>
+              <div class="row"><span>소속팀</span><strong>{{ member.orgName }}</strong></div>
+              <div class="row"><span>직책/직무/직위</span><strong>{{ member.duty }} · {{ member.job }} · {{ member.position }}</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </template>
 
     <BaseModal v-model="showDetailModal" width="760px">
       <div v-if="selectedMember" class="member-detail">
@@ -192,6 +226,7 @@ const teamMembers = ref([])
 const memberTotal = ref(0)
 const selectedTeam = ref('')
 const teamOptions = ref([])
+const loading = ref(true)
 
 const showDetailModal = ref(false)
 const selectedMember = ref(null)
@@ -286,6 +321,7 @@ const buildTeamOptions = (members) => {
 }
 
 const loadMembers = async () => {
+  loading.value = true
   try {
     const rows = await getMyOrganizationMembers()
     const mapped = (Array.isArray(rows) ? rows : []).map(mapMember)
@@ -301,6 +337,8 @@ const loadMembers = async () => {
     memberTotal.value = 0
     teamOptions.value = []
     alert(error?.response?.data?.error?.message || '내 조직 구성원 조회에 실패했습니다.')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -493,6 +531,12 @@ onMounted(async () => {
   font-weight: 700;
 }
 
+.info-skeleton {
+  width: 160px;
+  height: 26px;
+  border-radius: 10px;
+}
+
 .team-filter-bar {
   margin-top: 8px;
   background: #f8fbff;
@@ -553,10 +597,22 @@ onMounted(async () => {
   font-size: .95rem;
 }
 
+.team-title-skeleton {
+  width: 120px;
+  height: 22px;
+  border-radius: 8px;
+}
+
 .team-section-head span {
   color: #66778f;
   font-size: .82rem;
   font-weight: 600;
+}
+
+.team-count-skeleton {
+  width: 40px;
+  height: 18px;
+  border-radius: 8px;
 }
 
 .member-grid {
@@ -624,9 +680,25 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.profile-head-skeleton {
+  width: 100%;
+}
+
 .profile-head strong {
   font-size: .98rem;
   color: var(--gray800);
+}
+
+.member-name-skeleton {
+  width: 84px;
+  height: 22px;
+  border-radius: 8px;
+}
+
+.member-status-skeleton {
+  width: 48px;
+  height: 20px;
+  border-radius: 999px;
 }
 
 .status {
@@ -673,6 +745,18 @@ onMounted(async () => {
 .row strong {
   color: var(--gray800);
   word-break: break-word;
+}
+
+.row-skeleton span {
+  width: 42px;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.row-skeleton strong {
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
 }
 
 .member-detail {

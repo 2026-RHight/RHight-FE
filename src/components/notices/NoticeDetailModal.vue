@@ -4,14 +4,25 @@
       <button type="button" class="close-btn" aria-label="닫기" @click="emit('close')">×</button>
       <h2>공지사항 상세</h2>
       <header class="detail-head">
-        <h3>{{ resolvedNotice.title }}</h3>
-        <div class="meta-row">
+        <h3 v-if="!loading">{{ resolvedNotice.title }}</h3>
+        <div v-else class="detail-title-skeleton">
+          <span class="skeleton-block" />
+        </div>
+
+        <div v-if="!loading" class="meta-row">
           <span>생성일자: <strong class="font-num">{{ resolvedNotice.createdAt }}</strong></span>
           <span>작성 부서(작성자): <strong>{{ resolvedNotice.department }} ({{ resolvedNotice.author }})</strong></span>
           <span>공지사항 유형: <strong>{{ resolvedNotice.typeLabel }}</strong></span>
         </div>
+        <div v-else class="meta-skeleton-row">
+          <span class="skeleton-block meta-skeleton meta-skeleton-date" />
+          <span class="skeleton-block meta-skeleton meta-skeleton-author" />
+          <span class="skeleton-block meta-skeleton meta-skeleton-type" />
+        </div>
       </header>
-      <div v-if="loading" class="detail-body loading">상세 내용을 불러오는 중입니다.</div>
+      <div v-if="loading" class="detail-body detail-body-skeleton">
+        <span v-for="n in 5" :key="`detail-line-${n}`" class="skeleton-block detail-line-skeleton" />
+      </div>
       <div v-else class="detail-body">{{ resolvedNotice.content }}</div>
     </div>
   </div>
@@ -159,6 +170,16 @@ watch(
   color: var(--gray800);
   font-size: 1.06rem;
 }
+
+.detail-title-skeleton span {
+  display: block;
+  width: 280px;
+  max-width: 100%;
+  height: 24px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
 .meta-row {
   display: flex;
   flex-wrap: wrap;
@@ -166,6 +187,22 @@ watch(
   font-size: 0.82rem;
   color: var(--gray500);
 }
+
+.meta-skeleton-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meta-skeleton {
+  height: 16px;
+  border-radius: 999px;
+}
+
+.meta-skeleton-date { width: 120px; }
+.meta-skeleton-author { width: 220px; }
+.meta-skeleton-type { width: 130px; }
+
 .meta-row strong {
   color: var(--gray700);
   font-weight: 700;
@@ -177,7 +214,25 @@ watch(
   white-space: pre-line;
   padding-bottom: 4px;
 }
-.detail-body.loading{
+
+.detail-body-skeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.detail-line-skeleton {
+  display: block;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.detail-line-skeleton:nth-child(1) { width: 100%; }
+.detail-line-skeleton:nth-child(2) { width: 96%; }
+.detail-line-skeleton:nth-child(3) { width: 92%; }
+.detail-line-skeleton:nth-child(4) { width: 88%; }
+.detail-line-skeleton:nth-child(5) { width: 74%; }
+
+.detail-body.loading {
   color: var(--gray400);
 }
 </style>
