@@ -1,10 +1,23 @@
 <template>
   <div class="dashboard-container">
+    <div class="mobile-approval-main">
+      <header class="mobile-head">
+        <button class="mobile-back" type="button" aria-label="뒤로가기" @click="handleBack">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <div>
+          <h1>전자결재</h1>
+          <p>결재 진행을 확인합니다.</p>
+        </div>
+      </header>
+    </div>
 
     <!-- Top Summary Cards -->
     <div class="stats-grid">
       <!-- 결재 대기 -->
-      <div class="stat-card group" @click="$router.push('/approval/review')">
+      <div class="stat-card group" @click="handleGoReview">
         <div class="card-bg red-bg"></div>
         <div class="card-content">
           <h3 class="stat-label">결재 대기</h3>
@@ -28,7 +41,7 @@
       </div>
 
       <!-- 완료 문서 -->
-      <div class="stat-card group" @click="$router.push('/approval/box')">
+      <div class="stat-card group" @click="$router.push('/approval/box/completed')">
         <div class="card-bg green-bg"></div>
         <div class="card-content">
           <h3 class="stat-label">완료 문서</h3>
@@ -40,6 +53,7 @@
       </div>
 
       <!-- 새 결재 작성 -->
+      <!-- 새 결재 작성 (모바일에서는 숨김) -->
       <button class="action-card" @click="$router.push('/approval/draft')">
         <div class="plus-circle">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -59,7 +73,7 @@
           <h3 class="section-title">
             <span class="dot red-dot"></span> 결재 대기 문서
           </h3>
-          <button class="more-btn" @click="$router.push('/approval/review')">더보기</button>
+          <button class="more-btn" type="button" @click="handleGoReview">더보기</button>
         </div>
         <div class="section-body">
           <table class="dashboard-table">
@@ -92,7 +106,7 @@
           <h3 class="section-title">
             <span class="dot blue-dot"></span> 내가 올린 기안
           </h3>
-          <button class="more-btn" @click="$router.push('/approval/status')">더보기</button>
+          <button class="more-btn" type="button" @click="$router.push('/approval/status')">더보기</button>
         </div>
         <div class="section-body">
           <table class="dashboard-table">
@@ -143,8 +157,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { safeBack } from '@/utils/navigation'
 import ReviewModal from './components/ReviewModal.vue'
 import ApprovalDetailModal from './components/ApprovalDetailModal.vue'
 import {
@@ -244,6 +259,14 @@ const handleDetailAction = async (action) => {
   isDetailModalOpen.value = false
 }
 
+const handleGoReview = () => {
+  router.push('/approval/review')
+}
+
+const handleBack = () => {
+  safeBack(router, '/')
+}
+
 onMounted(loadDashboard)
 </script>
 
@@ -271,6 +294,38 @@ onMounted(loadDashboard)
   margin: 6px 0 0;
   font-size: 1.45rem;
   color: var(--gray800);
+}
+
+.mobile-approval-main {
+  display: none;
+  background: #f5f8fc;
+  border: 1px solid #eef2f7;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.mobile-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-head h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--gray800);
+}
+
+.mobile-head p {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--gray500);
+}
+
+.mobile-back{
+  width:32px;height:32px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;
+  display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer;
+  flex-shrink: 0;
 }
 
 .dashboard-hero-eyebrow {
@@ -334,6 +389,76 @@ onMounted(loadDashboard)
 
 .main-grid.single-section {
   grid-template-columns: 1fr;
+}
+
+@media (max-width: 768px) {
+  .action-card {
+    display: none !important;
+  }
+
+  .mobile-approval-main {
+    display: block;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .grid-section {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stat-card {
+    min-width: 0;
+    min-height: 104px;
+    height: auto;
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  .card-bg {
+    right: -18px;
+    top: -18px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .stat-label {
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+    line-height: 1.2;
+    word-break: keep-all;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+
+  .unit {
+    font-size: 0.72rem;
+    margin-left: 2px;
+  }
+
+  .card-footer {
+    gap: 3px;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    word-break: keep-all;
+  }
+
+  .status-marker {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+  }
 }
 
 /* Stat Cards */
@@ -557,22 +682,31 @@ onMounted(loadDashboard)
 
 .title-cell {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .tag {
-  padding: 2px 6px;
-  background: #f1f3f5;
+  display: inline-block;
+  width: fit-content;
+  padding: 2px 7px;
+  background: #EFF6FF;
   border-radius: 4px;
-  font-size: 0.7rem;
-  color: #868e96;
-  font-weight: 500;
+  font-size: 0.68rem;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .title-text {
-  font-weight: 500;
+  font-size: 0.87rem;
+  font-weight: 600;
   color: #212529;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .new-dot {
@@ -643,13 +777,13 @@ onMounted(loadDashboard)
 }
 
 /* Responsiveness */
-@media (max-width: 1024px) {
+@media (min-width: 769px) and (max-width: 1024px) {
   .dashboard-hero { flex-direction: column; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .main-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .stats-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 </style>

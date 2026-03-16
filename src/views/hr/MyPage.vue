@@ -1,5 +1,47 @@
 <template>
   <div class="mypage">
+    <section class="mobile-mypage">
+      <div class="mobile-head">
+        <button class="mobile-back" type="button" aria-label="뒤로가기" @click="handleBack">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <div class="mobile-avatar">
+          <img
+            v-if="user.profileImage"
+            :src="user.profileImage"
+            alt="프로필 이미지"
+          />
+          <span v-else>{{ user.name.slice(-2) }}</span>
+        </div>
+        <div class="mobile-info">
+          <div class="mobile-name">{{ user.name }}</div>
+          <div class="mobile-dept">{{ user.team }} · {{ user.position }}</div>
+          <span class="status-badge" :class="statusBadgeClass">{{ user.status || '-' }}</span>
+        </div>
+      </div>
+
+      <div class="mobile-rows">
+        <div class="mobile-row">
+          <span class="label">이메일</span>
+          <span class="value">{{ user.email }}</span>
+        </div>
+        <div class="mobile-row">
+          <span class="label">연락처</span>
+          <span class="value">{{ user.phone }}</span>
+        </div>
+        <div class="mobile-row">
+          <span class="label">내선</span>
+          <span class="value">{{ user.extension }}</span>
+        </div>
+        <div class="mobile-row">
+          <span class="label">근무지</span>
+          <span class="value">{{ user.workLocation }}</span>
+        </div>
+      </div>
+    </section>
+
     <!-- 브레드크럼 -->
     <div class="breadcrumb">인사 / 마이페이지</div>
 
@@ -58,15 +100,16 @@
       </div>
     </div>
 
-    <!-- 탭 메뉴 -->
-    <div class="tab-menu">
-      <div
-          v-for="tab in tabs" :key="tab.key"
-          class="tab-item"
-          :class="{ active: activeTab === tab.key }"
-          @click="activeTab = tab.key"
-      >{{ tab.label }}</div>
-    </div>
+    <div class="desktop-tabs">
+      <!-- 탭 메뉴 -->
+      <div class="tab-menu">
+        <div
+            v-for="tab in tabs" :key="tab.key"
+            class="tab-item"
+            :class="{ active: activeTab === tab.key }"
+            @click="activeTab = tab.key"
+        >{{ tab.label }}</div>
+      </div>
 
     <!-- 탭 컨텐츠 -->
     <template v-if="loading">
@@ -92,6 +135,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { safeBack } from '@/utils/navigation'
 import TabInfo from './tabs/TabInfo.vue'
 import TabHistory from './tabs/TabHistory.vue'
 import TabCertificate from './tabs/TabCertificate.vue'
@@ -167,6 +212,8 @@ const user = ref({
   careers: [],
 })
 
+const router = useRouter()
+
 const loadMyPageData = async () => {
   loading.value = true
   try {
@@ -224,6 +271,10 @@ const loadMyPageData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleBack = () => {
+  safeBack(router, '/')
 }
 
 onMounted(() => {

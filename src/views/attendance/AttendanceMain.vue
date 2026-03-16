@@ -1,5 +1,45 @@
 <template>
   <div class="attendance-dashboard">
+    <div class="mobile-attendance">
+      <div class="mobile-head">
+        <button class="mobile-back" type="button" aria-label="뒤로가기" @click="handleBack">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        <div class="mobile-head-content">
+          <h1>근태</h1>
+          <p>출퇴근 기록과 근태 현황을 확인합니다.</p>
+        </div>
+        <span class="status-badge" :class="workStatusClass">{{ workStatusLabel }}</span>
+      </div>
+
+      <div class="mobile-clock card">
+        <div class="mobile-clock-head">
+          <div class="mobile-date">{{ currentDate }}</div>
+          <button type="button" class="mobile-record-btn" @click="$router.push('/attendance/record')">
+            근태 현황
+          </button>
+        </div>
+        <div class="mobile-time">{{ currentTime }}</div>
+        <div class="mobile-location">서울, 대한민국</div>
+
+        <div class="mobile-times">
+          <div>
+            <div class="label">출근</div>
+            <div class="value">{{ checkInTime }}</div>
+          </div>
+          <div>
+            <div class="label">퇴근</div>
+            <div class="value">{{ checkOutTime }}</div>
+          </div>
+        </div>
+
+        <button v-if="!isCheckedIn" class="btn-check-out btn-in" @click="handleCheckIn">출근하기</button>
+        <button v-else class="btn-check-out" @click="handleCheckOut">퇴근하기</button>
+      </div>
+    </div>
+
     <!-- ═══ TOP ROW ═══ -->
     <div class="top-row">
       <!-- 1. 출퇴근 기록 카드 -->
@@ -18,14 +58,13 @@
 
         <div class="clock-actions">
           <div class="time-row">
-            <div class="time-item">
-              <span class="label">출근 시간</span>
-              <span class="value">{{ checkInTime }}</span>
+            <div class="time-item time-item--check-in">
+              <span class="time-item-caption">출근 시간</span>
+              <span class="time-item-value">{{ checkInTime }}</span>
             </div>
-            <div class="divider"></div>
-            <div class="time-item">
-              <span class="label">퇴근 시간</span>
-              <span class="value">{{ checkOutTime }}</span>
+            <div class="time-item time-item--check-out">
+              <span class="time-item-caption">퇴근 시간</span>
+              <span class="time-item-value">{{ checkOutTime }}</span>
             </div>
           </div>
           <button v-if="!isCheckedIn" class="btn-check-out btn-in" @click="handleCheckIn">출근하기</button>
@@ -163,7 +202,7 @@
                 }"
               >
                 {{ day.day }}
-                <div v-if="day.label" :class="day.variant === 'blue' ? 'bar-blue' : 'bar-orange'">
+                <div v-if="day.label" :class="`bar-${day.variant}`">
                   {{ day.label }}
                 </div>
               </div>
@@ -174,64 +213,41 @@
 
       <!-- Right: Applications -->
       <div class="col-right">
-        <!-- Quick App renamed to Vacation App -->
-        <div class="card quick-card">
-          <div class="card-header-row mb-4">
-            <span class="card-title">휴가 신청</span>
-            <span class="more-link" @click="$router.push('/attendance/vacation')">더보기</span>
-          </div>
-          <div class="quick-list">
-            <div class="quick-item" @click="$router.push('/approval/draft')">
-              <div class="icon-circle blue-bg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div class="quick-text">
-                <div class="main-text">연장근무 신청</div>
-                <div class="sub-text">야간 및 휴일 근무</div>
-              </div>
-              <span class="chevron">&gt;</span>
-            </div>
-             <div class="quick-item" @click="$router.push('/approval/draft')">
-              <div class="icon-circle purple-bg">
-                <!-- Business Trip: Briefcase -->
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              </div>
-              <div class="quick-text">
-                <div class="main-text">외근/출장 신청</div>
-                <div class="sub-text">외부 일정 보고</div>
-              </div>
-              <span class="chevron">&gt;</span>
-            </div>
-             <div class="quick-item" @click="$router.push('/approval/draft')">
-              <div class="icon-circle red-bg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-              </div>
-              <div class="quick-text">
-                <div class="main-text">휴가 신청</div>
-                <div class="sub-text">연차, 반차 등</div>
-              </div>
-              <span class="chevron">&gt;</span>
-            </div>
-          </div>
-        </div>
-
         <!-- My Applications -->
         <div class="card history-card" @click="$router.push('/attendance/history')">
            <div class="card-header-row mb-2">
-            <span class="card-title">나의 신청 현황</span>
+            <div class="history-heading">
+              <span class="card-title">나의 신청 현황</span>
+            </div>
             <span class="more-link">더보기</span>
           </div>
           <div class="history-list">
-             <div class="history-item" v-for="app in recentApplications" :key="app.id">
-              <div class="h-top">
-                <span class="status-badge-sm" :class="getApprStatusClass(app.status)">{{ getApprStatusLabel(app.status) }}</span>
-                <span class="h-date">{{ formatHistoryDate(app.appliedAt) }}</span>
+            <div v-if="recentApplications.length" class="history-stack">
+              <div class="history-item" v-for="app in recentApplications" :key="app.id">
+                <div class="history-item-top">
+                  <span class="status-badge-sm" :class="getApprStatusClass(app.status)">{{ getApprStatusLabel(app.status) }}</span>
+                  <span class="history-date-chip">{{ formatHistoryDate(app.appliedAt) }}</span>
+                </div>
+                <div class="history-item-body">
+                  <div class="history-type-row">
+                    <span class="history-type-badge">{{ app.type || '신청' }}</span>
+                    <span v-if="app.period" class="history-period">{{ app.period }}</span>
+                  </div>
+                  <div class="h-title">{{ app.title }}</div>
+                  <div class="history-meta">
+                    <span class="history-meta-label">결재자</span>
+                    <span class="history-meta-value">{{ app.approver || '-' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="h-title">{{ app.title }}</div>
             </div>
-             <div v-if="recentApplications.length === 0" class="no-data-text">
-                신청 내역이 없습니다.
-             </div>
+            <div v-else class="history-empty">
+              <div class="history-empty-icon">+</div>
+              <div class="history-empty-text">
+                <strong>신청 내역이 없습니다.</strong>
+                <span>휴가, 연장근무, 재택근무 신청이 여기 쌓입니다.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -250,17 +266,20 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+import { safeBack } from '@/utils/navigation'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAttendanceStore } from '@/store/attendance'
 import { storeToRefs } from 'pinia'
 import ActionConfirmModal from '@/components/common/ActionConfirmModal.vue'
 
+const router = useRouter()
 const store = useAttendanceStore()
 
 const recentApplications = computed(() => {
   return [...store.requestHistory]
     .sort((a, b) => new Date(b.appliedAt || 0) - new Date(a.appliedAt || 0))
-    .slice(0, 2)
+    .slice(0, 3)
 })
 
 const getApprStatusLabel = (s) => ({ pending: '결재 대기', approved: '승인됨', rejected: '반려됨' }[s])
@@ -406,15 +425,27 @@ const monthBadgeLabel = computed(
   () => `${displayMonth.value.getFullYear()}.${String(displayMonth.value.getMonth() + 1).padStart(2, '0')}`,
 )
 
+const resolveCalendarTone = (event) => {
+  const title = String(event?.title || '')
+  const category = String(event?.category || '').toUpperCase()
+
+  if (title.includes('지각')) return 'tardy'
+  if (title.includes('조퇴')) return 'early_leave'
+  if (title.includes('결근')) return 'absent'
+  if (title.includes('휴가') || category === 'LEAVE') return 'vacation'
+  if (category === 'WEEKLY_SCHEDULE') return 'early_leave'
+  if (category === 'BUSINESS_TRIP') return 'absent'
+  return 'normal'
+}
+
 const eventLabelMap = computed(() => {
   const map = new Map()
   calendarEvents.value.forEach((event) => {
     if (!event.targetDate) return
     if (map.has(event.targetDate)) return
-    const blueCategories = ['ATTENDANCE', 'OVERTIME', 'WEEKLY_SCHEDULE']
     map.set(event.targetDate, {
       label: event.title,
-      variant: blueCategories.includes(event.category) ? 'blue' : 'orange',
+      variant: resolveCalendarTone(event),
     })
   })
   return map
@@ -441,7 +472,7 @@ const calendarWeeks = computed(() => {
         isToday: key === todayKey,
         isCurrentMonth: date.getMonth() === month,
         label: labelInfo?.label || '',
-        variant: labelInfo?.variant || 'blue',
+        variant: labelInfo?.variant || 'normal',
       }
     }),
   )
@@ -562,6 +593,10 @@ watch(displayMonth, async (value) => {
 onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
+
+const handleBack = () => {
+  safeBack(router, '/')
+}
 </script>
 
 <style scoped>
@@ -650,28 +685,163 @@ onUnmounted(() => {
   margin-top: auto;
 }
 .time-row {
-  background: var(--gray50);
-  border-radius: 10px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   margin-bottom: 12px;
 }
-.time-item .label {
-  font-size: 0.82rem;
-  color: var(--gray500);
-  margin-bottom: 2px;
+.time-item {
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #dbe4f0;
+  background: linear-gradient(180deg, #fbfdff 0%, #f2f6fb 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
 }
-.time-item .value {
-  font-size: 1.1rem;
+.time-item--check-in {
+  border-color: #d8e7fb;
+}
+.time-item--check-out {
+  border-color: #dfe6ef;
+}
+
+.mobile-attendance {
+  display: none;
+  background: #f5f8fc;
+  border: 1px solid #eef2f7;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.mobile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobile-back{
+  width:32px;height:32px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;
+  display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer;
+  flex-shrink: 0;
+}
+
+.mobile-head-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-badge {
+  flex-shrink: 0;
+}
+
+.mobile-head h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--gray800);
+}
+
+.mobile-head p {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+  color: var(--gray500);
+}
+
+.mobile-clock {
+  margin-top: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-clock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobile-date {
+  font-size: 0.88rem;
+  color: var(--gray500);
+}
+
+.mobile-record-btn {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #dbe4f3;
+  background: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--gray700);
+  cursor: pointer;
+}
+
+.mobile-record-btn:hover {
+  background: #f8fbff;
+}
+
+.mobile-time {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--gray800);
+}
+
+.mobile-location {
+  font-size: 0.8rem;
+  color: var(--gray400);
+}
+
+.mobile-times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.mobile-times .label {
+  font-size: 0.76rem;
+  color: var(--gray500);
+}
+
+.mobile-times .value {
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--gray800);
 }
-.divider {
-  width: 1px;
-  height: 20px;
-  background: var(--gray300);
+
+@media (max-width: 768px) {
+  .attendance-dashboard {
+    height: auto;
+    overflow: visible;
+  }
+
+  .mobile-attendance {
+    display: block;
+  }
+
+  .top-row,
+  .bottom-row {
+    display: none;
+  }
+}
+.time-item-caption {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gray500);
+}
+.time-item-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--gray800);
 }
 .btn-check-out {
   width: 100%;
@@ -921,7 +1091,11 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
-.bar-blue, .bar-orange {
+.bar-normal,
+.bar-tardy,
+.bar-early_leave,
+.bar-absent,
+.bar-vacation {
   margin-top: 6px;
   font-size: 0.7rem;
   padding: 2px 6px;
@@ -929,18 +1103,18 @@ onUnmounted(() => {
   width: 90%;
   text-align: center;
 }
-.bar-blue {
-  background: #E0F7FA;
-  color: var(--primary);
-}
-.bar-orange {
-
-  background: #FFF3E0;
-  color: var(--orange);
-}
-.today .bar-blue {
-   background: rgba(255,255,255,0.2);
-   color: #fff;
+.bar-normal { background: #DBEAFE; color: #1D4ED8; }
+.bar-tardy { background: #FED7AA; color: #C2410C; }
+.bar-early_leave { background: #FDE68A; color: #92400E; }
+.bar-absent { background: #E2E8F0; color: #475569; }
+.bar-vacation { background: #BBF7D0; color: #15803D; }
+.today .bar-normal,
+.today .bar-tardy,
+.today .bar-early_leave,
+.today .bar-absent,
+.today .bar-vacation {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
 }
 
 /* Quick Apps */
@@ -952,6 +1126,9 @@ onUnmounted(() => {
 .history-card {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 .history-card:hover {
   transform: translateY(-2px);
@@ -1006,27 +1183,41 @@ onUnmounted(() => {
   color: var(--gray500);
   cursor: pointer;
 }
-.history-item {
-  background: var(--gray50);
-  padding: 16px;
-  border-radius: 10px;
-  margin-bottom: 0px;
+.history-heading {
+  display: flex;
+  flex-direction: column;
 }
-.h-top {
+.history-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.history-item {
+  background: rgba(255,255,255,0.9);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+.history-list {
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+.history-item-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .status-badge-sm {
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-size: 0.72rem;
+  padding: 5px 10px;
+  border-radius: 999px;
   font-weight: 700;
 }
 .status-badge-sm.warning {
   background: #FFF8E1;
-  color: #FBC02D;
+  color: #B7791F;
 }
 .status-badge-sm.success {
   background: #DCFCE7;
@@ -1036,15 +1227,97 @@ onUnmounted(() => {
   background: #FEE2E2;
   color: #991B1B;
 }
-.no-data-text { font-size: 0.9rem; color: var(--gray500); text-align: center; padding: 12px; }
-.h-date {
-  font-size: 0.8rem;
-  color: var(--gray400);
+.history-date-chip {
+  font-size: 0.76rem;
+  color: var(--gray500);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.history-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.history-type-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #e8f1ff;
+  color: #2155a3;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.history-period {
+  font-size: 0.78rem;
+  color: var(--gray500);
+  line-height: 1.4;
 }
 .h-title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 700;
   color: var(--gray800);
+  line-height: 1.45;
+}
+.history-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray500);
+  font-size: 0.78rem;
+}
+.history-meta-label {
+  color: var(--gray400);
+}
+.history-meta-value {
+  color: var(--gray700);
+  font-weight: 600;
+}
+.history-empty {
+  flex: 1;
+  min-height: 220px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+}
+.history-empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #eef6ff;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.history-empty-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.history-empty-text strong {
+  color: var(--gray700);
+  font-size: 0.95rem;
+}
+.history-empty-text span {
+  color: var(--gray500);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .mb-4 { margin-bottom: 16px; }
