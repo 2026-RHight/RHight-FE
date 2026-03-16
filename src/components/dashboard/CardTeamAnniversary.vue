@@ -4,6 +4,20 @@
       <h3>팀 기념일</h3>
     </div>
     <div class="card-body" style="padding:8px 18px">
+      <div v-if="loading">
+        <div v-for="n in 3" :key="`birthday-skeleton-${n}`" class="bday-item bday-item-skeleton">
+          <div class="bday-icon skeleton-block"></div>
+          <div class="bday-info">
+            <div class="bday-name-skeleton skeleton-block"></div>
+            <div class="bday-type-skeleton skeleton-block"></div>
+          </div>
+          <div class="bday-right">
+            <div class="bday-date-skeleton skeleton-block"></div>
+            <div class="bday-dday-skeleton skeleton-block"></div>
+          </div>
+        </div>
+      </div>
+      <template v-else>
       <div v-for="item in items" :key="item.employeeId" class="bday-item">
         <div class="bday-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,6 +37,7 @@
         </div>
       </div>
       <div v-if="!items.length" class="bday-empty">예정된 기념일이 없습니다</div>
+      </template>
     </div>
   </div>
 </template>
@@ -32,6 +47,7 @@ import { onMounted, ref } from 'vue'
 import { getTeamBirthdays } from '@/api/hr'
 
 const items = ref([])
+const loading = ref(true)
 
 const formatDday = (daysRemaining) => {
   if (daysRemaining === 0) return 'D-DAY'
@@ -52,6 +68,8 @@ const loadTeamBirthdays = async () => {
   } catch (error) {
     items.value = []
     console.error('팀 기념일 조회 실패:', error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -68,6 +86,11 @@ onMounted(loadTeamBirthdays)
   width:32px;height:32px;border-radius:8px;background:var(--accent);
   display:flex;align-items:center;justify-content:center;color:var(--secondary);
 }
+.bday-item-skeleton .bday-icon{background:none}
+.bday-name-skeleton{width:62px;height:16px}
+.bday-type-skeleton{width:34px;height:12px;margin-top:5px}
+.bday-date-skeleton{width:52px;height:18px}
+.bday-dday-skeleton{width:38px;height:14px;margin-top:4px;margin-left:auto}
 .bday-info{flex:1}
 .bday-name{font-size:0.85rem;font-weight:600;color:var(--gray700)}
 .bday-type{font-size:0.68rem;color:var(--gray400)}

@@ -15,7 +15,15 @@
       </div>
 
       <div class="tree-scroll">
-        <div v-if="!filteredRoot" class="empty">검색 결과가 없습니다.</div>
+        <div v-if="loading" class="tree-skeleton">
+          <div v-for="n in 6" :key="`tree-skeleton-${n}`" class="tree-skeleton-row">
+            <span class="skeleton-block tree-accent-skeleton" />
+            <span class="skeleton-block tree-label-skeleton" />
+            <span class="skeleton-block tree-chip-skeleton" />
+          </div>
+        </div>
+
+        <div v-else-if="!filteredRoot" class="empty">검색 결과가 없습니다.</div>
 
         <template v-else>
           <button
@@ -54,7 +62,32 @@
       </div>
 
       <div class="profile-scroll">
-        <div v-if="activeMembers.length === 0" class="empty">선택된 조직의 구성원이 없습니다.</div>
+        <div v-if="loading" class="profile-grid">
+          <article v-for="n in 3" :key="`profile-skeleton-${n}`" class="profile-card">
+            <div class="profile-layout">
+              <div class="profile-avatar-wrap">
+                <span class="skeleton-circle profile-avatar-skeleton" />
+              </div>
+
+              <div class="profile-main">
+                <div class="profile-head">
+                  <span class="skeleton-block profile-name-skeleton" />
+                  <span class="skeleton-block profile-state-skeleton" />
+                </div>
+                <div class="skeleton-block profile-role-skeleton" />
+
+                <div class="profile-rows">
+                  <div v-for="row in 4" :key="`profile-row-${n}-${row}`" class="row row-skeleton">
+                    <span class="skeleton-block" />
+                    <strong class="skeleton-block" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div v-else-if="activeMembers.length === 0" class="empty">선택된 조직의 구성원이 없습니다.</div>
 
         <div v-else class="profile-grid">
           <article
@@ -124,6 +157,7 @@ const selectedMemberId = ref(null)
 const myOrgNodeId = ref(null)
 const isSearchIndexLoading = ref(false)
 const isSearchIndexReady = ref(false)
+const loading = ref(true)
 
 const normalize = (value) => String(value || '').trim().toLowerCase()
 const isOpen = (nodeId) => Boolean(expandedNodes.value[nodeId])
@@ -486,6 +520,7 @@ const buildTree = (rows) => {
 }
 
 const loadOrganizationTree = async () => {
+  loading.value = true
   try {
     const rows = await getOrganizationTree()
     orgRoot.value = buildTree(Array.isArray(rows) ? rows : [])
@@ -512,6 +547,8 @@ const loadOrganizationTree = async () => {
     await resetToMyOrg()
   } catch (_error) {
     orgRoot.value = null
+  } finally {
+    loading.value = false
   }
 }
 
@@ -601,6 +638,38 @@ onMounted(async () => {
 
 .tree-scroll { flex: 1; overflow-y: auto; padding: 8px 8px 12px; min-height: 0; }
 .profile-scroll { flex: 1; overflow-y: auto; padding: 12px; min-height: 0; }
+
+.tree-skeleton {
+  display: grid;
+  gap: 6px;
+  padding: 4px 2px;
+}
+
+.tree-skeleton-row {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+}
+
+.tree-accent-skeleton {
+  width: 5px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.tree-label-skeleton {
+  width: 170px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.tree-chip-skeleton {
+  width: 42px;
+  height: 18px;
+  border-radius: 999px;
+}
 
 .empty {
   color: var(--gray400);
@@ -721,6 +790,11 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.profile-avatar-skeleton {
+  width: 56px;
+  height: 56px;
+}
+
 .profile-avatar-image {
   width: 100%;
   height: 100%;
@@ -740,11 +814,30 @@ onMounted(async () => {
   font-size: .98rem;
 }
 
+.profile-name-skeleton {
+  width: 84px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.profile-state-skeleton {
+  width: 42px;
+  height: 18px;
+  border-radius: 999px;
+}
+
 .profile-role {
   margin: 5px 0 8px;
   color: var(--gray500);
   font-size: .78rem;
   font-weight: 700;
+}
+
+.profile-role-skeleton {
+  width: 160px;
+  height: 14px;
+  margin: 5px 0 8px;
+  border-radius: 999px;
 }
 
 .profile-rows { display: grid; gap: 6px; }
@@ -758,6 +851,18 @@ onMounted(async () => {
 
 .row span { color: var(--gray500); }
 .row strong { color: var(--gray800); word-break: break-word; }
+
+.row-skeleton span {
+  width: 74px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.row-skeleton strong {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+}
 
 .status {
   display: inline-flex;

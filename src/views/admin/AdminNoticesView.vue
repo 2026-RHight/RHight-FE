@@ -39,35 +39,48 @@
         <div>생성일자</div>
       </div>
 
-      <div v-if="noticeList.length === 0" class="empty">등록된 공지사항이 없습니다.</div>
-
-      <div v-for="notice in noticeList" :key="notice.id" class="list-row">
-        <div>
-          <span class="type-chip">{{ notice.typeLabel }}</span>
+      <div v-if="loading" class="list-skeleton">
+        <div v-for="n in 8" :key="`admin-notice-skeleton-${n}`" class="list-row list-row-skeleton">
+          <div><span class="skeleton-block type-skeleton" /></div>
+          <div class="title-cell">
+            <span class="skeleton-block pin-toggle-skeleton" />
+            <span class="skeleton-block title-skeleton" />
+          </div>
+          <div class="skeleton-block writer-skeleton" />
+          <div class="skeleton-block date-skeleton" />
         </div>
-        <div class="title-cell">
-          <button
-            type="button"
-            class="pin-toggle-btn"
-            :class="{ active: notice.isPinned }"
-            :disabled="pinUpdatingId === notice.id"
-            :title="notice.isPinned ? '고정 해제' : '상단 고정'"
-            @click.stop="togglePin(notice)"
-          >
-            <span class="pin-icon" aria-hidden="true"></span>
-          </button>
-          <button type="button" class="title-btn" @click="openDetailModal(notice)">
-            <span v-if="notice.isPinned" class="pin-badge" aria-label="고정">
-              <span class="pin-icon" aria-hidden="true"></span>
-            </span>
-            {{ notice.title }}
-          </button>
-        </div>
-        <div>{{ notice.author }}</div>
-        <div class="font-num">{{ notice.createdAt }}</div>
       </div>
+      <div v-else-if="noticeList.length === 0" class="empty">등록된 공지사항이 없습니다.</div>
 
-      <div v-if="totalElements > 0" class="pagination">
+      <template v-else>
+        <div v-for="notice in noticeList" :key="notice.id" class="list-row">
+          <div>
+            <span class="type-chip">{{ notice.typeLabel }}</span>
+          </div>
+          <div class="title-cell">
+            <button
+              type="button"
+              class="pin-toggle-btn"
+              :class="{ active: notice.isPinned }"
+              :disabled="pinUpdatingId === notice.id"
+              :title="notice.isPinned ? '고정 해제' : '상단 고정'"
+              @click.stop="togglePin(notice)"
+            >
+              <span class="pin-icon" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="title-btn" @click="openDetailModal(notice)">
+              <span v-if="notice.isPinned" class="pin-badge" aria-label="고정">
+                <span class="pin-icon" aria-hidden="true"></span>
+              </span>
+              {{ notice.title }}
+            </button>
+          </div>
+          <div>{{ notice.author }}</div>
+          <div class="font-num">{{ notice.createdAt }}</div>
+        </div>
+      </template>
+
+      <div v-if="!loading && totalElements > 0" class="pagination">
         <button type="button" class="page-btn" :disabled="currentPage === 1" @click="currentPage--">
           이전
         </button>
@@ -352,6 +365,12 @@ onMounted(async () => {
   font-weight: 700;
 }
 .list-row { border-bottom: 1px solid var(--gray100); color: var(--gray700); font-size: .88rem; }
+.list-skeleton{display:block}
+.list-row-skeleton .skeleton-block{display:block;border-radius:999px}
+.pin-toggle-skeleton{width:24px;height:24px;border-radius:999px;flex-shrink:0}
+.title-skeleton{width:68%;height:18px}
+.writer-skeleton{width:72px;height:16px}
+.date-skeleton{width:82px;height:16px}
 .title-cell {
   display: flex;
   align-items: center;
@@ -433,6 +452,11 @@ onMounted(async () => {
   color: #075985;
   font-size: .75rem;
   font-weight: 700;
+}
+.type-skeleton{
+  width:92px;
+  height:24px;
+  border-radius:999px;
 }
 .empty {
   padding: 44px 10px;

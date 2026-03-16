@@ -5,7 +5,14 @@
       <button class="more-btn" type="button" @click="goList">더보기</button>
     </div>
     <div class="card-body card-body-fill">
-      <div v-if="loading" class="empty-row">공지사항을 불러오는 중입니다.</div>
+      <div v-if="loading">
+        <div v-for="n in 6" :key="`notice-skeleton-${n}`" class="notice-item notice-item-skeleton">
+          <div class="notice-dot skeleton-block skeleton-circle"></div>
+          <div class="notice-title-skeleton skeleton-block"></div>
+          <div class="notice-who-skeleton skeleton-block"></div>
+          <div class="notice-date-skeleton skeleton-block"></div>
+        </div>
+      </div>
       <div v-else-if="notices.length === 0" class="empty-row">공지사항이 없습니다.</div>
       <div v-for="item in notices" :key="item.id" class="notice-item">
         <div class="notice-dot"></div>
@@ -88,6 +95,10 @@ onMounted(() => {
 .notice-item:last-child{border-bottom:none}
 .notice-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .notice-dot{background:var(--blue)}
+.notice-item-skeleton .notice-dot{background:none}
+.notice-title-skeleton{flex:1;height:18px}
+.notice-who-skeleton{width:140px;height:15px}
+.notice-date-skeleton{width:74px;height:15px}
 .notice-title{
   flex:1;border:none;background:transparent;text-align:left;
   font-size:0.88rem;color:var(--gray700);font-weight:500;

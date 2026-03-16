@@ -1,6 +1,19 @@
 <template>
   <div class="card fade-up delay-1 profile-card">
-    <div class="profile-content">
+    <div v-if="loading" class="profile-content profile-content-skeleton">
+      <div class="avatar skeleton-block skeleton-circle"></div>
+      <div class="profile-name skeleton-block"></div>
+      <div class="profile-team skeleton-block"></div>
+      <div class="profile-btns">
+        <div class="btn-group">
+          <div class="btn-skeleton skeleton-block"></div>
+        </div>
+        <div class="btn-group">
+          <div class="btn-skeleton skeleton-block"></div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="profile-content">
       <div class="avatar">
         <img
           v-if="profileImageUrl"
@@ -39,6 +52,7 @@ const emit = defineEmits(['checkin', 'checkout'])
 
 const store = useAttendanceStore()
 const { checkInTime, checkOutTime } = storeToRefs(store)
+const loading = ref(true)
 
 const profile = ref({
   employeeName: sessionStorage.getItem(AUTH_KEYS.userName) || '',
@@ -75,6 +89,8 @@ const loadProfileHeader = async () => {
     }
   } catch (_error) {
     // 대시보드 카드 실패 시에는 세션 정보로만 렌더링
+  } finally {
+    loading.value = false
   }
 }
 
@@ -86,6 +102,11 @@ onMounted(() => {
 <style scoped>
 .profile-card{height:100%}
 .profile-content{text-align:center;padding:24px 16px 20px}
+.profile-content-skeleton .profile-name,
+.profile-content-skeleton .profile-team{
+  margin-left:auto;
+  margin-right:auto;
+}
 .avatar{
   width:76px;height:76px;border-radius:50%;
   background:linear-gradient(135deg,#94A3B8,#64748B);
@@ -96,8 +117,11 @@ onMounted(() => {
 .avatar-image{width:100%;height:100%;object-fit:cover;display:block}
 .profile-name{font-size:1.05rem;font-weight:700;color:var(--gray800);margin-top:10px}
 .profile-team{font-size:0.8rem;color:var(--gray500);margin-bottom:16px}
+.profile-content-skeleton .profile-name{width:84px;height:22px;margin-top:10px}
+.profile-content-skeleton .profile-team{width:118px;height:16px;margin-top:8px;margin-bottom:16px}
 .profile-btns{display:flex;gap:6px}
 .btn-group { flex: 1; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.btn-skeleton{width:100%;height:42px;border-radius:var(--radius-sm)}
 .btn-checkin,.btn-checkout{
   width: 100%; padding:9px;border-radius:var(--radius-sm);font-size:0.85rem;font-weight:600;
   transition:all var(--transition);
